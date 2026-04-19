@@ -66,7 +66,7 @@
 </head>
 <body>
   <h1>xslint checks</h1>
-  <p>31 checks available</p>
+  <p>34 checks available</p>
   <table>
     <thead>
       <tr>
@@ -100,6 +100,16 @@
     <td><a href="checks/template-match-function-template-complexity.html">template-match-function-template-complexity</a></td>
     <td><span class="severity-warning">warning</span></td>
     <td>The function or template contains more than 50 XSLT elements. Split it into smaller, focused units.</td>
+  </tr>
+  <tr>
+    <td><a href="checks/template-match-function-template-is-not-child-of-stylesheet.html">template-match-function-template-is-not-child-of-stylesheet</a></td>
+    <td><span class="severity-error">error</span></td>
+    <td>'xsl:function' or 'xsl:template' are used in the wrong places. Use 'xsl:function' and 'xsl:template' as child nodes of 'xsl:stylesheet'.</td>
+  </tr>
+  <tr>
+    <td><a href="checks/template-match-function-use-in-xslt-1.html">template-match-function-use-in-xslt-1</a></td>
+    <td><span class="severity-error">error</span></td>
+    <td>'xsl:function' is declared in XSLT version 1.0. Use a named template or upgrade the stylesheet version to 2.0 instead.</td>
   </tr>
   <tr>
     <td><a href="checks/template-match-incorrect-use-of-boolean-constants.html">template-match-incorrect-use-of-boolean-constants</a></td>
@@ -175,6 +185,11 @@
     <td><a href="checks/template-match-too-many-small-templates.html">template-match-too-many-small-templates</a></td>
     <td><span class="severity-warning">warning</span></td>
     <td>The stylesheet has 10 or more templates with fewer than 3 child elements. Merge related small templates to reduce fragmentation.</td>
+  </tr>
+  <tr>
+    <td><a href="checks/template-match-unsorted-imports.html">template-match-unsorted-imports</a></td>
+    <td><span class="severity-warning">warning</span></td>
+    <td>The 'xsl:import' elements are not sorted alphabetically by '@href'. Sort imports to improve readability.</td>
   </tr>
   <tr>
     <td><a href="checks/template-match-unused-function-template-parameter.html">template-match-unused-function-template-parameter</a></td>
