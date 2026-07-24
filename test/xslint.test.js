@@ -330,4 +330,27 @@ describe('xslint', function() {
     const streams = xslintStreams(['test/resources/directives/used.xsl'])
     assert.ok(!streams.stderr.includes('Unused xslint-disable directive'))
   })
+  it('should print defects as a JSON array with --format json', function() {
+    const streams = xslintStreams([
+      'test/resources/stylesheets/xsl-with-some-violations.xsl',
+      '--format=json',
+    ])
+    assert.ok(
+      JSON.parse(streams.stdout).some((defect) => defect.rule === 'short-names'),
+    )
+  })
+  it('should print a SARIF 2.1.0 log with --format sarif', function() {
+    const streams = xslintStreams([
+      'test/resources/stylesheets/xsl-with-some-violations.xsl',
+      '--format=sarif',
+    ])
+    assert.equal(JSON.parse(streams.stdout).version, '2.1.0')
+  })
+  it('should reject an unknown --format value', function() {
+    const status = xslintStatus([
+      'test/resources/stylesheets/xsl-with-some-violations.xsl',
+      '--format=bogus',
+    ])
+    assert.notEqual(status, 0)
+  })
 })

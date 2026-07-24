@@ -14,7 +14,7 @@ const {lintByXpath, names: xpathChecks} = require('./xpath-linter')
 const {lintByCorpus, names: corpusChecks} = require('./corpus-linter')
 const {lintByFormat, names: formatChecks} = require('./xpath-format-linter')
 const {logger, levels} = require('./logger')
-const {out} = require('./output')
+const {reporterOf} = require('./reporters')
 const {configFrom} = require('./config')
 const {directivesFrom, suppresses, unused} = require('./directives')
 const {minimatch} = require('minimatch')
@@ -122,7 +122,8 @@ const processOptions = function(options, config) {
  *  quiet: boolean,
  *  suppress: Array.<string>,
  *  maxWarnings: number|undefined,
- *  config: string|undefined
+ *  config: string|undefined,
+ *  format: string
  * }} options - CLI options
  */
 const xslint = function(pths, options) {
@@ -201,26 +202,17 @@ const xslint = function(pths, options) {
   logger.info(`Processed files: ${stylesheets.length}`)
   if (reported.length > 0) {
     logger.info(`Defects found: ${reported.length}`)
-    for (const defect of reported) {
-      out[defect.severity](
-        '%s(%d:%d) %s (%s)',
-        defect.file,
-        defect.line,
-        defect.pos,
-        defect.message,
-        defect.name,
-      )
-    }
-    const errors = reported.filter((defect) => defect.severity === 'error')
-    const warnings = reported.filter((defect) => defect.severity === 'warning')
-    if (
-      errors.length > 0 ||
-      (maxWarnings >= 0 && warnings.length > maxWarnings)
-    ) {
-      process.exit(1)
-    }
   } else {
     logger.info(`No defects found`)
+  }
+  reporterOf(options.format)(reported)
+  const errors = reported.filter((defect) => defect.severity === 'error')
+  const warnings = reported.filter((defect) => defect.severity === 'warning')
+  if (
+    errors.length > 0 ||
+    (maxWarnings >= 0 && warnings.length > maxWarnings)
+  ) {
+    process.exit(1)
   }
 }
 

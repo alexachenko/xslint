@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {program} = require('commander')
+const {program, Option} = require('commander')
 const version = require('./version')
 const xslint = require('./xslint')
 
@@ -19,6 +19,11 @@ program
   .helpOption('-?, --help', 'Print this help information')
   .option('--log-level <level>', 'Set log level')
   .option('--quiet', 'Suppress informational logs, printing only defects')
+  .addOption(
+    new Option('--format <format>', 'Output format for defects')
+      .choices(['text', 'json', 'sarif'])
+      .default('text'),
+  )
   .option('--config <path>', 'Path to a configuration file')
   .option(
     '--max-warnings <n>',

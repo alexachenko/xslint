@@ -134,6 +134,30 @@ drop the informational log lines:
 xslint --quiet
 ```
 
+## Machine-readable output
+
+`--format` selects the output. `text` (the default) is the human format above;
+`json` and `sarif` print a single document to stdout — logs stay on stderr, so
+the document is clean to pipe or redirect:
+
+```bash
+xslint --format json path/to/dir     # a flat array of defects
+xslint --format sarif path/to/dir    # a SARIF 2.1.0 log
+```
+
+SARIF feeds GitHub code scanning, so xslint findings appear as annotations on
+pull requests:
+
+```yaml
+- run: xslint --format sarif . > xslint.sarif || true
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: xslint.sarif
+```
+
+The `|| true` keeps a findings exit code from failing the step before the
+upload; the alerts still surface in code scanning.
+
 ## Exit code
 
 `xslint` exits non-zero when any `error`-severity defect is found. Warnings do

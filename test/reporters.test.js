@@ -1,0 +1,83 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+ * SPDX-License-Identifier: MIT
+ */
+
+const {reporterOf} = require('../src/reporters')
+const assert = require('assert')
+const path = require('path')
+
+/**
+ * Run a reporter over given defects and capture what it writes to stdout.
+ * @param {function(Array.<object>): void} report - Reporter under test
+ * @param {Array.<object>} defects - Defects to report
+ * @return {string} - The captured output
+ */
+const capture = function(report, defects) {
+  const lines = []
+  const original = console.log
+  console.log = (line) => lines.push(line)
+  try {
+    report(defects)
+  } finally {
+    console.log = original
+  }
+  return lines.join('\n')
+}
+
+/**
+ * A defect of given severity, its file under the working directory so the
+ * relative path is deterministic.
+ * @param {string} severity - Defect severity
+ * @return {object} - Defect
+ */
+const defect = function(severity) {
+  return {
+    name: 'short-names',
+    severity: severity,
+    message: 'Use a descriptive name',
+    file: path.join(process.cwd(), 'sheets', 'a.xsl'),
+    line: 16,
+    pos: 3,
+  }
+}
+
+describe('reporters', function() {
+  it('reports a defect as a JSON object with position and message', function() {
+    assert.deepStrictEqual(
+      JSON.parse(capture(reporterOf('json'), [defect('warning')]))[0],
+      {
+        rule: 'short-names',
+        severity: 'warning',
+        message: 'Use a descriptive name',
+        file: 'sheets/a.xsl',
+        line: 16,
+        column: 3,
+      },
+    )
+  })
+  it('reports an empty JSON array when there are no defects', function() {
+    assert.deepStrictEqual(JSON.parse(capture(reporterOf('json'), [])), [])
+  })
+  it('reports the SARIF version', function() {
+    assert.equal(
+      JSON.parse(capture(reporterOf('sarif'), [defect('warning')])).version,
+      '2.1.0',
+    )
+  })
+  it('places a SARIF result at the defect location', function() {
+    const log = JSON.parse(capture(reporterOf('sarif'), [defect('warning')]))
+    assert.deepStrictEqual(
+      log.runs[0].results[0].locations[0].physicalLocation.region,
+      {startLine: 16, startColumn: 3},
+    )
+  })
+  it('derives a SARIF rule from the defect', function() {
+    const log = JSON.parse(capture(reporterOf('sarif'), [defect('warning')]))
+    assert.equal(log.runs[0].tool.driver.rules[0].id, 'short-names')
+  })
+  it('maps an error defect to the SARIF error level', function() {
+    const log = JSON.parse(capture(reporterOf('sarif'), [defect('error')]))
+    assert.equal(log.runs[0].results[0].level, 'error')
+  })
+})

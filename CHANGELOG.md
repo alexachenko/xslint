@@ -9,6 +9,8 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add machine-readable output: `--format json` and `--format sarif` (SARIF
+  2.1.0, for GitHub code scanning) alongside the default `text` (#260).
 - Add inline suppression directives — `xslint-disable-next-line`,
   `xslint-disable-line`, and `xslint-disable-file` (#262), and report a
   directive that suppresses nothing as unused (#288).
