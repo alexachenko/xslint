@@ -101,8 +101,10 @@ quiet: false                            # default for --quiet
 - **`max-warnings`**, **`log-level`**, and **`quiet`** set the defaults for the
   matching command-line flags.
 
-Unknown top-level keys and rule names that match no check are reported so typos
-do not pass silently.
+Unknown top-level keys, rule names that match no check, and values of the wrong
+type (a non-numeric `max-warnings`, a non-list `exclude`, a non-boolean
+`quiet`, a non-string `log-level`) are reported and ignored, so typos do not
+pass silently.
 
 ## Inline suppression
 

@@ -49,9 +49,31 @@ const located = function(from) {
 }
 
 /**
+ * Value of a known key when it holds the expected type, warning and falling
+ * back to the default otherwise, so a mistyped value is as visible as a
+ * mistyped key rather than silently ignored.
+ * @param {object|null} raw - Parsed YAML, or null when there is no file
+ * @param {string} key - Key to read
+ * @param {function(*): boolean} ok - Whether the value has the expected type
+ * @param {string} expected - Human name of the expected type, for the warning
+ * @param {*} fallback - Value to use when the key is absent or mistyped
+ * @return {*} - The value when it fits, the fallback otherwise
+ */
+const typed = function(raw, key, ok, expected, fallback) {
+  if (!raw || !Object.hasOwn(raw, key)) {
+    return fallback
+  }
+  if (ok(raw[key])) {
+    return raw[key]
+  }
+  logger.warn(`Value of '${key}' in ${NAME} must be ${expected}, ignoring it`)
+  return fallback
+}
+
+/**
  * Normalize the parsed YAML into the configuration the linter consumes,
- * reporting any unknown top-level key and any rule graded to an unknown
- * severity rather than dropping them silently.
+ * reporting any unknown top-level key, any rule graded to an unknown severity,
+ * and any known key holding the wrong type rather than dropping them silently.
  * @param {object|null} raw - Parsed YAML, or null when there is no file
  * @return {{rules: object, exclude: Array.<string>, maxWarnings: number|null,
  *  logLevel: string|null, quiet: boolean|null}} - Normalized configuration
@@ -75,11 +97,21 @@ const normalized = function(raw) {
   }
   return {
     rules: rules,
-    exclude: raw && Array.isArray(raw.exclude) ? raw.exclude : [],
-    maxWarnings: raw && Object.hasOwn(raw, 'max-warnings') ?
-      raw['max-warnings'] : null,
-    logLevel: raw && Object.hasOwn(raw, 'log-level') ? raw['log-level'] : null,
-    quiet: raw && Object.hasOwn(raw, 'quiet') ? raw.quiet : null,
+    exclude: typed(
+      raw, 'exclude',
+      (val) => Array.isArray(val) && val.every((it) => typeof it === 'string'),
+      'a list of strings', [],
+    ),
+    maxWarnings: typed(
+      raw, 'max-warnings',
+      (val) => typeof val === 'number' && !Number.isNaN(val), 'a number', null,
+    ),
+    logLevel: typed(
+      raw, 'log-level', (val) => typeof val === 'string', 'a string', null,
+    ),
+    quiet: typed(
+      raw, 'quiet', (val) => typeof val === 'boolean', 'a boolean', null,
+    ),
   }
 }
 

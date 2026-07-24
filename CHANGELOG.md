@@ -9,6 +9,8 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Report and ignore `.xslint.yml` values of the wrong type — a non-numeric
+  `max-warnings` no longer silently disables the warning gate (#301).
 - Add machine-readable output: `--format json` and `--format sarif` (SARIF
   2.1.0, for GitHub code scanning) alongside the default `text` (#260).
 - Add inline suppression directives — `xslint-disable-next-line`,
