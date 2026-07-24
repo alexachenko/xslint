@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {program, Option} = require('commander')
-const version = require('./version')
-const xslint = require('./xslint')
+import {program, Option} from 'commander'
+import version from './version.js'
+import xslint from './xslint.js'
 
 program
   .name('xslint')

@@ -26,7 +26,7 @@ export default defineConfig([
   ...compat.extends("google"),
   jsdoc.configs["flat/recommended-error"],
   {
-    files: ["**/*.js"],
+    files: ["**/*.js", "**/*.mjs"],
     languageOptions: {
       globals: { ...globals.node, ...globals.mocha },
       ecmaVersion: 2022,
@@ -74,11 +74,15 @@ export default defineConfig([
     }
   },
   {
-    files: ["src/**/*.js"],
+    files: ["src/**/*.js", "src/**/*.mjs"],
     rules: {
       "jsdoc/require-jsdoc": ["error", {
         require: { FunctionDeclaration: true, FunctionExpression: true }
       }]
     }
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: { sourceType: "module" }
   }
 ]);

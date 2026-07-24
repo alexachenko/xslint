@@ -26,20 +26,19 @@ const execCmd = function(command, args, print) {
 }
 
 /**
- * Run xslint in a child process, node warnings silenced so only the tool's own
- * output remains.
+ * Run xslint in a child process, exactly as a user would, so the test sees the
+ * same output — no node warnings are silenced.
  * @param {Array.<string>} args - Array of args
  * @return {import('child_process').SpawnSyncReturns<string>} - Result
  */
 const spawnXslint = function(args) {
   return spawnSync(
     'node',
-    [path.resolve('./src/index.js'), ...args],
+    [path.resolve('./src/index.mjs'), ...args],
     {
       timeout: 120000,
       windowsHide: true,
       encoding: 'utf-8',
-      env: {...process.env, NODE_NO_WARNINGS: '1'},
     },
   )
 }

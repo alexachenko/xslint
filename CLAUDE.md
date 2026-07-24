@@ -29,7 +29,7 @@ Code style is enforced by ESLint (`eslint-config-google` plus `@stylistic`, in `
 
 Flow:
 ```text
-src/index.js (CLI, commander.js)
+src/index.mjs (CLI, commander.js — ESM entry so commander loads natively)
   → src/xslint.js (file discovery, suppression, run order, output: defects to
       stdout, logs to stderr)
     VALIDATORS (is it valid?) — each partitions its input, reporting the bad

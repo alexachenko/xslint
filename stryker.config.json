@@ -9,7 +9,6 @@
   "coverageAnalysis": "perTest",
   "mutate": [
     "src/**/*.js",
-    "!src/index.js",
     "!src/xslint.js",
     "!src/logger.js",
     "!src/output.js"

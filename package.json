@@ -2,9 +2,9 @@
   "name": "@maxonfjvipon/xslint",
   "version": "0.0.0",
   "description": "XSL Linter",
-  "main": "src/index.js",
+  "main": "src/index.mjs",
   "bin": {
-    "xslint": "src/index.js"
+    "xslint": "src/index.mjs"
   },
   "engines": {
     "node": ">=20"

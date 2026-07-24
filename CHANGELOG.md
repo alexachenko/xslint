@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Load the CLI entry as an ES module (`src/index.mjs`) so `commander` — which
+  is ESM-only — no longer triggers Node's `ExperimentalWarning` on every run;
+  the test harness no longer silences warnings, so it sees what users see
+  (#300).
 - Report a stylesheet as malformed for any well-formedness problem the XML
   parser reports, not only the fatal ones — an undefined entity or a stray
   `<` no longer slips through — and route the parser's own diagnostics through
