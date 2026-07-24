@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Report a stylesheet as malformed for any well-formedness problem the XML
+  parser reports, not only the fatal ones — an undefined entity or a stray
+  `<` no longer slips through — and route the parser's own diagnostics through
+  the logger instead of leaking them to the console (#298).
 - Assert behavior rather than whole-corpus totals in the end-to-end tests, so
   adding a fixture or a rule no longer breaks an unrelated test (#303).
 - Use bare module names in `require` (drop the `node:` prefix) and enforce it

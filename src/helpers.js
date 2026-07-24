@@ -9,12 +9,6 @@ const {DOMParser} = require('@xmldom/xmldom')
 const yaml = require('yaml')
 
 /**
- * XML Parser
- * @type {DOMParser}
- */
-const parser = new DOMParser()
-
-/**
  * Get all the files recursively from given directory
  * @param {string} dir - Directory path
  * @return {Array.<string>} - Array of file in given directory
@@ -51,16 +45,29 @@ const fromFile = function(type, fromString) {
 }
 
 /**
- * Parse XML from string.
+ * Parse XML from string. Any well-formedness problem the parser reports — not
+ * only the fatal ones it throws on, but also the recoverable ones such as an
+ * undefined entity — is treated as a failure, and the parser's own diagnostics
+ * are collected here rather than left to spill onto the console.
  * @param {string} str - XML as string
  * @return {Document} - Parsed XML as Document
  */
 const xmlFromString = function(str) {
+  const problems = []
   let parsed
   try {
-    parsed = parser.parseFromString(str, 'text/xml')
+    parsed = new DOMParser({
+      onError: (level, message) => {
+        if (level !== 'warning') {
+          problems.push(message.trim())
+        }
+      },
+    }).parseFromString(str, 'text/xml')
   } catch (err) {
     throw new Error(`Couldn't parse XML:\n${str}\n\nCause: ${err.message}`)
+  }
+  if (problems.length > 0) {
+    throw new Error(`Couldn't parse XML:\n${str}\n\nCause: ${problems[0]}`)
   }
   return parsed
 }

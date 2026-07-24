@@ -19,6 +19,23 @@ describe('xsl-validator', function() {
     ])
     assert.equal(defects[0].name, 'malformed-stylesheet')
   })
+  it('should report an undefined entity as a defect', function() {
+    const {defects} = validate([
+      {file: 'entity.xsl', content: '<a>&nope; text</a>'},
+    ])
+    assert.equal(defects[0].name, 'malformed-stylesheet')
+  })
+  it('should not leak parser diagnostics to the console', function() {
+    const original = console.error
+    const lines = []
+    console.error = (...args) => lines.push(args.join(' '))
+    try {
+      validate([{file: 'broken.xsl', content: '<a><b></a>'}])
+    } finally {
+      console.error = original
+    }
+    assert.equal(lines.length, 0)
+  })
   it('should leave a malformed stylesheet out of the corpus', function() {
     const {corpus} = validate([
       {file: 'broken.xsl', content: '<a><b></a>'},
