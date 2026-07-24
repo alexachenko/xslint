@@ -9,6 +9,8 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Assert behavior rather than whole-corpus totals in the end-to-end tests, so
+  adding a fixture or a rule no longer breaks an unrelated test (#303).
 - Use bare module names in `require` (drop the `node:` prefix) and enforce it
   with an ESLint rule; collapse the duplicate `warn`/`warning` naming in the
   logger and writer (#304).
