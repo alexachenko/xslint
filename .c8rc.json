@@ -5,6 +5,7 @@
   "exclude": [
     "src/index.mjs"
   ],
+  "all": true,
   "reporter": [
     "text-summary",
     "lcov"

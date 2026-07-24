@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Count every `src` file toward the 100% coverage gate (`c8` `all`), so a module
+  shipped without a test now fails CI instead of being silently omitted (#322).
+
 - Extend the `node:`-prefix ban from `require` to ESM `import` as well, and use
   bare specifiers in `eslint.config.mjs` (#319).
 
