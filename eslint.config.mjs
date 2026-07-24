@@ -20,6 +20,53 @@ const compat = new FlatCompat({
   allConfig: js.configs.all
 });
 
+// A project-local rule: a variable whose only purpose is to be returned by the
+// very next statement is redundant and should be inlined. No plugin dependency
+// is needed — a single no-restricted-syntax selector cannot compare a
+// declaration's name with the identifier the following return uses.
+const local = {
+  rules: {
+    "no-redundant-return-variable": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "disallow a variable that only exists to be returned next"
+        },
+        messages: {
+          redundant:
+            "Return the expression directly instead of binding it to a " +
+            "variable first"
+        }
+      },
+      create(context) {
+        return {
+          ReturnStatement(node) {
+            const block = node.parent;
+            if (
+              !node.argument ||
+              node.argument.type !== "Identifier" ||
+              block.type !== "BlockStatement"
+            ) {
+              return;
+            }
+            const prev = block.body[block.body.indexOf(node) - 1];
+            if (
+              prev &&
+              prev.type === "VariableDeclaration" &&
+              prev.declarations.length === 1 &&
+              prev.declarations[0].id.type === "Identifier" &&
+              prev.declarations[0].id.name === node.argument.name
+            ) {
+              context.report({ node: prev, messageId: "redundant" });
+            }
+          }
+        };
+      }
+    }
+  }
+};
+
 export default defineConfig([
   { ignores: ["eslint.config.mjs", "docs/**"] },
   js.configs.recommended,
@@ -37,8 +84,9 @@ export default defineConfig([
         tagNamePreference: { returns: "return" }
       }
     },
-    plugins: { "@stylistic": stylistic },
+    plugins: { "@stylistic": stylistic, local },
     rules: {
+      "local/no-redundant-return-variable": "error",
       "valid-jsdoc": "off",
       "require-jsdoc": "off",
       semi: ["error", "never"],

@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add a project-local ESLint rule that bans a redundant return variable
+  (`const x = expr; return x`), so the convention is enforced on new code
+  (#310).
 - Load the CLI entry as an ES module (`src/index.mjs`) so `commander` — which
   is ESM-only — no longer triggers Node's `ExperimentalWarning` on every run;
   the test harness no longer silences warnings, so it sees what users see
