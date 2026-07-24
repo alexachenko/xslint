@@ -136,6 +136,10 @@ drop the informational log lines:
 xslint --quiet
 ```
 
+Output is colored only when it goes to an interactive terminal, so a redirected
+or piped run stays plain text; setting the conventional `NO_COLOR` environment
+variable turns coloring off everywhere.
+
 ## Machine-readable output
 
 `--format` selects the output. `text` (the default) is the human format above;

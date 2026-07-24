@@ -6,10 +6,23 @@
 const safe = require('colors/safe')
 
 /**
+ * Whether a stream should be colored: only when it is an interactive terminal
+ * and the conventional NO_COLOR variable is not set, so redirected or piped
+ * output stays plain text.
+ * @param {{isTTY: boolean|undefined}} stream - Destination stream
+ * @return {boolean} - True when coloring is appropriate
+ */
+const colorful = function(stream) {
+  return Boolean(stream.isTTY) && !Object.hasOwn(process.env, 'NO_COLOR')
+}
+
+/**
  * Leveled, prefixed writer over a sink. The diagnostics (defects) and the
  * operational logs share this formatting but not their stream: defects go to
- * stdout, logs to stderr.
+ * stdout, logs to stderr. Coloring is applied only when asked for, so a
+ * non-terminal sink receives plain text.
  * @param {function(string, ...*): void} sink - Where a formatted line goes
+ * @param {boolean} colored - Whether to wrap the prefix in ANSI color
  * @return {{
  *  debug: function(string, ...*): void,
  *  info: function(string, ...*): void,
@@ -18,18 +31,25 @@ const safe = require('colors/safe')
  *  error: function(string, ...*): void
  * }} - Writer bound to the sink
  */
-const writer = function(sink) {
+const writer = function(sink, colored = true) {
+  const paint = (color, text) => colored ? safe[color](text) : text
   const write = {
-    debug: (msg, ...args) => sink(`${safe.gray('[DEBUG]')} ${msg}`, ...args),
-    info: (msg, ...args) => sink(`${safe.blue('[INFO]')} ${msg}`, ...args),
-    warn: (msg, ...args) => sink(`${safe.yellow('[WARNING]')} ${msg}`, ...args),
+    debug: (msg, ...args) => sink(`${paint('gray', '[DEBUG]')} ${msg}`, ...args),
+    info: (msg, ...args) => sink(`${paint('blue', '[INFO]')} ${msg}`, ...args),
+    warn: (msg, ...args) =>
+      sink(`${paint('yellow', '[WARNING]')} ${msg}`, ...args),
     warning: (msg, ...args) => write.warn(msg, ...args),
-    error: (msg, ...args) => sink(`${safe.red('[ERROR]')} ${msg}`, ...args),
+    error: (msg, ...args) => sink(`${paint('red', '[ERROR]')} ${msg}`, ...args),
   }
   return write
 }
 
 module.exports = {
-  out: writer((msg, ...args) => console.log(msg, ...args)),
-  err: writer((msg, ...args) => console.error(msg, ...args)),
+  writer,
+  out: writer(
+    (msg, ...args) => console.log(msg, ...args), colorful(process.stdout),
+  ),
+  err: writer(
+    (msg, ...args) => console.error(msg, ...args), colorful(process.stderr),
+  ),
 }
