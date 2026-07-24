@@ -9,8 +9,10 @@ const path = require('path')
 const {logger} = require('./logger')
 
 /**
- * Corpus checks, each identified by the name suppressions match against.
- * @type {Array.<{name: string, path: string}>}
+ * Corpus checks, each parsed once at load: the name suppressions match against,
+ * plus the declaration/usage selectors and defect metadata.
+ * @type {Array.<{name: string, declaration: string, usage: string,
+ *  severity: string, message: string}>}
  */
 const CHECKS = allFilesFrom(
   path.join(__dirname, 'resources', 'checks', 'corpus'),
@@ -18,7 +20,7 @@ const CHECKS = allFilesFrom(
   name: check.substring(
     check.lastIndexOf(path.sep) + 1, check.lastIndexOf('.yaml'),
   ),
-  path: check,
+  ...yaml.parsedFromFile(check),
 }))
 
 /**
@@ -43,17 +45,16 @@ const lintByCorpus = function(corpus, suppressions = []) {
     if (suppressions.some((sup) => check.name.includes(sup))) {
       continue
     }
-    const yml = yaml.parsedFromFile(check.path)
     const used = new Set(
-      corpus.flatMap(({xsl}) => strings(xsl, yml.usage)),
+      corpus.flatMap(({xsl}) => strings(xsl, check.usage)),
     )
     for (const {file, xsl} of corpus) {
-      for (const node of nodes(xsl, yml.declaration)) {
+      for (const node of nodes(xsl, check.declaration)) {
         if (!used.has(node.getAttribute('name'))) {
           defects.push({
             name: check.name,
-            severity: yml.severity,
-            message: yml.message,
+            severity: check.severity,
+            message: check.message,
             file: file,
             line: node.lineNumber,
             pos: node.columnNumber,

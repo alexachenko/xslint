@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Parse the corpus checks once at module load instead of on every run, matching
+  the other linters and validators (#317).
+
 - Send a fatal CLI error's stack trace to stderr instead of stdout, so stdout
   stays clean for defects and machine-readable output (#318).
 
