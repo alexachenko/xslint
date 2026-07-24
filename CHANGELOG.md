@@ -9,6 +9,15 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+## 0.0.9 - 2026-07-24
+
+- Fix the release workflow: read the changelog for the GitHub Release notes and
+  set them with `gh release edit` (falling back to create) rather than failing
+  on Rultor's existing release, and stop pushing the changelog to the protected
+  `master` — the changelog is now promoted in the pre-tag pull request (#349).
+
+## 0.0.8 - 2026-07-24
+
 - Declare `repository` (so `npm publish --provenance` validates) and a
   `files` allowlist that ships only `src`, keeping `coverage`, tests, and the
   dev-only `patches` out of the published package (#346).
