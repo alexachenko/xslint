@@ -59,6 +59,13 @@ describe('reporters', function() {
   it('reports an empty JSON array when there are no defects', function() {
     assert.deepStrictEqual(JSON.parse(capture(reporterOf('json'), [])), [])
   })
+  it('names an out-of-tree file by its absolute path, not a climb', function() {
+    const outside = path.join(path.parse(process.cwd()).root, 'out', 'a.xsl')
+    const reported = JSON.parse(capture(
+      reporterOf('json'), [{...defect('warning'), file: outside}],
+    ))
+    assert.equal(reported[0].file, outside.split(path.sep).join('/'))
+  })
   it('reports the SARIF version', function() {
     assert.equal(
       JSON.parse(capture(reporterOf('sarif'), [defect('warning')])).version,

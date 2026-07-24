@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Name an out-of-tree file by its absolute path in `json`/`sarif` output rather
+  than a `..`-climbing relative path that GitHub code scanning cannot map
+  (#320).
+
 - Parse the corpus checks once at module load instead of on every run, matching
   the other linters and validators (#317).
 

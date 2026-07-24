@@ -162,7 +162,9 @@ pull requests:
 ```
 
 The `|| true` keeps a findings exit code from failing the step before the
-upload; the alerts still surface in code scanning.
+upload; the alerts still surface in code scanning. Run it from the repository
+root so the reported paths stay repo-relative — a file outside the working
+directory is named by its absolute path instead.
 
 ## Exit code
 

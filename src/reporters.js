@@ -15,12 +15,17 @@ const LEVEL = {warning: 'warning', error: 'error'}
 
 /**
  * A defect's file as a path relative to the working directory, in posix form,
- * the shape the machine formats and GitHub code scanning expect.
+ * the shape the machine formats and GitHub code scanning expect. A file outside
+ * the working directory, whose relative path would climb out with '..' (or is
+ * absolute across drives), is named by its absolute path instead, so an
+ * out-of-tree file is unambiguous rather than a confusing relative climb.
  * @param {string} file - Absolute path of the stylesheet
- * @return {string} - Relative posix path
+ * @return {string} - Relative posix path, or absolute when it would escape
  */
 const located = function(file) {
-  return path.relative(process.cwd(), file).split(path.sep).join('/')
+  const relative = path.relative(process.cwd(), file)
+  const escapes = relative.startsWith('..') || path.isAbsolute(relative)
+  return (escapes ? file : relative).split(path.sep).join('/')
 }
 
 /**
