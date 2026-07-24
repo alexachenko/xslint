@@ -2,13 +2,16 @@
   "include": [
     "src/**"
   ],
+  "exclude": [
+    "src/index.mjs"
+  ],
   "reporter": [
     "text-summary",
     "lcov"
   ],
   "check-coverage": true,
-  "statements": 90,
-  "lines": 90,
-  "functions": 90,
-  "branches": 90
+  "statements": 100,
+  "lines": 100,
+  "functions": 100,
+  "branches": 100
 }

@@ -288,6 +288,19 @@ describe('xslint', function() {
     fs.rmSync(dir, {recursive: true, force: true})
     assert.ok(streams.stderr.includes('Unknown key \'excludes\''))
   })
+  it('should warn about an unknown rule in the config', function() {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xslint-'))
+    const cfg = path.join(dir, '.xslint.yml')
+    fs.writeFileSync(cfg, 'rules:\n  no-such-rule: error\n')
+    const streams = xslintStreams([
+      'test/resources/stylesheets/xsl-with-some-violations.xsl',
+      `--config=${cfg}`,
+    ])
+    fs.rmSync(dir, {recursive: true, force: true})
+    assert.ok(streams.stderr.includes(
+      'Rule \'no-such-rule\' in configuration does not exist',
+    ))
+  })
   it('should read the log level from the config file', function() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xslint-'))
     const cfg = path.join(dir, '.xslint.yml')

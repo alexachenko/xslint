@@ -67,11 +67,15 @@ describe('tokens', function() {
       '123.45.6',
       '123e45E6',
       '123e45.6',
+      '1e',
+      '1e+',
     ]
     const ACTUAL = [
       '123.45',
       '123e45',
       '123e45',
+      '1',
+      '1',
     ]
     FULL.forEach((string, index) => {
       assert.equal(

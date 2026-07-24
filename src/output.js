@@ -46,6 +46,7 @@ const writer = function(sink, colored = true) {
 
 module.exports = {
   writer,
+  colorful,
   out: writer(
     (msg, ...args) => console.log(msg, ...args), colorful(process.stdout),
   ),

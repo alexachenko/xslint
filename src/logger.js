@@ -55,11 +55,7 @@ const logger = {
       err.warning(msg, ...args)
     }
   },
-  error: (msg, ...args) => {
-    if (currentLevel <= LEVELS[LOG_LEVELS.ERROR]) {
-      err.error(msg, ...args)
-    }
-  },
+  error: (msg, ...args) => err.error(msg, ...args),
   setLevel: (level) => {
     level = level.toLowerCase()
     if (!Object.hasOwn(LEVELS, level)) {
