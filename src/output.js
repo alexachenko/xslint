@@ -5,10 +5,13 @@
 
 const safe = require('colors/safe')
 
+safe.enable()
+
 /**
  * Whether a stream should be colored: only when it is an interactive terminal
  * and the conventional NO_COLOR variable is not set, so redirected or piped
- * output stays plain text.
+ * output stays plain text. This is the single gate on coloring — the library's
+ * own terminal heuristics are forced on above so the decision stays here.
  * @param {{isTTY: boolean|undefined}} stream - Destination stream
  * @return {boolean} - True when coloring is appropriate
  */
