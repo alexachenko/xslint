@@ -3,29 +3,16 @@
 ---
 docker:
   image: maxonfjvipon/rultor-image-js:latest
-assets:
-  npmrc: maxonfjvipon/secrets#.npmrc
 install: |
   npm install --no-color
   npm install --no-color mocha
   pdd -f /dev/null -v
 release:
   pre: false
-  script: |
+  script: |-
     [[ "${tag}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit -1
-    sed -i "s/0\.0\.0/${tag}/" package.json
-    sed -i "s/0\.0\.0/${tag}/" src/version.js
-    sed -i "s/0000-00-00/$(date +%Y-%m-%d)/" src/version.js
     npm test
     npm run coverage
-    git commit -am "set version to ${tag}"
-    chmod 600 ../npmrc
-    echo "xslint dry run:"
-    npm publish --dry-run --userconfig=../npmrc || exit 1
-    echo "Check if xslint exists:"
-    npm view @maxonfjvipon/xslint@${tag} && exit 1
-    echo "Publishing xslint:"
-    npm publish --userconfig=../npmrc --access=public
 merge:
   script: |-
     npm test

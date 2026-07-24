@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Publish releases from a GitHub Actions workflow via npm OIDC trusted
+  publishing (no token to rotate, with provenance), promoting the changelog and
+  cutting a GitHub Release; `@rultor release` still validates, tests, and pushes
+  the tag that triggers it (#343).
+
 - Authenticate Codecov uploads with `CODECOV_TOKEN`, so coverage reports upload
   and the badge reflects real coverage (#341).
 
