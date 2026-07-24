@@ -44,7 +44,7 @@ describe('xslint', function() {
       'test/resources/stylesheets/xsl-with-some-violations.xsl',
       '--suppress=empty-content-in-instructions',
       '--suppress=starts-with-double-slash',
-    ]);
+    ])
     assert.ok(stdout.includes('Processed files: 1'))
     const absented = [
       'empty-content-in-instructions',
