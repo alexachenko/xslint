@@ -9,6 +9,22 @@ const {DOMParser} = require('@xmldom/xmldom')
 const yaml = require('yaml')
 
 /**
+ * XML parser, built once and reused. Its error handler raises on any
+ * well-formedness problem the parser reports — not only the fatal ones it
+ * throws on, but also the recoverable ones such as an undefined entity — so a
+ * not-well-formed document never parses, and keeps the parser's diagnostics
+ * off the console.
+ * @type {DOMParser}
+ */
+const parser = new DOMParser({
+  onError: (level, message) => {
+    if (level !== 'warning') {
+      throw new Error(message.trim())
+    }
+  },
+})
+
+/**
  * Get all the files recursively from given directory
  * @param {string} dir - Directory path
  * @return {Array.<string>} - Array of file in given directory
@@ -45,31 +61,16 @@ const fromFile = function(type, fromString) {
 }
 
 /**
- * Parse XML from string. Any well-formedness problem the parser reports — not
- * only the fatal ones it throws on, but also the recoverable ones such as an
- * undefined entity — is treated as a failure, and the parser's own diagnostics
- * are collected here rather than left to spill onto the console.
+ * Parse XML from string.
  * @param {string} str - XML as string
  * @return {Document} - Parsed XML as Document
  */
 const xmlFromString = function(str) {
-  const problems = []
-  let parsed
   try {
-    parsed = new DOMParser({
-      onError: (level, message) => {
-        if (level !== 'warning') {
-          problems.push(message.trim())
-        }
-      },
-    }).parseFromString(str, 'text/xml')
+    return parser.parseFromString(str, 'text/xml')
   } catch (err) {
     throw new Error(`Couldn't parse XML:\n${str}\n\nCause: ${err.message}`)
   }
-  if (problems.length > 0) {
-    throw new Error(`Couldn't parse XML:\n${str}\n\nCause: ${problems[0]}`)
-  }
-  return parsed
 }
 
 /**
