@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Run the coverage gate in Rultor's merge and release builds, so a drop below
+  100% blocks the merge and the release rather than only annotating the pull
+  request (#328).
+
 - Type the `TOKENS` map with a non-drifting index signature instead of a
   hand-maintained key-by-key literal that had fallen out of sync (#327).
 
