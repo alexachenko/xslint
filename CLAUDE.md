@@ -19,6 +19,8 @@ npx mocha test/xslint.test.js --timeout 10000   # Run a single test file
 npx mocha test/xslint.test.js --grep "sentence"  # Run tests matching a pattern
 ```
 
+Code style is enforced by ESLint (`eslint-config-google` plus `@stylistic`, in `eslint.config.mjs`, run by the `grunt` job on every push and pull request): spaced operators (`@stylistic/space-infix-ops`), no single-letter names (`id-length` minimum 2), and postfix-only increment/decrement (`no-restricted-syntax` bans prefix `++x`/`--x`; `x++` is fine).
+
 ## Architecture
 
 **xslint** is a CLI linter for XSL stylesheets. It runs in two stages: **validators** first establish that the input is valid (each stylesheet is well-formed XML, and every XPath expression compiles), then **linters** run over what passed — the well-formed stylesheets, and the XPath expressions that parse — catching stylistic, semantic, and logical problems. Each validator *partitions* its input: it hands the valid part to the next stage and reports the rest, so one broken file (or one malformed expression) never hides the feedback on the rest.

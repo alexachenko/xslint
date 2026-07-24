@@ -122,7 +122,7 @@ describe('xslint', function() {
     expected.forEach((str) => assert.ok(stdout.includes(str)))
   })
   it('should test incorrect suppress', function() {
-    const suppress='qwerty'
+    const suppress = 'qwerty'
     const stdout = runXslint([
       'test/resources/stylesheets/xsl-with-some-violations.xsl',
       `--suppress=${suppress}`,

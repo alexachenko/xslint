@@ -190,7 +190,8 @@ const xslint = function(pths, options) {
         }
       }
     }
-    for (const stale of unused(list, defects.filter((d) => d.file === file))) {
+    const found = defects.filter((defect) => defect.file === file)
+    for (const stale of unused(list, found)) {
       logger.warn(`Unused xslint-disable directive at ${file}:${stale.line}`)
     }
   }

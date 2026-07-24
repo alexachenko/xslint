@@ -37,8 +37,8 @@ program
 
 try {
   program.parse(process.argv)
-} catch (e) {
-  console.error(e.message)
-  console.debug(e.stack)
+} catch (error) {
+  console.error(error.message)
+  console.debug(error.stack)
   process.exit(1)
 }

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import globals from "globals";
 import jsdoc from "eslint-plugin-jsdoc";
+import stylistic from "@stylistic/eslint-plugin";
 import { FlatCompat } from "@eslint/eslintrc";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,6 +37,7 @@ export default defineConfig([
         tagNamePreference: { returns: "return" }
       }
     },
+    plugins: { "@stylistic": stylistic },
     rules: {
       "valid-jsdoc": "off",
       "require-jsdoc": "off",
@@ -54,7 +56,13 @@ export default defineConfig([
         "error",
         { definedTypes: ["Document", "Node", "Element"] }
       ],
-      "jsdoc/reject-any-type": "off"
+      "jsdoc/reject-any-type": "off",
+      "@stylistic/space-infix-ops": "error",
+      "id-length": ["error", { min: 2 }],
+      "no-restricted-syntax": ["error", {
+        selector: "UpdateExpression[prefix=true]",
+        message: "Use postfix increment/decrement (x++), not prefix (++x)"
+      }]
     }
   },
   {

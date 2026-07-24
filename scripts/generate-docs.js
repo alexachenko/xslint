@@ -117,7 +117,7 @@ const expressions = (kind, lint) => {
 
 const generate = function() {
   const checks = KINDS.flatMap((kind) => allFilesFrom(path.join(CHECKS, kind))
-    .filter((f) => f.endsWith('.yaml'))
+    .filter((file) => file.endsWith('.yaml'))
     .sort()
     .map((yamlFile) => {
       const name = path.basename(yamlFile, '.yaml')

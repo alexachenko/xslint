@@ -225,23 +225,23 @@ const opensComment = function(xpath, at) {
  */
 const opensAxis = function(xpath, at) {
   let axis = ''
-  if (at<xpath.length && xpath[at].match(/[a-zA-Z]/)) {
+  if (at < xpath.length && xpath[at].match(/[a-zA-Z]/)) {
     do {
       axis += xpath[at]
       at++
       if (xpath[at] === ':') {
-        if (xpath[at+1] === ':') {
-          axis += xpath.slice(at, at+2)
+        if (xpath[at + 1] === ':') {
+          axis += xpath.slice(at, at + 2)
           at++
         } else {
           axis = ''
         }
         break
       }
-    } while (at<xpath.length && xpath[at].match(/[a-zA-Z\-:]/))
+    } while (at < xpath.length && xpath[at].match(/[a-zA-Z\-:]/))
   }
   if (!AXES[axis]) {
-    axis=''
+    axis = ''
   }
   return axis
 }
@@ -253,7 +253,7 @@ const opensAxis = function(xpath, at) {
  * @return {boolean} - True when digit or "." with digit starts here
  */
 const opensNumber = function(xpath, at) {
-  return DIGIT.includes(xpath[at]) || (xpath[at] === '.' && DIGIT.includes(xpath[at+1]))
+  return DIGIT.includes(xpath[at]) || (xpath[at] === '.' && DIGIT.includes(xpath[at + 1]))
 }
 
 /**
@@ -263,12 +263,12 @@ const opensNumber = function(xpath, at) {
  * @return {string} - User function
  */
 const opensUserFunction = function(xpath, at) {
-  let func=''
+  let func = ''
   let colon = 0
-  if (at<xpath.length && xpath[at].match(/[a-zA-Z]/)) {
+  if (at < xpath.length && xpath[at].match(/[a-zA-Z]/)) {
     func += xpath[at]
     at++
-    while (at<xpath.length && xpath[at].match(/[a-zA-Z0-9_:]/)) {
+    while (at < xpath.length && xpath[at].match(/[a-zA-Z0-9_:]/)) {
       if (xpath[at].match(/[a-zA-Z0-9_]/)) {
         func = func + xpath[at]
         at++
@@ -283,7 +283,7 @@ const opensUserFunction = function(xpath, at) {
         }
       }
     }
-    if (xpath[at-1] === ':' || xpath[at] !== '(' || colon !== 1) func = ''
+    if (xpath[at - 1] === ':' || xpath[at] !== '(' || colon !== 1) func = ''
   }
   return func
 }
@@ -358,21 +358,21 @@ const afterComment = function(xpath, start) {
  * @return {number} - Offset just past the closing digit
  */
 const afterNumber = function(xpath, start) {
-  let at = start +1
+  let at = start + 1
   let point = 0
-  let e = 0
+  let exponent = 0
   while (at < xpath.length) {
-    if (xpath[at] === '.' && point === 0 && e === 0 ) {
+    if (xpath[at] === '.' && point === 0 && exponent === 0 ) {
       point += 1
       at += 1
     } else if (DIGIT.includes(xpath[at])) {
       at += 1
-    } else if ((xpath[at] === 'e' || xpath[at] === 'E') && e === 0) {
-      e+=1
-      if (DIGIT.includes(xpath[at+1])) {
+    } else if ((xpath[at] === 'e' || xpath[at] === 'E') && exponent === 0) {
+      exponent += 1
+      if (DIGIT.includes(xpath[at + 1])) {
         at += 2
-      } else if (xpath[at+1] ==='+' || xpath[at+1] === '-') {
-        if (DIGIT.includes(xpath[at+2])) {
+      } else if (xpath[at + 1] === '+' || xpath[at + 1] === '-') {
+        if (DIGIT.includes(xpath[at + 2])) {
           at += 3
         } else {
           break
@@ -402,8 +402,8 @@ const afterOther = function(xpath, start) {
     !QUOTES.includes(xpath[at]) &&
     !WHITESPACE.includes(xpath[at]) &&
     !SINGLE[xpath[at]] &&
-    !DOUBLE[xpath.slice(at, at+2)] &&
-    !TRIPLE[xpath.slice(at, at+3)] &&
+    !DOUBLE[xpath.slice(at, at + 2)] &&
+    !TRIPLE[xpath.slice(at, at + 3)] &&
     !opensMore(xpath, at) &&
     !opensComment(xpath, at) &&
     !opensUserFunction(xpath, at) &&
@@ -463,12 +463,12 @@ const tokenized = function(xpath) {
     } else if (more) {
       type = MORE[more]
       at += more.length
-    } else if (TRIPLE[xpath.slice(at, at+3)]) {
-      type = TRIPLE[xpath.slice(at, at+3)]
-      at+=3
-    } else if (DOUBLE[xpath.slice(at, at+2)]) {
-      type = DOUBLE[xpath.slice(at, at+2)]
-      at+=2
+    } else if (TRIPLE[xpath.slice(at, at + 3)]) {
+      type = TRIPLE[xpath.slice(at, at + 3)]
+      at += 3
+    } else if (DOUBLE[xpath.slice(at, at + 2)]) {
+      type = DOUBLE[xpath.slice(at, at + 2)]
+      at += 2
     } else if (SINGLE[xpath[at]]) {
       type = SINGLE[xpath[at]]
       at++
