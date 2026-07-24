@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Declare `repository` (so `npm publish --provenance` validates) and a
+  `files` allowlist that ships only `src`, keeping `coverage`, tests, and the
+  dev-only `patches` out of the published package (#346).
+
 - Publish releases from a GitHub Actions workflow via npm OIDC trusted
   publishing (no token to rotate, with provenance), promoting the changelog and
   cutting a GitHub Release; `@rultor release` still validates, tests, and pushes
