@@ -87,4 +87,21 @@ describe('reporters', function() {
     const log = JSON.parse(capture(reporterOf('sarif'), [defect('error')]))
     assert.equal(log.runs[0].results[0].level, 'error')
   })
+  it('emits a GitHub warning command at the defect location', function() {
+    assert.ok(
+      capture(reporterOf('github'), [defect('warning')])
+        .includes('::warning file=sheets/a.xsl,line=16,col=3'),
+    )
+  })
+  it('maps an error defect to a GitHub error command', function() {
+    assert.ok(
+      capture(reporterOf('github'), [defect('error')]).startsWith('::error '),
+    )
+  })
+  it('carries the rule name as the GitHub annotation title', function() {
+    assert.ok(
+      capture(reporterOf('github'), [defect('warning')])
+        .includes('title=short-names'),
+    )
+  })
 })

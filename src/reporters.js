@@ -104,14 +104,54 @@ const sarif = function(defects) {
 }
 
 /**
+ * Escape a value for the message data of a workflow command.
+ * @param {string} data - Raw text
+ * @return {string} - Escaped text
+ */
+const escapedData = function(data) {
+  return String(data)
+    .replace(/%/g, '%25')
+    .replace(/\r/g, '%0D')
+    .replace(/\n/g, '%0A')
+}
+
+/**
+ * Escape a value for a property of a workflow command, where the property
+ * delimiters also need escaping.
+ * @param {string} data - Raw text
+ * @return {string} - Escaped text
+ */
+const escapedProperty = function(data) {
+  return escapedData(data).replace(/:/g, '%3A').replace(/,/g, '%2C')
+}
+
+/**
+ * Print defects as GitHub Actions workflow commands, so a run inside a GitHub
+ * Action renders each as an inline annotation on the pull-request diff with no
+ * separate upload step.
+ * @param {Array.<object>} defects - Defects to print
+ */
+const github = function(defects) {
+  for (const defect of defects) {
+    console.log(
+      `::${LEVEL[defect.severity]} ` +
+      `file=${escapedProperty(located(defect.file))},` +
+      `line=${defect.line},col=${defect.pos},` +
+      `title=${escapedProperty(defect.name)}` +
+      `::${escapedData(defect.message)}`,
+    )
+  }
+}
+
+/**
  * Reporters by format name, each a function that writes given defects.
  * @type {{[format: string]: function(Array.<object>): void}}
  */
-const REPORTERS = {text: text, json: json, sarif: sarif}
+const REPORTERS = {text: text, json: json, sarif: sarif, github: github}
 
 /**
  * The reporter for a format, so a caller writes defects without knowing how.
- * @param {string} format - Format name (text, json, or sarif)
+ * @param {string} format - Format name (text, json, sarif, or github)
  * @return {function(Array.<object>): void} - Reporter that writes the defects
  */
 const reporterOf = function(format) {

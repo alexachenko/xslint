@@ -144,12 +144,18 @@ variable turns coloring off everywhere.
 
 `--format` selects the output. `text` (the default) is the human format above;
 `json` and `sarif` print a single document to stdout — logs stay on stderr, so
-the document is clean to pipe or redirect:
+the document is clean to pipe or redirect; `github` prints GitHub Actions
+workflow commands:
 
 ```bash
 xslint --format json path/to/dir     # a flat array of defects
 xslint --format sarif path/to/dir    # a SARIF 2.1.0 log
+xslint --format github path/to/dir   # ::warning/::error annotations for CI
 ```
+
+Inside a GitHub Action, `--format github` makes each defect an inline
+annotation on the pull-request diff with no upload step — the lowest-friction
+way to see findings on a review.
 
 SARIF feeds GitHub code scanning, so xslint findings appear as annotations on
 pull requests:

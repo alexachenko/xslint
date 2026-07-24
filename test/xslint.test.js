@@ -374,6 +374,13 @@ describe('xslint', function() {
     ])
     assert.equal(JSON.parse(streams.stdout).version, '2.1.0')
   })
+  it('should print GitHub workflow commands with --format github', function() {
+    const streams = xslintStreams([
+      'test/resources/stylesheets/xsl-with-some-violations.xsl',
+      '--format=github',
+    ])
+    assert.ok(/::(warning|error) file=/.test(streams.stdout))
+  })
   it('should reject an unknown --format value', function() {
     const status = xslintStatus([
       'test/resources/stylesheets/xsl-with-some-violations.xsl',

@@ -21,7 +21,7 @@ program
   .option('--quiet', 'Suppress informational logs, printing only defects')
   .addOption(
     new Option('--format <format>', 'Output format for defects')
-      .choices(['text', 'json', 'sarif'])
+      .choices(['text', 'json', 'sarif', 'github'])
       .default('text'),
   )
   .option('--config <path>', 'Path to a configuration file')

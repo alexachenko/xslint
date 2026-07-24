@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add a `--format github` reporter that prints GitHub Actions workflow
+  commands, so findings render as inline annotations on the pull-request diff
+  with no SARIF-upload step (#333).
+
 - Evaluate suppression once per run in the per-file XPath linter instead of
   re-checking it for every file, matching the other linters (#331).
 
