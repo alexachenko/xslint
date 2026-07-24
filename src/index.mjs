@@ -44,6 +44,6 @@ try {
   program.parse(process.argv)
 } catch (error) {
   console.error(error.message)
-  console.debug(error.stack)
+  console.error(error.stack)
   process.exit(1)
 }

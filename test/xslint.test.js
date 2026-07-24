@@ -301,6 +301,15 @@ describe('xslint', function() {
       'Rule \'no-such-rule\' in configuration does not exist',
     ))
   })
+  it('should keep stdout clean when it fails to read the config', function() {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xslint-'))
+    const streams = xslintStreams([
+      'test/resources/stylesheets/xsl-with-no-violations.xsl',
+      `--config=${dir}`,
+    ])
+    fs.rmSync(dir, {recursive: true, force: true})
+    assert.equal(streams.stdout, '')
+  })
   it('should read the log level from the config file', function() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xslint-'))
     const cfg = path.join(dir, '.xslint.yml')

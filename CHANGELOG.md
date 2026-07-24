@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Send a fatal CLI error's stack trace to stderr instead of stdout, so stdout
+  stays clean for defects and machine-readable output (#318).
+
 - Reach 100% statement, branch, function, and line coverage and raise the
   gate from 90% to 100% (the CLI bootstrap `src/index.mjs` is excluded, as it
   already is from mutation testing) (#305).
