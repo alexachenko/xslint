@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Apply `--log-level`/`--quiet` before reading the configuration, rule
+  patterns, and suppressions, so a raised level now silences their warnings
+  too (#299).
 - Color output only for an interactive terminal and honor `NO_COLOR`, so
   redirected or piped output no longer carries raw ANSI escapes (#302).
 - Report and ignore `.xslint.yml` values of the wrong type — a non-numeric

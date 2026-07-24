@@ -102,16 +102,14 @@ const excluded = function(file, patterns, base) {
 }
 
 /**
- * Set the log level, taking the command line first, then the configuration,
- * then the default.
- * @param {{logLevel: string|undefined, quiet: boolean|undefined}} options - CLI
- *  options
- * @param {{logLevel: string|null, quiet: boolean|null}} config - Configuration
+ * The log level a quiet flag and an explicit level resolve to: quiet forces
+ * warnings-only, otherwise the explicit level, otherwise info.
+ * @param {boolean|null|undefined} quiet - Whether to drop informational logs
+ * @param {string|null|undefined} level - Explicit level, if any
+ * @return {string} - The level to set
  */
-const processOptions = function(options, config) {
-  const quiet = options.quiet ?? config.quiet ?? false
-  const level = options.logLevel ?? config.logLevel ?? levels.INFO
-  logger.setLevel(quiet ? levels.WARNING : level)
+const leveled = function(quiet, level) {
+  return quiet ? levels.WARNING : level ?? levels.INFO
 }
 
 /**
@@ -127,7 +125,11 @@ const processOptions = function(options, config) {
  * }} options - CLI options
  */
 const xslint = function(pths, options) {
+  logger.setLevel(leveled(options.quiet, options.logLevel))
   const config = configFrom(options.config)
+  if (options.quiet == null && options.logLevel == null) {
+    logger.setLevel(leveled(config.quiet, config.logLevel))
+  }
   const disabled = []
   const overrides = {}
   for (const [pattern, severity] of Object.entries(config.rules)) {
@@ -145,7 +147,6 @@ const xslint = function(pths, options) {
   }
   const suppressions = [...validatedSuppressions(options.suppress), ...disabled]
   const maxWarnings = options.maxWarnings ?? config.maxWarnings ?? -1
-  processOptions(options, config)
   logger.info(`Directories and files to process: ${pths.join(', ')}`)
   pths = pths.map((pth) => path.resolve(process.cwd(), pth))
   let stylesheets = []

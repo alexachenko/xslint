@@ -129,6 +129,14 @@ describe('xslint', function() {
     ])
     assert.ok(stdout.includes(`Check with substring '${suppress}' does not exist. Delete this '--suppress' or use another one.`))
   })
+  it('should silence the bad-suppress warning under a raised log level', function() {
+    const streams = xslintStreams([
+      'test/resources/stylesheets/xsl-with-some-violations.xsl',
+      '--suppress=qwerty',
+      '--log-level=error',
+    ])
+    assert.ok(!streams.stderr.includes('does not exist'))
+  })
   it('should test non-existing directory', function() {
     const dir = 'non-existing-directory'
     const stdout = runXslint([dir])
