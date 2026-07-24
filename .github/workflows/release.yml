@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+name: release
+'on':
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install
+      - name: Stamp the released version
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          today="$(date +%F)"
+          sed -i "s/0\.0\.0/${VERSION}/" package.json
+          sed -i "s/0\.0\.0/${VERSION}/" src/version.js
+          sed -i "s/0000-00-00/${today}/" src/version.js
+      - run: npm test
+      - run: npm run coverage
+      - name: Publish to npm via OIDC
+        run: |
+          npm install -g npm@latest
+          npm publish --provenance --access public
+      - name: Promote the changelog and collect the release notes
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          today="$(date +%F)"
+          node scripts/changelog-release.js "${VERSION}" "${today}" > notes.md
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: gh release create "${VERSION}" --title "${VERSION}" --notes-file notes.md
+      - name: Commit the promoted changelog to master
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CHANGELOG.md
+          git commit -m "changelog: release ${VERSION}"
+          git push origin HEAD:master
