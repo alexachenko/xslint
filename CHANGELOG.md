@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Extend the `node:`-prefix ban from `require` to ESM `import` as well, and use
+  bare specifiers in `eslint.config.mjs` (#319).
+
 - Name an out-of-tree file by its absolute path in `json`/`sarif` output rather
   than a `..`-climbing relative path that GitHub code scanning cannot map
   (#320).

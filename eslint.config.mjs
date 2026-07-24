@@ -4,8 +4,8 @@
  */
 
 import { defineConfig } from "eslint/config";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import path from "path";
+import { fileURLToPath } from "url";
 import js from "@eslint/js";
 import globals from "globals";
 import jsdoc from "eslint-plugin-jsdoc";
@@ -117,6 +117,11 @@ export default defineConfig([
             "CallExpression[callee.name='require'][arguments.0.value=/^node:/]",
           message:
             "Do not use the 'node:' prefix in require; use the bare name"
+        },
+        {
+          selector: "ImportDeclaration[source.value=/^node:/]",
+          message:
+            "Do not use the 'node:' prefix in import; use the bare name"
         }
       ]
     }
