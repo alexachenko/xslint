@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Type the `TOKENS` map with a non-drifting index signature instead of a
+  hand-maintained key-by-key literal that had fallen out of sync (#327).
+
 - Count every `src` file toward the 100% coverage gate (`c8` `all`), so a module
   shipped without a test now fails CI instead of being silently omitted (#322).
 
