@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Authenticate Codecov uploads with `CODECOV_TOKEN`, so coverage reports upload
+  and the badge reflects real coverage (#341).
+
 - Add a `--format github` reporter that prints GitHub Actions workflow
   commands, so findings render as inline annotations on the pull-request diff
   with no SARIF-upload step (#333).
