@@ -17,6 +17,7 @@ release:
     sed -i "s/0\.0\.0/${tag}/" src/version.js
     sed -i "s/0000-00-00/$(date +%Y-%m-%d)/" src/version.js
     npm test
+    npm run coverage
     git commit -am "set version to ${tag}"
     chmod 600 ../npmrc
     echo "xslint dry run:"
@@ -28,3 +29,4 @@ release:
 merge:
   script: |-
     npm test
+    npm run coverage
