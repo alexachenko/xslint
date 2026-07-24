@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Evaluate suppression once per run in the per-file XPath linter instead of
+  re-checking it for every file, matching the other linters (#331).
+
 - Run the coverage gate in Rultor's merge and release builds, so a drop below
   100% blocks the merge and the release rather than only annotating the pull
   request (#328).

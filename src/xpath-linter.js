@@ -54,11 +54,11 @@ const evaluateXpath = function(xsl, xpath) {
 const lintByXpath = function(corpus, suppressions = []) {
   logger.debug(`Xpath linting started`)
   const defects = []
+  const active = PACKS.filter(
+    (pack) => !suppressions.some((sup) => pack.name.includes(sup)),
+  )
   for (const {file, xsl} of corpus) {
-    for (const pack of PACKS) {
-      if (suppressions.some((sup) => pack.name.includes(sup))) {
-        continue
-      }
+    for (const pack of active) {
       for (const node of evaluateXpath(xsl, pack.xpath)) {
         defects.push({
           name: pack.name,
