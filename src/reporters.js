@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-const path = require('node:path')
+const path = require('path')
 const {out} = require('./output')
 const version = require('./version')
 

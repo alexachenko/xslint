@@ -19,7 +19,9 @@ npx mocha test/xslint.test.js --timeout 10000   # Run a single test file
 npx mocha test/xslint.test.js --grep "sentence"  # Run tests matching a pattern
 ```
 
-Code style is enforced by ESLint (`eslint-config-google` plus `@stylistic`, in `eslint.config.mjs`, run by the `grunt` job on every push and pull request): spaced operators (`@stylistic/space-infix-ops`), no single-letter names (`id-length` minimum 2), and postfix-only increment/decrement (`no-restricted-syntax` bans prefix `++x`/`--x`; `x++` is fine).
+Code style is enforced by ESLint (`eslint-config-google` plus `@stylistic`, in `eslint.config.mjs`, run by the `grunt` job on every push and pull request): spaced operators (`@stylistic/space-infix-ops`), no single-letter names (`id-length` minimum 2), postfix-only increment/decrement (`no-restricted-syntax` bans prefix `++x`/`--x`; `x++` is fine), and bare module names in `require` (`no-restricted-syntax` bans the `node:` prefix — write `require('path')`, not `require('node:path')`).
+
+**Every code-style convention must be machine-enforced.** When a style or consistency issue is fixed, do not just fix the instances — add an automated check that fails when the style is violated again (an ESLint rule, preferably a new `no-restricted-syntax` selector so no dependency is added, or a CI job), in the same change, so the mistake cannot recur.
 
 ## Architecture
 

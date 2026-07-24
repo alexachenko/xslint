@@ -59,10 +59,18 @@ export default defineConfig([
       "jsdoc/reject-any-type": "off",
       "@stylistic/space-infix-ops": "error",
       "id-length": ["error", { min: 2 }],
-      "no-restricted-syntax": ["error", {
-        selector: "UpdateExpression[prefix=true]",
-        message: "Use postfix increment/decrement (x++), not prefix (++x)"
-      }]
+      "no-restricted-syntax": ["error",
+        {
+          selector: "UpdateExpression[prefix=true]",
+          message: "Use postfix increment/decrement (x++), not prefix (++x)"
+        },
+        {
+          selector:
+            "CallExpression[callee.name='require'][arguments.0.value=/^node:/]",
+          message:
+            "Do not use the 'node:' prefix in require; use the bare name"
+        }
+      ]
     }
   },
   {

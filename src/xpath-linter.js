@@ -5,7 +5,7 @@
 
 const {nodes} = require('./xpath')
 const {allFilesFrom, yaml} = require('./helpers')
-const path = require('node:path')
+const path = require('path')
 const {logger} = require('./logger')
 
 /**

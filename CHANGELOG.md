@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Use bare module names in `require` (drop the `node:` prefix) and enforce it
+  with an ESLint rule; collapse the duplicate `warn`/`warning` naming in the
+  logger and writer (#304).
 - Apply `--log-level`/`--quiet` before reading the configuration, rule
   patterns, and suppressions, so a raised level now silences their warnings
   too (#299).

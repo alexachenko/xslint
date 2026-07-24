@@ -5,7 +5,7 @@
 
 const {tokenized, TOKENS} = require('./tokens')
 const {yaml} = require('./helpers')
-const path = require('node:path')
+const path = require('path')
 const {logger} = require('./logger')
 
 /**

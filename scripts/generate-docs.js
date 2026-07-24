@@ -5,8 +5,8 @@
 
 'use strict'
 
-const path = require('node:path')
-const fs = require('node:fs')
+const path = require('path')
+const fs = require('fs')
 const {allFilesFrom, yaml} = require('../src/helpers')
 const {marked} = require('marked')
 

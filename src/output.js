@@ -29,22 +29,19 @@ const colorful = function(stream) {
  * @return {{
  *  debug: function(string, ...*): void,
  *  info: function(string, ...*): void,
- *  warn: function(string, ...*): void,
  *  warning: function(string, ...*): void,
  *  error: function(string, ...*): void
  * }} - Writer bound to the sink
  */
 const writer = function(sink, colored = true) {
   const paint = (color, text) => colored ? safe[color](text) : text
-  const write = {
+  return {
     debug: (msg, ...args) => sink(`${paint('gray', '[DEBUG]')} ${msg}`, ...args),
     info: (msg, ...args) => sink(`${paint('blue', '[INFO]')} ${msg}`, ...args),
-    warn: (msg, ...args) =>
+    warning: (msg, ...args) =>
       sink(`${paint('yellow', '[WARNING]')} ${msg}`, ...args),
-    warning: (msg, ...args) => write.warn(msg, ...args),
     error: (msg, ...args) => sink(`${paint('red', '[ERROR]')} ${msg}`, ...args),
   }
-  return write
 }
 
 module.exports = {

@@ -7,13 +7,12 @@ const {err} = require('./output')
 
 /**
  * Log levels.
- * @type {{ERROR: string, INFO: string, DEBUG: string, WARN: string}}
+ * @type {{ERROR: string, INFO: string, DEBUG: string, WARNING: string}}
  */
 const LOG_LEVELS = {
   DEBUG: 'debug',
   INFO: 'info',
   WARNING: 'warning',
-  WARN: 'warn',
   ERROR: 'error',
 }
 
@@ -25,7 +24,6 @@ const LEVELS = {
   [LOG_LEVELS.DEBUG]: 0,
   [LOG_LEVELS.INFO]: 1,
   [LOG_LEVELS.WARNING]: 2,
-  [LOG_LEVELS.WARN]: 2,
   [LOG_LEVELS.ERROR]: 3,
 }
 
@@ -54,7 +52,7 @@ const logger = {
   },
   warn: (msg, ...args) => {
     if (currentLevel <= LEVELS[LOG_LEVELS.WARNING]) {
-      err.warn(msg, ...args)
+      err.warning(msg, ...args)
     }
   },
   error: (msg, ...args) => {

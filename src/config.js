@@ -4,7 +4,7 @@
  */
 
 const fs = require('fs')
-const path = require('node:path')
+const path = require('path')
 const {yaml} = require('./helpers')
 const {logger} = require('./logger')
 

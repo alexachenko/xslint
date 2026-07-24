@@ -5,7 +5,7 @@
 
 const {nodes, isValid} = require('./xpath')
 const {yaml} = require('./helpers')
-const path = require('node:path')
+const path = require('path')
 const {logger} = require('./logger')
 
 /**
