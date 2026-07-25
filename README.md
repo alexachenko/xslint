@@ -249,10 +249,20 @@ silently by `--fix`:
 xslint --fix-suggestions path/to/dir
 ```
 
-Today this covers `using-disable-output-escaping` — the attribute is removed,
-which changes how the output is escaped, so you opt in. Checks whose correction
-needs real judgment (a fresh name, a more specific path) stay report-only. A
-run without `--fix` reports how many defects each option would fix.
+Today this covers:
+
+- `using-disable-output-escaping` — the attribute is removed, which changes how
+  the output is escaped.
+- `output-method-xml` — `method="xml"` becomes `"html"` when the stylesheet
+  emits HTML.
+- `missing-version-in-stylesheet` — `version="1.0"` is declared (a guess you may
+  want to change).
+- `mode-or-priority-without-match` — the orphan `mode` or `priority` attribute
+  is removed.
+
+Checks whose correction needs real judgment (a fresh name, a more specific
+path) stay report-only. A run without `--fix` reports how many defects each
+option would fix.
 
 Pass `--fix-dry-run` to see what would remain after fixing, without writing any
 file:

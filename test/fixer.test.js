@@ -101,6 +101,31 @@ describe('fixer', function() {
       fixture('using-disable-output-escaping.fixed.xsl'),
     )
   })
+  it('should switch an xml output method to html with --fix-suggestions',
+    function() {
+      const file = scratch(fixture('output-method-xml.xsl'))
+      runXslint(['--fix-suggestions', file])
+      assert.equal(
+        fs.readFileSync(file, 'utf-8'),
+        fixture('output-method-xml.fixed.xsl'),
+      )
+    })
+  it('should declare a missing version with --fix-suggestions', function() {
+    const file = scratch(fixture('missing-version-in-stylesheet.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('missing-version-in-stylesheet.fixed.xsl'),
+    )
+  })
+  it('should drop an orphan mode with --fix-suggestions', function() {
+    const file = scratch(fixture('mode-or-priority-without-match.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('mode-or-priority-without-match.fixed.xsl'),
+    )
+  })
   it('should announce how many defects --fix would fix', function() {
     const file = scratch(dirty)
     assert.ok(xslintStreams([file]).stderr.includes('fixable with --fix'))

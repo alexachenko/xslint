@@ -69,8 +69,9 @@ const lintByXpath = function(corpus, suppressions = []) {
           line: node.lineNumber,
           pos: node.columnNumber,
         }
-        if (FIXERS[pack.name]) {
-          defect.fix = FIXERS[pack.name](node)
+        const fix = FIXERS[pack.name] && FIXERS[pack.name](node)
+        if (fix) {
+          defect.fix = fix
         }
         defects.push(defect)
       }

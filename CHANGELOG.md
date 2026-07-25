@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add three more `--fix-suggestions`, each a `src/fixers.js` registry entry:
+  `output-method-xml` (switch `method="xml"` to `"html"`),
+  `missing-version-in-stylesheet` (declare `version="1.0"`), and
+  `mode-or-priority-without-match` (delete the orphan attribute, when exactly
+  one of `mode`/`priority` is present) (#334).
+
 - Add a suggestion tier to `--fix`. A fix marked `suggestion` is opinionated —
   it changes behavior, removes code, or is one of several valid corrections —
   so `--fix` leaves it and only the new `--fix-suggestions` applies it. A
