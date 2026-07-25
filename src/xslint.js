@@ -12,6 +12,7 @@ const {
 } = require('./xpath-validator')
 const {lintByXpath, names: xpathChecks} = require('./xpath-linter')
 const {lintByCorpus, names: corpusChecks} = require('./corpus-linter')
+const {lintByAxis, names: axisChecks} = require('./xpath-axis-linter')
 const {lintByFormat, names: formatChecks} = require('./xpath-format-linter')
 const {fixed} = require('./fixer')
 const {logger, levels} = require('./logger')
@@ -28,6 +29,7 @@ const {minimatch} = require('minimatch')
 const LINTERS = [
   lintByXpath,
   lintByCorpus,
+  lintByAxis,
 ]
 
 /**
@@ -47,7 +49,7 @@ const EXPRESSION_LINTERS = [
  */
 const CHECKS = [
   ...xslChecks, ...xpathValidatorChecks,
-  ...xpathChecks, ...corpusChecks, ...formatChecks,
+  ...xpathChecks, ...corpusChecks, ...axisChecks, ...formatChecks,
 ]
 
 /**

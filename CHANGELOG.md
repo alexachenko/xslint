@@ -9,6 +9,14 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `unabbreviated-axis` fixable by `--fix`: it is now a token-aware check
+  (`src/xpath-axis-linter.js`) that reports one defect per verbose axis and
+  abbreviates it (`child::x`→`x`, `attribute::x`→`@x`, `parent::node()`→`..`).
+  It reads every XPath and pattern attribute, so an axis in a template `match`
+  is caught, and points at each occurrence rather than the whole element; a
+  `parent::` with any other node test, having no short form, is no longer
+  flagged (#334).
+
 - Add a `--fix` mode (`--fix-dry-run` to preview) that rewrites the
   mechanically-fixable defects in place. It covers `redundant-whitespace`
   today: a check-agnostic engine (`src/fixer.js`) applies the `fix` a defect

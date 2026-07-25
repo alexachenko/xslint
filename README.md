@@ -225,11 +225,16 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers `redundant-whitespace`: a doubled space is collapsed to one,
-and a space leading or trailing an XPath expression is removed. Only the exact
-span that was flagged is rewritten — the rest of the file is left
-byte-for-byte intact — and a fix is skipped rather than applied when the source
-no longer matches what it expects. Checks whose correction needs a human
+Today this covers two checks:
+
+- `redundant-whitespace` — a doubled space is collapsed to one, and a space
+  leading or trailing an XPath expression is removed.
+- `unabbreviated-axis` — a verbose axis specifier is shortened: `child::x`
+  becomes `x`, `attribute::x` becomes `@x`, and `parent::node()` becomes `..`.
+
+Only the exact span that was flagged is rewritten — the rest of the file is
+left byte-for-byte intact — and a fix is skipped rather than applied when the
+source no longer matches what it expects. Checks whose correction needs a human
 decision stay report-only.
 
 Pass `--fix-dry-run` to see what would remain after fixing, without writing any

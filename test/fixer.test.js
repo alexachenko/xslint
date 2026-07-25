@@ -11,51 +11,66 @@ const os = require('os')
 const path = require('path')
 
 /**
- * A stylesheet carrying redundant whitespace, copied into a temporary file so
- * a fixing run never mutates the committed fixture.
- * @type {string}
+ * Read one of the committed fix fixtures.
+ * @param {string} name - Fixture base name
+ * @return {string} - The fixture's content
  */
-const dirty = fs.readFileSync(
-  path.resolve(__dirname, 'resources', 'fix', 'redundant-whitespace.xsl'),
-  'utf-8',
-)
+const fixture = function(name) {
+  return fs.readFileSync(
+    path.resolve(__dirname, 'resources', 'fix', name),
+    'utf-8',
+  )
+}
 
 /**
- * The same stylesheet with every redundant whitespace run collapsed or trimmed.
+ * A stylesheet carrying redundant whitespace, and its collapsed form.
  * @type {string}
  */
-const clean = fs.readFileSync(
-  path.resolve(__dirname, 'resources', 'fix', 'redundant-whitespace.fixed.xsl'),
-  'utf-8',
-)
+const dirty = fixture('redundant-whitespace.xsl')
+const clean = fixture('redundant-whitespace.fixed.xsl')
 
 /**
- * Copy the dirty fixture into a fresh temporary file and return its path.
+ * Copy the given content into a fresh temporary file, so a fixing run never
+ * mutates the committed fixture, and return its path.
+ * @param {string} content - Stylesheet to seed the file with
  * @return {string} - Path of the temporary stylesheet
  */
-const scratch = function() {
+const scratch = function(content) {
   const file = path.join(
     fs.mkdtempSync(path.join(os.tmpdir(), 'xslint-fix-')),
     'sheet.xsl',
   )
-  fs.writeFileSync(file, dirty)
+  fs.writeFileSync(file, content)
   return file
 }
 
 describe('fixer', function() {
   it('should collapse redundant whitespace in place with --fix', function() {
-    const file = scratch()
+    const file = scratch(dirty)
     runXslint(['--fix', file])
     assert.equal(fs.readFileSync(file, 'utf-8'), clean)
   })
   it('cannot touch the file with --fix-dry-run', function() {
-    const file = scratch()
+    const file = scratch(dirty)
     runXslint(['--fix-dry-run', file])
     assert.equal(fs.readFileSync(file, 'utf-8'), dirty)
   })
   it('should drop the fixed defect from the report', function() {
-    const file = scratch()
+    const file = scratch(dirty)
     assert.ok(!xslintStreams(['--fix', file]).stdout.includes('redundant-whitespace'))
+  })
+  it('should abbreviate verbose axes in place with --fix', function() {
+    const file = scratch(fixture('unabbreviated-axis.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('unabbreviated-axis.fixed.xsl'),
+    )
+  })
+  it('cannot abbreviate a parent axis that has no short form', function() {
+    const file = scratch(fixture('unabbreviated-axis.xsl'))
+    runXslint(['--fix', file])
+    assert.ok(fs.readFileSync(file, 'utf-8').includes('parent::n'))
   })
   it('should collapse a run whose span it can verify', function() {
     assert.equal(
