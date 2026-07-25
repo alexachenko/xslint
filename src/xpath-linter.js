@@ -4,6 +4,7 @@
  */
 
 const {nodes} = require('./xpath')
+const {FIXERS} = require('./fixers')
 const {allFilesFrom, yaml} = require('./helpers')
 const path = require('path')
 const {logger} = require('./logger')
@@ -59,15 +60,19 @@ const lintByXpath = function(corpus, suppressions = []) {
   )
   for (const {file, xsl} of corpus) {
     for (const pack of active) {
-      for (const node of evaluateXpath(xsl, pack.xpath)) {
-        defects.push({
+      for (const node of nodes(xsl, pack.xpath)) {
+        const defect = {
           name: pack.name,
           severity: pack.severity,
           message: pack.message,
           file: file,
-          line: node.line,
-          pos: node.pos,
-        })
+          line: node.lineNumber,
+          pos: node.columnNumber,
+        }
+        if (FIXERS[pack.name]) {
+          defect.fix = FIXERS[pack.name](node)
+        }
+        defects.push(defect)
       }
     }
   }

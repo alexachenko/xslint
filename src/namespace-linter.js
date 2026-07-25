@@ -4,6 +4,7 @@
  */
 
 const {yaml} = require('./helpers')
+const {deletion} = require('./fixes')
 const path = require('path')
 const {logger} = require('./logger')
 
@@ -89,12 +90,7 @@ const lintByNamespace = function(corpus, suppressions = []) {
             file: file,
             line: attribute.lineNumber,
             pos: attribute.columnNumber - attribute.name.length - 1,
-            fix: {
-              line: attribute.lineNumber,
-              col: attribute.columnNumber - attribute.name.length - 2,
-              value: ` ${attribute.name}="${attribute.value}"`,
-              replacement: '',
-            },
+            fix: deletion(attribute),
           })
         }
       }

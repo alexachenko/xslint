@@ -27,6 +27,10 @@ program
   .option('--config <path>', 'Path to a configuration file')
   .option('--fix', 'Rewrite the fixable defects in place')
   .option(
+    '--fix-suggestions',
+    'Apply the suggested fixes too, not just the safe ones',
+  )
+  .option(
     '--fix-dry-run',
     'Report what --fix would change without writing files',
   )

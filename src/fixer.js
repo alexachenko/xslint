@@ -31,12 +31,17 @@ const offsetAt = function(text, line, col) {
  * offsets stay valid.
  * @param {Array.<{file: string, content: string}>} sources - Original sources
  * @param {Array.<{file: string, fix: {line: number, col: number, value: string,
- *  replacement: string}}>} defects - Defects, only those carrying a `fix` fixed
+ *  replacement: string, suggestion: boolean}}>} defects - Defects, only those
+ *  carrying a `fix` fixed
+ * @param {boolean} suggestions - Whether to also apply the fixes marked as
+ *  suggestions, not just the safe ones
  * @return {{contents: Map.<string, string>, applied: Array.<object>}} - The
  *  rewritten content by file and the defects that were applied
  */
-const fixed = function(sources, defects) {
-  const fixable = defects.filter((defect) => defect.fix)
+const fixed = function(sources, defects, suggestions = false) {
+  const fixable = defects.filter(
+    (defect) => defect.fix && (suggestions || !defect.fix.suggestion),
+  )
   const contents = new Map()
   const applied = []
   for (const {file, content} of sources) {

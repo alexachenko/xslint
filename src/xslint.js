@@ -131,7 +131,8 @@ const leveled = function(quiet, level) {
  *  config: string|undefined,
  *  format: string,
  *  fix: boolean|undefined,
- *  fixDryRun: boolean|undefined
+ *  fixDryRun: boolean|undefined,
+ *  fixSuggestions: boolean|undefined
  * }} options - CLI options
  */
 const xslint = function(pths, options) {
@@ -210,8 +211,8 @@ const xslint = function(pths, options) {
   let reported = defects.filter(
     (defect) => !suppresses(directives.get(defect.file), defect),
   )
-  if (options.fix || options.fixDryRun) {
-    const {contents, applied} = fixed(sources, reported)
+  if (options.fix || options.fixDryRun || options.fixSuggestions) {
+    const {contents, applied} = fixed(sources, reported, options.fixSuggestions)
     for (const [file, content] of contents) {
       if (!options.fixDryRun) {
         fs.writeFileSync(file, content)
@@ -221,6 +222,19 @@ const xslint = function(pths, options) {
       logger.info(`Fixed ${applied.length} defects in ${contents.size} files`)
     }
     reported = reported.filter((defect) => !applied.includes(defect))
+  } else {
+    const auto = reported.filter(
+      (defect) => defect.fix && !defect.fix.suggestion,
+    )
+    const suggested = reported.filter(
+      (defect) => defect.fix && defect.fix.suggestion,
+    )
+    if (auto.length > 0) {
+      logger.info(`${auto.length} defects fixable with --fix`)
+    }
+    if (suggested.length > 0) {
+      logger.info(`${suggested.length} more fixable with --fix-suggestions`)
+    }
   }
   logger.info(`Processed files: ${stylesheets.length}`)
   if (reported.length > 0) {

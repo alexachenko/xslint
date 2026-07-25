@@ -238,8 +238,21 @@ Today this covers four checks:
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the
-source no longer matches what it expects. Checks whose correction needs a human
-decision stay report-only.
+source no longer matches what it expects.
+
+Other defects have a correction that is clear but *opinionated* — it changes
+behavior, removes code, or is one of several reasonable choices. Those are
+offered as **suggestions**, applied only with `--fix-suggestions`, never
+silently by `--fix`:
+
+```bash
+xslint --fix-suggestions path/to/dir
+```
+
+Today this covers `using-disable-output-escaping` — the attribute is removed,
+which changes how the output is escaped, so you opt in. Checks whose correction
+needs real judgment (a fresh name, a more specific path) stay report-only. A
+run without `--fix` reports how many defects each option would fix.
 
 Pass `--fix-dry-run` to see what would remain after fixing, without writing any
 file:

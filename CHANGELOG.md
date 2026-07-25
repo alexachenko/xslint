@@ -9,6 +9,14 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add a suggestion tier to `--fix`. A fix marked `suggestion` is opinionated —
+  it changes behavior, removes code, or is one of several valid corrections —
+  so `--fix` leaves it and only the new `--fix-suggestions` applies it. A
+  declarative xpath rule can now carry a fix through `src/fixers.js` without
+  becoming a code-based linter; `using-disable-output-escaping` is the first
+  suggestion (the attribute is deleted). A run without `--fix` now reports how
+  many defects each option would fix (#334).
+
 - Make `use-node-set-extension` fixable by `--fix`: it is now a code-based
   check (`src/node-set-linter.js`) that reports one defect per `node-set()`
   call in a `@select` of an XSLT 2.0/3.0 stylesheet, with a fix that unwraps it

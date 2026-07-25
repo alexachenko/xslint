@@ -88,6 +88,27 @@ describe('fixer', function() {
       fixture('use-node-set-extension.fixed.xsl'),
     )
   })
+  it('cannot apply a suggestion with plain --fix', function() {
+    const file = scratch(fixture('using-disable-output-escaping.xsl'))
+    runXslint(['--fix', file])
+    assert.ok(fs.readFileSync(file, 'utf-8').includes('disable-output-escaping'))
+  })
+  it('should apply a suggestion with --fix-suggestions', function() {
+    const file = scratch(fixture('using-disable-output-escaping.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('using-disable-output-escaping.fixed.xsl'),
+    )
+  })
+  it('should announce how many defects --fix would fix', function() {
+    const file = scratch(dirty)
+    assert.ok(xslintStreams([file]).stderr.includes('fixable with --fix'))
+  })
+  it('should announce a suggestion under --fix-suggestions', function() {
+    const file = scratch(fixture('using-disable-output-escaping.xsl'))
+    assert.ok(xslintStreams([file]).stderr.includes('fixable with --fix-suggestions'))
+  })
   it('should collapse a run whose span it can verify', function() {
     assert.equal(
       fixed(
