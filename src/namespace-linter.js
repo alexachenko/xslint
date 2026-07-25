@@ -67,7 +67,7 @@ const used = function(elements, prefix) {
  * it. The deletion text is reconstructed from the declaration — a leading
  * space, the name, and the double-quoted value — and the fixer applies it only
  * when that exact text is present, so a single-quoted or oddly spaced
- * declaration is reported but left untouched rather than mis-edited.
+ * declaration is reported but left untouched rather than wrongly edited.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,

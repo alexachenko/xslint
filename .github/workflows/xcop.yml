@@ -22,3 +22,4 @@ jobs:
           xcop --license LICENSE.txt
           --include '**/*.xsl' --include '**/*.xml'
           --exclude 'test/resources/malformed/**'
+          --exclude 'test/resources/fix/**'
