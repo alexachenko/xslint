@@ -5,7 +5,7 @@
 
 const {
   evaluateXPath, evaluateXPathToNodes, evaluateXPathToStrings,
-  compileXPathToJavaScript, registerCustomXPathFunction,
+  compileXPathToJavaScript,
 } = require('fontoxpath')
 
 /**
@@ -37,30 +37,6 @@ const PREFIXES = {
   'xsl': STANDARD.xsl,
   'xslint': FUNCTIONS,
 }
-
-/**
- * In-scope namespace prefixes of given node and its ancestors. fontoxpath
- * hides namespace declarations, so this exposes them to the rules.
- * @param {object} context - Dynamic context, unused
- * @param {Node} node - Context node
- * @return {Array.<string>} - Declared namespace prefixes
- */
-const inScopePrefixes = function(context, node) {
-  const prefixes = new Set(['xml'])
-  for (let element = node; element; element = element.parentNode) {
-    for (const attribute of Array.from(element.attributes || [])) {
-      if (attribute.nodeName.startsWith('xmlns:')) {
-        prefixes.add(attribute.nodeName.slice('xmlns:'.length))
-      }
-    }
-  }
-  return Array.from(prefixes)
-}
-
-registerCustomXPathFunction(
-  {namespaceURI: FUNCTIONS, localName: 'in-scope-prefixes'},
-  ['node()'], 'xs:string*', inScopePrefixes,
-)
 
 /**
  * Resolve prefix.

@@ -13,6 +13,7 @@ const {
 const {lintByXpath, names: xpathChecks} = require('./xpath-linter')
 const {lintByCorpus, names: corpusChecks} = require('./corpus-linter')
 const {lintByAxis, names: axisChecks} = require('./xpath-axis-linter')
+const {lintByNamespace, names: namespaceChecks} = require('./namespace-linter')
 const {lintByFormat, names: formatChecks} = require('./xpath-format-linter')
 const {fixed} = require('./fixer')
 const {logger, levels} = require('./logger')
@@ -30,6 +31,7 @@ const LINTERS = [
   lintByXpath,
   lintByCorpus,
   lintByAxis,
+  lintByNamespace,
 ]
 
 /**
@@ -49,7 +51,8 @@ const EXPRESSION_LINTERS = [
  */
 const CHECKS = [
   ...xslChecks, ...xpathValidatorChecks,
-  ...xpathChecks, ...corpusChecks, ...axisChecks, ...formatChecks,
+  ...xpathChecks, ...corpusChecks, ...axisChecks, ...namespaceChecks,
+  ...formatChecks,
 ]
 
 /**

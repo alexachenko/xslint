@@ -72,6 +72,14 @@ describe('fixer', function() {
     runXslint(['--fix', file])
     assert.ok(fs.readFileSync(file, 'utf-8').includes('parent::n'))
   })
+  it('should delete a redundant namespace declaration with --fix', function() {
+    const file = scratch(fixture('redundant-namespace-declarations.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('redundant-namespace-declarations.fixed.xsl'),
+    )
+  })
   it('should collapse a run whose span it can verify', function() {
     assert.equal(
       fixed(

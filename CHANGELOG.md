@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `redundant-namespace-declarations` fixable by `--fix`: it is now a
+  code-based check (`src/namespace-linter.js`) that reports one defect per
+  namespace prefix declared on the stylesheet but used nowhere, positioned at
+  the declaration, with a fix that deletes it. Detection is unchanged; the now
+  unused `xslint:in-scope-prefixes` custom XPath function was removed (#334).
+
 - Make `unabbreviated-axis` fixable by `--fix`: it is now a token-aware check
   (`src/xpath-axis-linter.js`) that reports one defect per verbose axis and
   abbreviates it (`child::x`→`x`, `attribute::x`→`@x`, `parent::node()`→`..`).
