@@ -1,6 +1,7 @@
-# Xslint
+# xslint
 
-CLI application for checking the quality of XSL.
+Lint your XSL/XSLT stylesheets — catch malformed XML, invalid XPath, and
+stylistic defects before they ship.
 
 [![DevOps By Rultor.com](https://www.rultor.com/b/maxonfjvipon/xslint)](https://www.rultor.com/p/maxonfjvipon/xslint)
 
@@ -11,12 +12,55 @@ CLI application for checking the quality of XSL.
 [![Hits-of-Code](https://hitsofcode.com/github/maxonfjvipon/xslint)](https://hitsofcode.com/view/github/maxonfjvipon/xslint)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/maxonfjvipon/xslint/blob/master/LICENSE.txt)
 
-## Installation
+`xslint` is a CLI linter for XSL stylesheets. It first checks that every
+stylesheet is well-formed and every XPath expression compiles, then runs 49
+checks for stylistic, semantic, and logical problems — each reported with its
+exact line and column, in your terminal or in CI.
 
-To install `xslint` you need to install [npm] first. Then run:
+## Quick start
+
+Run it on your stylesheets — no install needed:
 
 ```bash
-npm install -g @maxonfjvipon/xslint@0.0.9
+npx @maxonfjvipon/xslint@latest path/to/stylesheets
+```
+
+Given a stylesheet like this:
+
+```xml
+<?xml version="1.0"?>
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="//book">
+    <xsl:variable name="x" select="title"/>
+    <xsl:value-of select="$x"/>
+  </xsl:template>
+</xsl:stylesheet>
+```
+
+xslint points at each problem with its exact position and how to fix it:
+
+```text
+[ERROR] sheet.xsl(2:1) The xsl:output instruction is missing. Declare it to specify the serialization format explicitly. (not-using-output)
+[WARNING] sheet.xsl(3:3) The match attribute of xsl:template starts with //, which scans the entire document tree. Use a more specific pattern. (starts-with-double-slash)
+[WARNING] sheet.xsl(4:5) A variable, function, or template has a single-character name. Use a descriptive name that reveals intent. (short-names)
+```
+
+In CI, use the [GitHub Action](https://github.com/maxonfjvipon/xslint-action) to
+get inline annotations on your pull requests:
+
+```yaml
+- uses: actions/checkout@v6
+- uses: maxonfjvipon/xslint-action@0.0.5
+```
+
+Browse all 49 checks in the [check catalog](https://maxonfjvipon.github.io/xslint/).
+
+## Installation
+
+To install `xslint` globally, install [npm] first, then run:
+
+```bash
+npm install -g @maxonfjvipon/xslint@latest
 xslint --version
 ```
 
