@@ -121,6 +121,8 @@ Configuration by users: a `.xslint.yml` file (discovered by walking up from the 
 
 Command-line flags override the file; the file overrides the built-in defaults. Resolution lives in `src/config.js` (which also exposes the config's `base` directory); `src/xslint.js` expands each rule pattern against the check names, folds `off` rules into the suppression list, filters excluded files against `base`, applies severity overrides to the collected defects, and resolves the effective `max-warnings`/`log-level`/`quiet`.
 
+Fixing by users: `xslint --fix` rewrites the mechanically-fixable defects in place (`--fix-dry-run` reports the same result without writing any file). A defect is fixable when it carries a `fix: {line, col, value, replacement}` — the format linter attaches one to each `redundant-whitespace` defect, and no other check does yet. `src/fixer.js` maps each fix's position to a source offset and applies it *only* when the span still holds the exact `value` (a shifted offset — an entity ahead of the run, an already-edited file — is skipped, never corrupting the source), applying a file's fixes from the end backwards so earlier offsets stay valid, and returns the rewritten content per changed file plus the defects it applied. `src/xslint.js` writes the changed files (unless `--fix-dry-run`) and drops the applied defects from the report, so the exit code reflects only what remains. The fix engine is check-agnostic — the `fix` shape is the whole contract — so future fixers (axis abbreviation, unused-namespace removal) attach a `fix` and need no engine change.
+
 ## Keeping Docs in Sync
 
 Any change to behavior — new logic, a new check or validator, a rename, a moved file, a changed flag or output — must update the documentation in the same change. Before finishing, check all three and fix whichever went stale:
@@ -145,6 +147,7 @@ A change that leaves any of these describing the old behavior is not done.
 | `src/corpus-linter.js` | Loads `checks/corpus/*.yaml`, applies cross-file rules over the corpus |
 | `src/xpath-format-linter.js` | Tokenizes the validator's valid expressions and flags formatting noise (`redundant-whitespace`) |
 | `src/tokens.js` | XPath lexer: positioned token stream (`TOKENS`: string, comment, whitespace, other) preserving whitespace |
+| `src/fixer.js` | Applies the `fix` a defect carries to its source text (verify-before-apply, end-to-start) for `--fix`/`--fix-dry-run` |
 | `src/xpath.js` | Shared fontoxpath environment: prefixes, custom functions, node/string evaluators, expression validator (`isValid`) |
 | `src/helpers.js` | XML parsing (`@xmldom/xmldom`), YAML parsing, file recursion |
 | `src/logger.js` | 4-level logger (debug/info/warning/error) |

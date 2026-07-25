@@ -216,6 +216,29 @@ upload; the alerts still surface in code scanning. Run it from the repository
 root so the reported paths stay repo-relative — a file outside the working
 directory is named by its absolute path instead.
 
+## Fixing
+
+Some defects have a single unambiguous correction, and `--fix` applies it in
+place:
+
+```bash
+xslint --fix path/to/dir
+```
+
+Today this covers `redundant-whitespace`: a doubled space is collapsed to one,
+and a space leading or trailing an XPath expression is removed. Only the exact
+span that was flagged is rewritten — the rest of the file is left
+byte-for-byte intact — and a fix is skipped rather than applied when the source
+no longer matches what it expects. Checks whose correction needs a human
+decision stay report-only.
+
+Pass `--fix-dry-run` to see what would remain after fixing, without writing any
+file:
+
+```bash
+xslint --fix-dry-run path/to/dir
+```
+
 ## Exit code
 
 `xslint` exits non-zero when any `error`-severity defect is found. Warnings do

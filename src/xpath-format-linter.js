@@ -29,27 +29,34 @@ const META = yaml.parsedFromFile(
 const names = [CHECK]
 
 /**
- * Offsets of the redundant whitespace runs in an expression. A run is redundant
- * when it is longer than one space, or leads or trails the expression; a run
- * that wraps a line is left alone, and runs inside string literals or comments
- * are never seen because the lexer keeps those whole.
+ * Redundant whitespace runs in an expression. A run is redundant when it is
+ * longer than one space, or leads or trails the expression; a run that wraps a
+ * line is left alone, and runs inside string literals or comments are never
+ * seen because the lexer keeps those whole. Each run carries the offset where
+ * it starts, its raw value, and the text that should replace it — empty when it
+ * leads or trails, a single space when it is a doubled run in the middle.
  * @param {string} expression - Xpath expression
- * @return {Array.<number>} - Offsets where redundant runs start
+ * @return {Array.<{offset: number, value: string, replacement: string}>} - Runs
  */
 const redundancies = function(expression) {
-  const offsets = []
+  const runs = []
   for (const token of tokenized(expression)) {
+    const edge =
+      token.start === 0 ||
+      token.start + token.value.length === expression.length
     if (
       token.type === TOKENS.WHITESPACE &&
       !/[\r\n]/.test(token.value) &&
-      (token.start === 0 ||
-        token.start + token.value.length === expression.length ||
-        token.value.length > 1)
+      (edge || token.value.length > 1)
     ) {
-      offsets.push(token.start)
+      runs.push({
+        offset: token.start,
+        value: token.value,
+        replacement: edge ? '' : ' ',
+      })
     }
   }
-  return offsets
+  return runs
 }
 
 /**
@@ -67,14 +74,23 @@ const lintByFormat = function(expressions, suppressions = []) {
   const defects = []
   if (!suppressions.some((sup) => CHECK.includes(sup))) {
     for (const {file, expression} of expressions) {
-      for (const offset of redundancies(expression.nodeValue)) {
+      for (const {offset, value, replacement} of redundancies(
+        expression.nodeValue,
+      )) {
+        const pos = expression.columnNumber + 1 + offset
         defects.push({
           name: CHECK,
           severity: META.severity,
           message: META.message,
           file: file,
           line: expression.lineNumber,
-          pos: expression.columnNumber + 1 + offset,
+          pos: pos,
+          fix: {
+            line: expression.lineNumber,
+            col: pos,
+            value: value,
+            replacement: replacement,
+          },
         })
       }
     }

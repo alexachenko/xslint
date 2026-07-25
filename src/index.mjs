@@ -25,6 +25,11 @@ program
       .default('text'),
   )
   .option('--config <path>', 'Path to a configuration file')
+  .option('--fix', 'Rewrite the fixable defects in place')
+  .option(
+    '--fix-dry-run',
+    'Report what --fix would change without writing files',
+  )
   .option(
     '--max-warnings <n>',
     'Number of warnings to allow before the exit code becomes non-zero ' +

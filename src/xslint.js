@@ -13,6 +13,7 @@ const {
 const {lintByXpath, names: xpathChecks} = require('./xpath-linter')
 const {lintByCorpus, names: corpusChecks} = require('./corpus-linter')
 const {lintByFormat, names: formatChecks} = require('./xpath-format-linter')
+const {fixed} = require('./fixer')
 const {logger, levels} = require('./logger')
 const {reporterOf} = require('./reporters')
 const {configFrom} = require('./config')
@@ -121,7 +122,9 @@ const leveled = function(quiet, level) {
  *  suppress: Array.<string>,
  *  maxWarnings: number|undefined,
  *  config: string|undefined,
- *  format: string
+ *  format: string,
+ *  fix: boolean|undefined,
+ *  fixDryRun: boolean|undefined
  * }} options - CLI options
  */
 const xslint = function(pths, options) {
@@ -197,9 +200,21 @@ const xslint = function(pths, options) {
       logger.warn(`Unused xslint-disable directive at ${file}:${stale.line}`)
     }
   }
-  const reported = defects.filter(
+  let reported = defects.filter(
     (defect) => !suppresses(directives.get(defect.file), defect),
   )
+  if (options.fix || options.fixDryRun) {
+    const {contents, applied} = fixed(sources, reported)
+    for (const [file, content] of contents) {
+      if (!options.fixDryRun) {
+        fs.writeFileSync(file, content)
+      }
+    }
+    if (applied.length > 0) {
+      logger.info(`Fixed ${applied.length} defects in ${contents.size} files`)
+    }
+    reported = reported.filter((defect) => !applied.includes(defect))
+  }
   logger.info(`Processed files: ${stylesheets.length}`)
   if (reported.length > 0) {
     logger.info(`Defects found: ${reported.length}`)

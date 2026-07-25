@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add a `--fix` mode (`--fix-dry-run` to preview) that rewrites the
+  mechanically-fixable defects in place. It covers `redundant-whitespace`
+  today: a check-agnostic engine (`src/fixer.js`) applies the `fix` a defect
+  carries only when the flagged span still matches, leaving the rest of the
+  file byte-for-byte intact (#334).
+
 - Add a scheduled workflow that keeps the `xslint-action` version in the README
   current, opening a PR when the action publishes a new release (#357).
 
