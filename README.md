@@ -13,7 +13,7 @@ stylistic defects before they ship.
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/maxonfjvipon/xslint/blob/master/LICENSE.txt)
 
 `xslint` is a CLI linter for XSL stylesheets. It first checks that every
-stylesheet is well-formed and every XPath expression compiles, then runs 49
+stylesheet is well-formed and every XPath expression compiles, then runs its
 checks for stylistic, semantic, and logical problems — each reported with its
 exact line and column, in your terminal or in CI.
 
@@ -22,7 +22,7 @@ exact line and column, in your terminal or in CI.
 Run it on your stylesheets — no install needed:
 
 ```bash
-npx @maxonfjvipon/xslint@latest path/to/stylesheets
+npx @maxonfjvipon/xslint@0.0.9 path/to/stylesheets
 ```
 
 Given a stylesheet like this:
@@ -53,14 +53,14 @@ get inline annotations on your pull requests:
 - uses: maxonfjvipon/xslint-action@0.0.5
 ```
 
-Browse all 49 checks in the [check catalog](https://maxonfjvipon.github.io/xslint/).
+Browse the full [check catalog](https://maxonfjvipon.github.io/xslint/).
 
 ## Installation
 
 To install `xslint` globally, install [npm] first, then run:
 
 ```bash
-npm install -g @maxonfjvipon/xslint@latest
+npm install -g @maxonfjvipon/xslint@0.0.9
 xslint --version
 ```
 
