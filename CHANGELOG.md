@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Enforce a 100-character line length for Markdown (code blocks and tables
+  exempt); `CLAUDE.md`, a dense one-line-per-paragraph reference, is exempt
+  (#355).
+
 ## 0.0.9 - 2026-07-24
 
 - Fix the release workflow: read the changelog for the GitHub Release notes and

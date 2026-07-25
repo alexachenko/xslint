@@ -1,5 +1,9 @@
  # CLAUDE.md
 
+<!-- markdownlint-disable MD013 -->
+<!-- This file is dense reference prose written one paragraph per line; the
+     100-char line length is not enforced here. -->
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Git Workflow
