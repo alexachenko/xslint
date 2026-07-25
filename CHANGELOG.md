@@ -9,6 +9,9 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add a scheduled workflow that keeps the `xslint-action` version in the README
+  current, opening a PR when the action publishes a new release (#357).
+
 - Enforce a 100-character line length for Markdown (code blocks and tables
   exempt); `CLAUDE.md`, a dense one-line-per-paragraph reference, is exempt
   (#355).

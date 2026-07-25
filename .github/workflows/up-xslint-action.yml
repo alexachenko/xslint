@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+# yamllint disable rule:line-length
+name: up-xslint-action
+'on':
+  schedule:
+    - cron: '0 6 * * *'
+concurrency:
+  group: up-xslint-action-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  up:
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Resolve the latest and current xslint-action versions
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh release view --repo maxonfjvipon/xslint-action --json tagName --jq .tagName)
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
+          current=$(grep -oP 'xslint-action@\K[0-9.]+' README.md | head -1)
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+      - name: Update the README to the latest xslint-action version
+        if: steps.version.outputs.latest != steps.version.outputs.current
+        run: |
+          sed -E -i "s|xslint-action@[0-9.]+|xslint-action@${{ steps.version.outputs.latest }}|g" README.md
+      - uses: peter-evans/create-pull-request@v8
+        if: steps.version.outputs.latest != steps.version.outputs.current
+        with:
+          sign-commits: true
+          branch: xslint-action-version-up
+          commit-message: 'new xslint-action version in README'
+          delete-branch: true
+          title: 'New xslint-action version in README'
+          assignees: maxonfjvipon
+          base: master
