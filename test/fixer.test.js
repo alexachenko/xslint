@@ -80,6 +80,14 @@ describe('fixer', function() {
       fixture('redundant-namespace-declarations.fixed.xsl'),
     )
   })
+  it('should unwrap the node-set extension with --fix', function() {
+    const file = scratch(fixture('use-node-set-extension.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('use-node-set-extension.fixed.xsl'),
+    )
+  })
   it('should collapse a run whose span it can verify', function() {
     assert.equal(
       fixed(

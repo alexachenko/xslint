@@ -225,7 +225,7 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers three checks:
+Today this covers four checks:
 
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
@@ -233,6 +233,8 @@ Today this covers three checks:
   becomes `x`, `attribute::x` becomes `@x`, and `parent::node()` becomes `..`.
 - `redundant-namespace-declarations` — a namespace prefix declared on the
   stylesheet but never used is deleted.
+- `use-node-set-extension` — the redundant `node-set()` extension is unwrapped
+  in XSLT 2.0 and later: `exsl:node-set($x)` becomes `$x`.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the

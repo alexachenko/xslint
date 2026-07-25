@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `use-node-set-extension` fixable by `--fix`: it is now a code-based
+  check (`src/node-set-linter.js`) that reports one defect per `node-set()`
+  call in a `@select` of an XSLT 2.0/3.0 stylesheet, with a fix that unwraps it
+  (`exsl:node-set($x)` → `$x`). It masks string and comment spans before
+  matching, so a `node-set(` inside a literal is never flagged (#334).
+
 - Make `redundant-namespace-declarations` fixable by `--fix`: it is now a
   code-based check (`src/namespace-linter.js`) that reports one defect per
   namespace prefix declared on the stylesheet but used nowhere, positioned at
