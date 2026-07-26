@@ -316,6 +316,27 @@ Linters:
   parse are checked, so a malformed one is reported once by the validator and
   never nagged about its spacing.
 
+## Programmatic use
+
+`xslint` is embeddable — editors, build tools, and the forthcoming language
+server import it instead of shelling out. `lint` takes in-memory sources and
+returns the defects, touching no files and never exiting:
+
+```js
+const {lint, fixed} = require('@maxonfjvipon/xslint')
+
+const sources = [{file: 'sheet.xsl', content: '<xsl:stylesheet .../>'}]
+const defects = lint(sources, {suppress: ['short-names']})
+// each defect: {name, severity, message, file, line, pos, fix?}
+
+// apply the fixable ones without writing to disk:
+const {contents} = fixed(sources, defects)
+```
+
+`lint(sources, {suppress, overrides})` runs every validator and linter over the
+`{file, content}` sources and honors inline `xslint-disable` directives;
+`fixed(sources, defects, suggestions)` returns the rewritten content per file.
+
 ## How to Contribute
 
 Fork repository, make changes, then send us a [pull request][guidelines].

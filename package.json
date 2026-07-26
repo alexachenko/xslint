@@ -8,7 +8,7 @@
   },
   "homepage": "https://github.com/maxonfjvipon/xslint#readme",
   "bugs": "https://github.com/maxonfjvipon/xslint/issues",
-  "main": "src/index.mjs",
+  "main": "src/xslint.js",
   "bin": {
     "xslint": "src/index.mjs"
   },

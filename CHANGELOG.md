@@ -9,6 +9,13 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Expose a programmatic API: `lint(sources, {suppress, overrides})` returns the
+  defects for in-memory `{file, content}` sources without reading files,
+  printing, or exiting, and `fixed` applies the fixes. The package `main` now
+  points at this API (the CLI bin stays `src/index.mjs`), so editors and the
+  planned LSP server (#336) can embed xslint instead of shelling out. The CLI
+  is now a thin wrapper over `lint` (#336).
+
 - Add three more `--fix-suggestions`, each a `src/fixers.js` registry entry:
   `output-method-xml` (switch `method="xml"` to `"html"`),
   `missing-version-in-stylesheet` (declare `version="1.0"`), and

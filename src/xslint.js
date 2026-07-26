@@ -121,7 +121,58 @@ const leveled = function(quiet, level) {
 }
 
 /**
- * Entry point.
+ * Lint stylesheet sources and return the defects, without touching the
+ * filesystem, printing output, or exiting — the reusable core the command line
+ * wraps and an editor or LSP can call in-process. Each defect carries
+ * `{name, severity, message, file, line, pos}` and, when fixable, a `fix`;
+ * apply fixes with `fixed` (re-exported alongside this). Inline
+ * `xslint-disable` directives in each source's content are honored.
+ * @param {Array.<{file: string, content: string}>} sources - Raw stylesheets
+ * @param {{suppress: Array.<string>, overrides: {[check: string]: string}}}
+ *  options - Check-name substrings to skip, and per-check severity re-grades
+ * @return {Array.<object>} - The defects that survive suppression
+ */
+const lint = function(sources, {suppress = [], overrides = {}} = {}) {
+  const suppressions = validatedSuppressions(suppress)
+  const {corpus, defects} = validateXsls(sources, suppressions)
+  const {expressions, defects: invalid} = validateXpaths(corpus, suppressions)
+  defects.push(...invalid)
+  for (const linter of LINTERS) {
+    defects.push(...linter(corpus, suppressions))
+  }
+  for (const linter of EXPRESSION_LINTERS) {
+    defects.push(...linter(expressions, suppressions))
+  }
+  for (const defect of defects) {
+    if (overrides[defect.name]) {
+      defect.severity = overrides[defect.name]
+    }
+  }
+  const directives = new Map(
+    sources.map((source) => [source.file, directivesFrom(source.content)]),
+  )
+  for (const [file, list] of directives) {
+    for (const directive of list) {
+      for (const name of directive.names) {
+        if (!CHECKS.includes(name)) {
+          logger.warn(
+            `Rule '${name}' in an xslint-disable directive does not exist`,
+          )
+        }
+      }
+    }
+    const found = defects.filter((defect) => defect.file === file)
+    for (const stale of unused(list, found)) {
+      logger.warn(`Unused xslint-disable directive at ${file}:${stale.line}`)
+    }
+  }
+  return defects.filter(
+    (defect) => !suppresses(directives.get(defect.file), defect),
+  )
+}
+
+/**
+ * Entry point for the command line.
  * @param {Array.<string>} pths - Files or directories with .xsl to lint
  * @param {{
  *  logLevel: string,
@@ -156,7 +207,6 @@ const xslint = function(pths, options) {
       }
     }
   }
-  const suppressions = [...validatedSuppressions(options.suppress), ...disabled]
   const maxWarnings = options.maxWarnings ?? config.maxWarnings ?? -1
   logger.info(`Directories and files to process: ${pths.join(', ')}`)
   pths = pths.map((pth) => path.resolve(process.cwd(), pth))
@@ -176,41 +226,10 @@ const xslint = function(pths, options) {
     file: stylesheet,
     content: fs.readFileSync(stylesheet, 'utf-8'),
   }))
-  const {corpus, defects} = validateXsls(sources, suppressions)
-  const {expressions, defects: invalid} = validateXpaths(corpus, suppressions)
-  defects.push(...invalid)
-  for (const lint of LINTERS) {
-    defects.push(...lint(corpus, suppressions))
-  }
-  for (const lint of EXPRESSION_LINTERS) {
-    defects.push(...lint(expressions, suppressions))
-  }
-  for (const defect of defects) {
-    if (overrides[defect.name]) {
-      defect.severity = overrides[defect.name]
-    }
-  }
-  const directives = new Map(
-    sources.map((source) => [source.file, directivesFrom(source.content)]),
-  )
-  for (const [file, list] of directives) {
-    for (const directive of list) {
-      for (const name of directive.names) {
-        if (!CHECKS.includes(name)) {
-          logger.warn(
-            `Rule '${name}' in an xslint-disable directive does not exist`,
-          )
-        }
-      }
-    }
-    const found = defects.filter((defect) => defect.file === file)
-    for (const stale of unused(list, found)) {
-      logger.warn(`Unused xslint-disable directive at ${file}:${stale.line}`)
-    }
-  }
-  let reported = defects.filter(
-    (defect) => !suppresses(directives.get(defect.file), defect),
-  )
+  let reported = lint(sources, {
+    suppress: [...options.suppress, ...disabled],
+    overrides: overrides,
+  })
   if (options.fix || options.fixDryRun || options.fixSuggestions) {
     const {contents, applied} = fixed(sources, reported, options.fixSuggestions)
     for (const [file, content] of contents) {
@@ -254,3 +273,5 @@ const xslint = function(pths, options) {
 }
 
 module.exports = xslint
+module.exports.lint = lint
+module.exports.fixed = fixed
