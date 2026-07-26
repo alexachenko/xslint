@@ -11,8 +11,11 @@ First, in `CHANGELOG.md`, rename the `## Unreleased` heading to
 Then comment on any issue or pull request:
 
 ```text
-@rultor release, tag=0.0.12
+@rultor release, tag=`0.0.12`
 ```
+
+The backticks around the version are required — without them Rultor reads an
+empty tag and refuses the release.
 
 Rultor validates and tests, tags the commit, and the tag triggers
 [`.github/workflows/release.yml`](.github/workflows/release.yml), which:
