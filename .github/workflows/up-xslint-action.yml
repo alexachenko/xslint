@@ -31,6 +31,7 @@ jobs:
       - uses: peter-evans/create-pull-request@v8
         if: steps.version.outputs.latest != steps.version.outputs.current
         with:
+          token: ${{ secrets.DISPATCH_TOKEN }}
           sign-commits: true
           branch: xslint-action-version-up
           commit-message: 'new xslint-action version in README'
