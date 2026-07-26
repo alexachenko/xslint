@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+## 0.0.11 - 2026-07-27
+
+- Move the project to the `xslint` GitHub organization; the repository,
+  homepage, and documentation-site URLs now point at `github.com/xslint`.
+
 ## 0.0.10 - 2026-07-26
 
 - Expose a programmatic API: `lint(sources, {suppress, overrides})` returns the
