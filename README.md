@@ -3,14 +3,14 @@
 Lint your XSL/XSLT stylesheets — catch malformed XML, invalid XPath, and
 stylistic defects before they ship.
 
-[![DevOps By Rultor.com](https://www.rultor.com/b/maxonfjvipon/xslint)](https://www.rultor.com/p/maxonfjvipon/xslint)
+[![DevOps By Rultor.com](https://www.rultor.com/b/xslint/xslint)](https://www.rultor.com/p/xslint/xslint)
 
 [![npm](https://img.shields.io/npm/v/@maxonfjvipon/xslint.svg?style=flat)](https://www.npmjs.com/package/@maxonfjvipon/xslint)
-[![grunt](https://github.com/maxonfjvipon/xslint/actions/workflows/grunt.yml/badge.svg)](https://github.com/maxonfjvipon/xslint/actions/workflows/grunt.yml)
+[![grunt](https://github.com/xslint/xslint/actions/workflows/grunt.yml/badge.svg)](https://github.com/xslint/xslint/actions/workflows/grunt.yml)
 [![codecov](https://codecov.io/gh/xslint/xslint/branch/master/graph/badge.svg)](https://codecov.io/gh/xslint/xslint)
-[![PDD status](http://www.0pdd.com/svg?name=maxonfjvipon/xslint)](http://www.0pdd.com/p?name=maxonfjvipon/xslint)
-[![Hits-of-Code](https://hitsofcode.com/github/maxonfjvipon/xslint)](https://hitsofcode.com/view/github/maxonfjvipon/xslint)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/maxonfjvipon/xslint/blob/master/LICENSE.txt)
+[![PDD status](http://www.0pdd.com/svg?name=xslint/xslint)](http://www.0pdd.com/p?name=xslint/xslint)
+[![Hits-of-Code](https://hitsofcode.com/github/xslint/xslint)](https://hitsofcode.com/view/github/xslint/xslint)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/xslint/xslint/blob/master/LICENSE.txt)
 
 `xslint` is a CLI linter for XSL stylesheets. It first checks that every
 stylesheet is well-formed and every XPath expression compiles, then runs its
@@ -45,15 +45,15 @@ xslint points at each problem with its exact position and how to fix it:
 [WARNING] sheet.xsl(4:5) A variable, function, or template has a single-character name. Use a descriptive name that reveals intent. (short-names)
 ```
 
-In CI, use the [GitHub Action](https://github.com/maxonfjvipon/xslint-action) to
+In CI, use the [GitHub Action](https://github.com/xslint/xslint-action) to
 get inline annotations on your pull requests:
 
 ```yaml
 - uses: actions/checkout@v6
-- uses: maxonfjvipon/xslint-action@0.0.5
+- uses: xslint/xslint-action@0.0.5
 ```
 
-Browse the full [check catalog](https://maxonfjvipon.github.io/xslint/).
+Browse the full [check catalog](https://xslint.github.io/xslint/).
 
 ## Installation
 
@@ -69,7 +69,7 @@ xslint --version
 To build `xslint` from source, clone this repository:
 
 ```bash
-git clone git@github.com:maxonfjvipon/xslint.git
+git clone git@github.com:xslint/xslint.git
 cd xslint
 ```
 
@@ -285,7 +285,7 @@ xslint --max-warnings=10   # more than ten warnings fails the run
 ## Checks
 
 The full list of checks with descriptions and examples is available at
-[maxonfjvipon.github.io/xslint][checks].
+[xslint.github.io/xslint][checks].
 
 xslint runs in two stages. **Validators** first establish that the input is
 valid; **linters** then run over the stylesheets that pass, catching
@@ -363,4 +363,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow and
 [npm]: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 [node]: https://nodejs.org/en
 [guidelines]: https://www.yegor256.com/2014/04/15/github-guidelines.html
-[checks]: https://maxonfjvipon.github.io/xslint/
+[checks]: https://xslint.github.io/xslint/
