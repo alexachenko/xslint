@@ -9,6 +9,8 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+## 0.0.10 - 2026-07-26
+
 - Expose a programmatic API: `lint(sources, {suppress, overrides})` returns the
   defects for in-memory `{file, content}` sources without reading files,
   printing, or exiting, and `fixed` applies the fixes. The package `main` now
