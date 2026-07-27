@@ -3,8 +3,8 @@
 ---
 pack: empty-content-in-instructions
 found:
-  amount: 4
-  positions: [ [ 5, 5 ], [ 7, 5 ], [ 9, 7 ], [ 10, 7 ] ]
+  amount: 2
+  positions: [ [ 5, 5 ], [ 7, 5 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" id="style1">
@@ -13,14 +13,9 @@ input: |-
       <xsl:for-each select="o/o">
       </xsl:for-each>
       <xsl:if test="@ooo = true()"/>
-      <xsl:choose>
-        <xsl:when test="o/o"/>
-        <xsl:otherwise>
-        </xsl:otherwise>
-      </xsl:choose>
     </xsl:template>
     <xsl:template match="/objects/o/o[1]/o[1]">
-      <xsl:variable name="qw" as="xs:string" select="ooo" />
+      <xsl:variable name="qw" as="xs:string" select="ooo"/>
       <xsl:copy-of select="$qw"/>
     </xsl:template>
   </xsl:stylesheet>

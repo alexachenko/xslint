@@ -1,8 +1,10 @@
 # Not using output
 
-Every stylesheet must declare `xsl:output` to specify the serialization format
-explicitly. Omitting it leaves the output method implementation-defined and
-leads to inconsistent results across processors.
+Every stylesheet that has templates must declare `xsl:output` to specify the
+serialization format explicitly. Omitting it leaves the output method
+implementation-defined and leads to inconsistent results across processors. A
+module with no templates — one imported into a pipeline that sets the output
+itself — is exempt, since it never serializes on its own.
 
 Incorrect:
 

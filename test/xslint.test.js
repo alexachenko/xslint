@@ -29,8 +29,6 @@ describe('xslint', function() {
     const stdout = runXslint(['test/resources/stylesheets/xsl-with-some-violations.xsl'])
     const expected = [
       'Processed files: 1',
-      '(26:9) An instruction element such as xsl:for-each, xsl:if, or xsl:when has no content. Add content or remove the empty element. (empty-content-in-instructions)',
-      '(27:9) An instruction element such as xsl:for-each, xsl:if, or xsl:when has no content. Add content or remove the empty element. (empty-content-in-instructions)',
       '(6:1) No built-in Schema types are used in XSLT 2.0 or 3.0 mode. Declare variable types with xs:string, xs:integer, or similar. (not-using-schema-types)',
       '(16:3) A variable is assigned via a nested xsl:value-of instead of the select attribute. Use select syntax instead. (setting-value-of-variable-incorrectly)',
       '(16:3) A variable, function, or template has a single-character name. Use a descriptive name that reveals intent. (short-names)',
@@ -108,8 +106,6 @@ describe('xslint', function() {
     ])
     const expected = [
       'Processed files: 1',
-      '(26:9) An instruction element such as xsl:for-each, xsl:if, or xsl:when has no content. Add content or remove the empty element. (empty-content-in-instructions)',
-      '(27:9) An instruction element such as xsl:for-each, xsl:if, or xsl:when has no content. Add content or remove the empty element. (empty-content-in-instructions)',
       '(6:1) No built-in Schema types are used in XSLT 2.0 or 3.0 mode. Declare variable types with xs:string, xs:integer, or similar. (not-using-schema-types)',
       '(16:3) A variable is assigned via a nested xsl:value-of instead of the select attribute. Use select syntax instead. (setting-value-of-variable-incorrectly)',
       '(16:3) A variable, function, or template has a single-character name. Use a descriptive name that reveals intent. (short-names)',

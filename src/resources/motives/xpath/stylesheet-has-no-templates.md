@@ -1,14 +1,16 @@
 # Stylesheet has no templates
 
-A stylesheet without any `xsl:template` elements can produce no output. Add
-at least one template to process the input document.
+A stylesheet with no templates, functions, or variables offers nothing: it can
+produce no output and exports nothing to import. Add at least one template. A
+function or variable library — one whose definitions are pulled in by the
+stylesheets that `xsl:import` it — is exempt, since its templates live in the
+importer.
 
 Incorrect:
 
 ```xsl
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="html"/>
-  <xsl:variable name="title" select="'Hello'"/>
 </xsl:stylesheet>
 ```
 

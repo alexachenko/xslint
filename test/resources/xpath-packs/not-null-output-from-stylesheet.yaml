@@ -17,4 +17,5 @@ input: |-
     <xsl:template match="/objects/o/o[1]/o[2]">
       <xsl:copy-of select="$oo"/>
     </xsl:template>
+    <xsl:template match="/object/noise"/>
   </xsl:stylesheet>

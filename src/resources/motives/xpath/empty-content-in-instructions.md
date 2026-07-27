@@ -1,8 +1,9 @@
 # Empty content in instructions
 
-Instruction elements such as `xsl:for-each`, `xsl:if`, `xsl:when`, and
-`xsl:otherwise` with no content produce no output and are almost certainly
-a mistake.
+Instruction elements such as `xsl:for-each` and `xsl:if` with no content
+produce no output and are almost certainly a mistake. An empty `xsl:when` or
+`xsl:otherwise` is a deliberate "this case produces nothing" and is left
+alone — the latter is exactly what `use-choose-without-otherwise` asks for.
 
 Incorrect:
 

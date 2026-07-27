@@ -15,9 +15,7 @@ input: |-
           <xsl:when test="@ooo = false()">
             <HR STYLE="color:red"/>
           </xsl:when>
-          <xsl:otherwise>
-            <BR/>
-          </xsl:otherwise>
+          <xsl:otherwise/>
         </xsl:choose>
       </xsl:for-each>
       <xsl:if test="@ooo = false()">
