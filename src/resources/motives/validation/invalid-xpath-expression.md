@@ -9,9 +9,13 @@ expression syntax is checked, not its formatting; pattern attributes such as
 `match` and attribute value templates are left to other checks.
 
 The expression is parsed by the same engine that evaluates the rules, so it is
-valid here exactly when the processor would accept it. Every prefix resolves
+valid here exactly when the processor can parse it. Every prefix resolves
 while parsing, so an unknown prefix or a custom function is never mistaken for
-a syntax error: only genuine syntax mistakes are reported.
+a syntax error. Neither is a static-type mismatch: the engine is XPath 3.1, so
+it rejects the implicit string-to-number coercion an XPath 1.0 stylesheet leans
+on — `substring-before($spans, ':') - 1` reads a numeric prefix in 1.0 — but
+that is a dialect difference, not a broken expression, so it is not reported.
+Only genuine syntax mistakes are.
 
 Incorrect (`==` is not an XPath operator):
 
