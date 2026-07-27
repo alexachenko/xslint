@@ -14,5 +14,5 @@ jobs:
       - uses: actions/checkout@v6
       - uses: maxonfjvipon/deps-sentinel-action@0.0.4
         with:
-          token: ${{ secrets.OWNER_TOKEN }}
+          token: ${{ secrets.DISPATCH_TOKEN }}
           owner: maxonfjvipon
