@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+- id: xslint
+  name: xslint
+  description: Lint XSL/XSLT stylesheets with xslint
+  entry: xslint
+  language: node
+  files: \.(xsl|xslt)$
