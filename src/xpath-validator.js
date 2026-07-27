@@ -42,6 +42,15 @@ const EXPRESSIONS =
   '"namespace-context")]'
 
 /**
+ * A reference to an entity left unresolved in a parsed expression — an entity
+ * declared in an external DTD the parser never read. Such an expression cannot
+ * be validated (`&` is not an XPath operator), so it is neither reported nor
+ * kept: reporting it would be a false positive over a resolution gap.
+ * @type {RegExp}
+ */
+const UNRESOLVED = /&[A-Za-z_][\w.-]*;/
+
+/**
  * Validate every Xpath expression in the corpus, splitting the valid ones out
  * for the linters to consume from the malformed ones, which become defects.
  * An expression that cannot be parsed by the engine that would run it is
@@ -61,6 +70,8 @@ const validate = function(corpus, suppressions = []) {
     for (const expression of nodes(xsl, EXPRESSIONS)) {
       if (isValid(expression.nodeValue)) {
         expressions.push({file: file, expression: expression})
+      } else if (UNRESOLVED.test(expression.nodeValue)) {
+        logger.debug(`Skipping expression with an unresolved entity`)
       } else if (!suppressed) {
         defects.push({
           name: CHECK,

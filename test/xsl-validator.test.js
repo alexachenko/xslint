@@ -38,6 +38,30 @@ describe('xsl-validator', function() {
       ])
       assert.equal(defects[0].name, 'malformed-stylesheet')
     })
+  it('should keep a stylesheet whose entities come from an external subset',
+    function() {
+      const {corpus} = validate([
+        {file: 'external.xsl', content: '<!DOCTYPE a [<!ENTITY % ent SYSTEM "e.ent"> %ent;]>\n<a>&primary;</a>'},
+      ])
+      assert.equal(corpus[0].file, 'external.xsl')
+    })
+  it('should expand an internal entity into the parsed value', function() {
+    const {corpus} = validate([
+      {file: 'expand.xsl', content: '<!DOCTYPE a [<!ENTITY lc "\'abc\'">]>\n<a t="translate(.,&lc;,X)"/>'},
+    ])
+    assert.equal(
+      corpus[0].xsl.documentElement.getAttribute('t'), 'translate(.,\'abc\',X)',
+    )
+  })
+  it('should expand a declared entity and leave an unresolvable one alone',
+    function() {
+      const {corpus} = validate([
+        {file: 'mix.xsl', content: '<!DOCTYPE a [<!ENTITY lc \'abc\'> <!ENTITY % x SYSTEM "x.ent">]>\n<a t="&lc;-&primary;"/>'},
+      ])
+      assert.equal(
+        corpus[0].xsl.documentElement.getAttribute('t'), 'abc-&primary;',
+      )
+    })
   it('should not leak parser diagnostics to the console', function() {
     const original = console.error
     const lines = []
