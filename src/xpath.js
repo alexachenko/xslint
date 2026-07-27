@@ -76,10 +76,22 @@ const strings = function(xsl, xpath) {
 }
 
 /**
+ * A thrown compile failure that carries a W3C error code, as opposed to a
+ * parse failure. The engine reports a syntax error as "<position>: <source>",
+ * but a static or type error as a QName-shaped code such as XPTY0004 or
+ * XPST0017. Only the former means the expression is genuinely malformed.
+ * @type {RegExp}
+ */
+const CODED = /^[A-Z]{4}\d{4}/
+
+/**
  * Whether given Xpath expression is syntactically valid. The same engine that
  * runs the rules parses it, so an expression is valid here exactly when the
- * processor would accept it. Every prefix resolves, isolating syntax from
- * unresolved-prefix errors.
+ * processor can parse it. Every prefix resolves, isolating syntax from
+ * unresolved-prefix errors, and a static-type complaint counts as valid too:
+ * the engine is XPath 3.1, so it rejects the implicit numeric coercion an
+ * XPath 1.0 stylesheet leans on (substring-before(...) - 1), which is a
+ * dialect mismatch, not a syntax error.
  * @param {string} xpath - Xpath expression
  * @return {boolean} - True when the expression parses
  */
@@ -90,8 +102,8 @@ const isValid = function(xpath) {
       namespaceResolver: (prefix) =>
         Object.hasOwn(STANDARD, prefix) ? STANDARD[prefix] : FUNCTIONS,
     })
-  } catch {
-    parses = false
+  } catch (err) {
+    parses = CODED.test(String(err.message))
   }
   return parses
 }
