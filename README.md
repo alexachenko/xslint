@@ -318,9 +318,10 @@ Linters:
 
 ## Programmatic use
 
-`xslint` is embeddable — editors, build tools, and the forthcoming language
-server import it instead of shelling out. `lint` takes in-memory sources and
-returns the defects, touching no files and never exiting:
+`xslint` is embeddable — editors, build tools, and the
+[language server](https://github.com/xslint/xslint-lsp) import it instead of
+shelling out. `lint` takes in-memory sources and returns the defects, touching
+no files and never exiting:
 
 ```js
 const {lint, fixed} = require('@maxonfjvipon/xslint')
@@ -336,6 +337,18 @@ const {contents} = fixed(sources, defects)
 `lint(sources, {suppress, overrides})` runs every validator and linter over the
 `{file, content}` sources and honors inline `xslint-disable` directives;
 `fixed(sources, defects, suggestions)` returns the rewritten content per file.
+
+## Editors
+
+xslint runs inside your editor through the
+[xslint-lsp](https://github.com/xslint/xslint-lsp) language server, with the
+same diagnostics and quick-fixes as the CLI:
+
+- **VS Code, Cursor, VSCodium, Windsurf, Gitpod** — install the extension from
+  [Open VSX](https://open-vsx.org/extension/maxonfjvipon/xslint-vscode), or the
+  `.vsix` attached to each [release](https://github.com/xslint/xslint-lsp/releases).
+- **IntelliJ IDEA, WebStorm, PyCharm, and other JetBrains IDEs** — install the
+  [xslint-jetbrains](https://github.com/xslint/xslint-jetbrains) plugin.
 
 ## How to Contribute
 
