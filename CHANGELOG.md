@@ -9,6 +9,32 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+## 0.0.12 - 2026-07-27
+
+- Fix a family of false positives surfaced by linting real-world XSLT
+  (DocBook-XSL, TEI, DITA-OT, and objectionary/eo):
+  - `invalid-xpath-expression` no longer rejects XPath 1.0 numeric coercion
+    such as `substring-before(...) - 1`, nor the `namespace::` axis (#396,
+    #402).
+  - `malformed-stylesheet` tolerates internal-subset entity declarations, and
+    declared entities are resolved before linting (#395, #403).
+  - `unused-function` and `unused-variable` now follow usage across the whole
+    corpus, so a definition in a `_funcs.xsl`/`_specials.xsl` library used from
+    an importing stylesheet is no longer flagged (#407).
+  - `incorrect-use-of-boolean-constants` fires only on a bare boolean constant
+    in an `xsl:if`/`xsl:when` test, not on string comparisons or output (#409).
+  - `empty-content-in-instructions` leaves an empty `xsl:when`/`xsl:otherwise`
+    alone; only `xsl:if`/`xsl:for-each` are flagged (#411).
+  - `stylesheet-has-no-templates` and `not-using-output` exempt library modules
+    that have no templates (#412, #414).
+  - `null-output-from-stylesheet` no longer flags an empty node-suppressing
+    template (#413).
+
+- Add a `.pre-commit-hooks.yaml` so xslint can run as a pre-commit hook.
+
+- Turn the documentation-site index into a landing page and add a "proven on
+  real code" section.
+
 ## 0.0.11 - 2026-07-27
 
 - Move the project to the `xslint` GitHub organization; the repository,
