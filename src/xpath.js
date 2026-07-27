@@ -85,27 +85,50 @@ const strings = function(xsl, xpath) {
 const CODED = /^[A-Z]{4}\d{4}/
 
 /**
- * Whether given Xpath expression is syntactically valid. The same engine that
- * runs the rules parses it, so an expression is valid here exactly when the
- * processor can parse it. Every prefix resolves, isolating syntax from
- * unresolved-prefix errors, and a static-type complaint counts as valid too:
- * the engine is XPath 3.1, so it rejects the implicit numeric coercion an
- * XPath 1.0 stylesheet leans on (substring-before(...) - 1), which is a
- * dialect mismatch, not a syntax error.
- * @param {string} xpath - Xpath expression
- * @return {boolean} - True when the expression parses
+ * The namespace axis, which XPath 3.0 dropped but 1.0 and 2.0 define. The
+ * engine cannot parse it, so an expression that uses it is rewritten to a
+ * supported axis before being retried.
+ * @type {RegExp}
  */
-const isValid = function(xpath) {
-  let parses = true
+const NAMESPACE_AXIS = /namespace\s*::/
+
+/**
+ * Whether the engine compiles the expression, counting a static-type
+ * complaint as success. The engine is XPath 3.1, so it rejects the implicit
+ * numeric coercion an XPath 1.0 stylesheet leans on (substring-before(...) -
+ * 1); that is a dialect mismatch, not a syntax error. It tells the two apart
+ * by the shape of the failure: a parse error is "<position>: <source>", a
+ * static or type error a W3C code such as XPTY0004.
+ * @param {string} xpath - Xpath expression
+ * @return {boolean} - True when it compiles or fails only on a type
+ */
+const compiles = function(xpath) {
+  let ok = true
   try {
     compileXPathToJavaScript(xpath, evaluateXPath.ALL_RESULTS_TYPE, {
       namespaceResolver: (prefix) =>
         Object.hasOwn(STANDARD, prefix) ? STANDARD[prefix] : FUNCTIONS,
     })
   } catch (err) {
-    parses = CODED.test(String(err.message))
+    ok = CODED.test(String(err.message))
   }
-  return parses
+  return ok
+}
+
+/**
+ * Whether given Xpath expression is syntactically valid. The same engine that
+ * runs the rules parses it, so an expression is valid here exactly when the
+ * processor can parse it. Every prefix resolves, isolating syntax from
+ * unresolved-prefix errors. The namespace axis is the one construct the engine
+ * cannot parse yet the older dialects allow, so an expression that parses once
+ * its namespace:: axis is rewritten to a supported one is valid too.
+ * @param {string} xpath - Xpath expression
+ * @return {boolean} - True when the expression parses
+ */
+const isValid = function(xpath) {
+  return compiles(xpath) ||
+    (NAMESPACE_AXIS.test(xpath) &&
+      compiles(xpath.replace(/namespace\s*::/g, 'child::')))
 }
 
 module.exports = {
