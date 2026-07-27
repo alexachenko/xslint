@@ -9,21 +9,71 @@ const {DOMParser} = require('@xmldom/xmldom')
 const yaml = require('yaml')
 
 /**
- * Names of the general entities the given source declares in an internal DTD
- * subset. `@xmldom/xmldom` never expands them, so a reference to one surfaces
- * as an "entity not found" error even though the entity is perfectly well
- * declared — DocBook and TEI stylesheets rely on exactly this. Knowing the
- * declared names lets the parser tell that recoverable case apart from a
- * genuinely undefined entity.
+ * A reference to a general entity, `&name;`, as it survives in a parsed value.
+ * @type {RegExp}
+ */
+const REFERENCE = /&([A-Za-z_][\w.-]*);/g
+
+/**
+ * The general entities the given source declares inline in its internal DTD
+ * subset, mapped to their replacement text. `@xmldom/xmldom` never expands
+ * them, so a reference to one surfaces as an "entity not found" error even
+ * though the entity is perfectly well declared — DocBook and TEI stylesheets
+ * rely on exactly this — and the reference is left literal in the parsed
+ * value. Knowing name and value lets the parser forgive the error and lets the
+ * tree be repaired afterwards.
  * @param {string} str - XML source
- * @return {Set.<string>} - Declared general entity names
+ * @return {Map.<string, string>} - Declared entity names to their values
  */
 const declaredEntities = function(str) {
-  const names = new Set()
-  for (const match of str.matchAll(/<!ENTITY\s+([A-Za-z_][\w.-]*)\s/g)) {
-    names.add(match[1])
+  const entities = new Map()
+  for (const match of str.matchAll(
+    /<!ENTITY\s+([A-Za-z_][\w.-]*)\s+(?:"([^"]*)"|'([^']*)')/g)) {
+    entities.set(match[1], match[2] === undefined ? match[3] : match[2])
   }
-  return names
+  return entities
+}
+
+/**
+ * Whether the source reaches for an external DTD — a `SYSTEM` or `PUBLIC`
+ * identifier, or a parameter entity — whose entity declarations we never read.
+ * When it does, an unresolved entity is not evidence of a malformed document:
+ * the entity may well be declared in the DTD we did not load.
+ * @param {string} str - XML source
+ * @return {boolean} - True when an external subset is in play
+ */
+const external = function(str) {
+  return /<!ENTITY\s+%/.test(str) ||
+    /<!DOCTYPE[^>[]*\b(?:SYSTEM|PUBLIC)\b/.test(str)
+}
+
+/**
+ * Replace every reference to a declared entity in the subtree with its value,
+ * in place. `@xmldom/xmldom` leaves the reference literal, so an expression or
+ * text that uses one would otherwise read `&lowercase;` rather than its
+ * replacement. Positions are untouched: the parser fixed line and column from
+ * the original source, and only in-memory values change.
+ * @param {Node} node - Node whose subtree to repair
+ * @param {Map.<string, string>} entities - Declared entity values
+ */
+const expand = function(node, entities) {
+  if ((node.nodeType === 2 || node.nodeType === 3) &&
+    node.nodeValue.includes('&')) {
+    const value = node.nodeValue.replace(REFERENCE,
+      (whole, name) => entities.has(name) ? entities.get(name) : whole)
+    node.nodeValue = value
+    if (node.nodeType === 2) {
+      node.value = value
+    }
+  }
+  if (node.attributes) {
+    for (let index = 0; index < node.attributes.length; index++) {
+      expand(node.attributes.item(index), entities)
+    }
+  }
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    expand(child, entities)
+  }
 }
 
 /**
@@ -31,19 +81,22 @@ const declaredEntities = function(str) {
  * well-formedness problem the parser reports — not only the fatal ones it
  * throws on, but also the recoverable ones such as an undefined entity — so a
  * not-well-formed document never parses, and keeps the parser's diagnostics
- * off the console. The one exception is a reference to an entity the source
- * itself declares: `@xmldom/xmldom` leaves internal-subset entities unexpanded,
- * and a declared-but-unexpanded entity is not a malformed document.
+ * off the console. The one exception is an unresolved entity the document is
+ * entitled to: one it declares inline, or any at all when it pulls in an
+ * external DTD we did not read. `@xmldom/xmldom` leaves such entities
+ * unexpanded, and a declared-but-unexpanded entity is not malformed.
  * @param {string} str - XML source the parser will read
+ * @param {Map.<string, string>} declared - Entities declared inline
  * @return {DOMParser} - Configured parser
  */
-const parserFor = function(str) {
-  const declared = declaredEntities(str)
+const parserFor = function(str, declared) {
+  const loose = external(str)
   return new DOMParser({
     onError: (level, message) => {
       const text = message.trim()
       const missing = text.match(/^entity not found:&(.+?);/)
-      if (level !== 'warning' && !(missing && declared.has(missing[1]))) {
+      const forgiven = missing && (loose || declared.has(missing[1]))
+      if (level !== 'warning' && !forgiven) {
         throw new Error(text)
       }
     },
@@ -92,8 +145,13 @@ const fromFile = function(type, fromString) {
  * @return {Document} - Parsed XML as Document
  */
 const xmlFromString = function(str) {
+  const entities = declaredEntities(str)
   try {
-    return parserFor(str).parseFromString(str, 'text/xml')
+    const doc = parserFor(str, entities).parseFromString(str, 'text/xml')
+    if (entities.size) {
+      expand(doc.documentElement, entities)
+    }
+    return doc
   } catch (err) {
     throw new Error(`Couldn't parse XML:\n${str}\n\nCause: ${err.message}`)
   }
