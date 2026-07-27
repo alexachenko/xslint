@@ -25,6 +25,19 @@ describe('xsl-validator', function() {
     ])
     assert.equal(defects[0].name, 'malformed-stylesheet')
   })
+  it('should keep a stylesheet that declares an internal entity', function() {
+    const {corpus} = validate([
+      {file: 'declared.xsl', content: '<!DOCTYPE a [<!ENTITY sc "x">]>\n<a>&sc;</a>'},
+    ])
+    assert.equal(corpus[0].file, 'declared.xsl')
+  })
+  it('should report a reference to an entity the subset leaves undeclared',
+    function() {
+      const {defects} = validate([
+        {file: 'gap.xsl', content: '<!DOCTYPE a [<!ENTITY sc "x">]>\n<a>&other;</a>'},
+      ])
+      assert.equal(defects[0].name, 'malformed-stylesheet')
+    })
   it('should not leak parser diagnostics to the console', function() {
     const original = console.error
     const lines = []

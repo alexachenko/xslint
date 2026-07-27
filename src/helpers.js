@@ -9,20 +9,46 @@ const {DOMParser} = require('@xmldom/xmldom')
 const yaml = require('yaml')
 
 /**
- * XML parser, built once and reused. Its error handler raises on any
+ * Names of the general entities the given source declares in an internal DTD
+ * subset. `@xmldom/xmldom` never expands them, so a reference to one surfaces
+ * as an "entity not found" error even though the entity is perfectly well
+ * declared — DocBook and TEI stylesheets rely on exactly this. Knowing the
+ * declared names lets the parser tell that recoverable case apart from a
+ * genuinely undefined entity.
+ * @param {string} str - XML source
+ * @return {Set.<string>} - Declared general entity names
+ */
+const declaredEntities = function(str) {
+  const names = new Set()
+  for (const match of str.matchAll(/<!ENTITY\s+([A-Za-z_][\w.-]*)\s/g)) {
+    names.add(match[1])
+  }
+  return names
+}
+
+/**
+ * XML parser for the given source. Its error handler raises on any
  * well-formedness problem the parser reports — not only the fatal ones it
  * throws on, but also the recoverable ones such as an undefined entity — so a
  * not-well-formed document never parses, and keeps the parser's diagnostics
- * off the console.
- * @type {DOMParser}
+ * off the console. The one exception is a reference to an entity the source
+ * itself declares: `@xmldom/xmldom` leaves internal-subset entities unexpanded,
+ * and a declared-but-unexpanded entity is not a malformed document.
+ * @param {string} str - XML source the parser will read
+ * @return {DOMParser} - Configured parser
  */
-const parser = new DOMParser({
-  onError: (level, message) => {
-    if (level !== 'warning') {
-      throw new Error(message.trim())
-    }
-  },
-})
+const parserFor = function(str) {
+  const declared = declaredEntities(str)
+  return new DOMParser({
+    onError: (level, message) => {
+      const text = message.trim()
+      const missing = text.match(/^entity not found:&(.+?);/)
+      if (level !== 'warning' && !(missing && declared.has(missing[1]))) {
+        throw new Error(text)
+      }
+    },
+  })
+}
 
 /**
  * Get all the files recursively from given directory
@@ -67,7 +93,7 @@ const fromFile = function(type, fromString) {
  */
 const xmlFromString = function(str) {
   try {
-    return parser.parseFromString(str, 'text/xml')
+    return parserFor(str).parseFromString(str, 'text/xml')
   } catch (err) {
     throw new Error(`Couldn't parse XML:\n${str}\n\nCause: ${err.message}`)
   }
