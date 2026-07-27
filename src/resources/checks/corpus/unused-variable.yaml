@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+declaration: //xsl:variable[@name]
+usage: //@*
+reference: "${name}"
+scoped: true
+severity: warning
+message: A variable is declared but never referenced by $name across the corpus. Remove it or use it.

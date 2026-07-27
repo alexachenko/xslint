@@ -76,10 +76,12 @@ message: <human-readable explanation>
 ```yaml
 declaration: <XPath selecting declared nodes that carry an @name>
 usage: <XPath selecting the names used, collected across the whole corpus>
+reference: "<optional substring template, with {name} standing for the @name>"
+scoped: <optional true>
 severity: warning|error
 message: <human-readable explanation>
 ```
-A `declaration` node is a defect only when its `@name` appears in no `usage` value anywhere in the corpus.
+By default a `declaration` node is a defect only when its `@name` appears — by exact identity — in no `usage` value anywhere in the corpus (e.g. `unused-named-template`, whose usage `//xsl:call-template/@name` yields called names). When a `reference` is given, the match is by substring instead: the `@name` is substituted into the template and the declaration is a defect when that string occurs in no `usage` value across the corpus, excluding the declaration's own subtree so recursion alone is not use. This carries the checks whose use lives inside an XPath expression rather than in an attribute — `unused-function` (`reference: "{name}("`, over `//@*`) and `unused-variable` (`reference: "${name}"`). A `scoped: true` check (a variable) counts a usage only within the declaration's parent subtree, or — for a top-level declaration — in any other file that imports it; an unscoped one (a function) is global. Because usage is followed across the corpus, a function or variable defined in one file (a `_funcs.xsl` / `_specials.xsl` library) but used from another is not flagged.
 
 **Validator check format** (`src/resources/checks/validation/<name>.yaml`):
 ```yaml

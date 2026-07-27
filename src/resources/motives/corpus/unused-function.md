@@ -1,7 +1,9 @@
 # Unused function
 
-A stylesheet function whose name never appears in any `match` or `select`
-attribute is dead code and should be removed.
+A stylesheet function that is called from no expression anywhere in the corpus
+— neither in its own stylesheet nor in one that imports it — is dead code and
+should be removed. Calling itself does not count, so a recursive function used
+nowhere else is still flagged.
 
 Incorrect:
 

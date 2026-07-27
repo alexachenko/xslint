@@ -1,7 +1,8 @@
 # Unused variable
 
-A variable that is declared but whose `$name` never appears in any attribute
-value in the stylesheet is dead code and should be removed.
+A variable whose `$name` is referenced nowhere it is in scope — within its own
+parent for a local one, or anywhere in the corpus (including a stylesheet that
+imports it) for a top-level one — is dead code and should be removed.
 
 Incorrect:
 
