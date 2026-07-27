@@ -53,6 +53,17 @@ get inline annotations on your pull requests:
 - uses: xslint/xslint-action@0.0.6
 ```
 
+Or run it on commit with [pre-commit](https://pre-commit.com) — add to your
+`.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/xslint/xslint
+    rev: 0.0.11
+    hooks:
+      - id: xslint
+```
+
 Browse the full [check catalog](https://xslint.github.io/xslint/).
 
 ## Proven on real code
