@@ -53,6 +53,15 @@ describe('xsl-validator', function() {
       corpus[0].xsl.documentElement.getAttribute('t'), 'translate(.,\'abc\',X)',
     )
   })
+  it('should expand a declared entity and leave an unresolvable one alone',
+    function() {
+      const {corpus} = validate([
+        {file: 'mix.xsl', content: '<!DOCTYPE a [<!ENTITY lc \'abc\'> <!ENTITY % x SYSTEM "x.ent">]>\n<a t="&lc;-&primary;"/>'},
+      ])
+      assert.equal(
+        corpus[0].xsl.documentElement.getAttribute('t'), 'abc-&primary;',
+      )
+    })
   it('should not leak parser diagnostics to the console', function() {
     const original = console.error
     const lines = []
