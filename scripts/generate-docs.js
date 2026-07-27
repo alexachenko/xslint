@@ -138,8 +138,29 @@ const generate = function() {
   </tr>`
   }).join('\n')
 
-  const indexBody = `  <h1>xslint checks</h1>
-  <p>${checks.length} checks available</p>
+  const indexBody = `  <h1>xslint</h1>
+  <p>A linter for XSL/XSLT stylesheets. It first checks that every stylesheet is
+  well-formed and every XPath expression compiles, then flags stylistic,
+  semantic, and logical mistakes &mdash; each pinpointed to its exact line and
+  column, with a fix where the correction is unambiguous. Think of it as the
+  checks ESLint gives JavaScript, but for XSL.</p>
+
+  <h2>Run it</h2>
+  <pre><code>npx @maxonfjvipon/xslint path/to/stylesheets</code></pre>
+  <p>It also runs in your editor &mdash;
+  <a href="https://open-vsx.org/extension/maxonfjvipon/xslint-vscode">VS Code and compatible editors</a>
+  and <a href="https://plugins.jetbrains.com/plugin/33167">JetBrains IDEs</a> &mdash;
+  in CI via the <a href="https://github.com/xslint/xslint-action">GitHub Action</a>,
+  or embedded through the
+  <a href="https://github.com/xslint/xslint-lsp">language server</a>.</p>
+
+  <h2>What it reports</h2>
+  <pre><code>[ERROR]   sheet.xsl(2:1) The xsl:output instruction is missing. (not-using-output)
+[WARNING] sheet.xsl(3:3) The match attribute starts with //, which scans the whole tree. (starts-with-double-slash)
+[WARNING] sheet.xsl(4:5) A variable has a single-character name. (short-names)</code></pre>
+
+  <h2>Checks</h2>
+  <p>${checks.length} checks, each with its rationale:</p>
   <table>
     <thead>
       <tr>
@@ -156,7 +177,7 @@ ${indexRows}
 
   fs.writeFileSync(
     path.join(DOCS, 'index.html'),
-    page('xslint checks', indexBody, false),
+    page('xslint — a linter for XSL/XSLT', indexBody, false),
   )
 
   for (const {name, kind, lint, md} of checks) {
