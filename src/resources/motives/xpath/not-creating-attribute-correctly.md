@@ -6,15 +6,15 @@ single `xsl:value-of`, plain text, or empty — it can be written inline as a
 literal attribute, with an attribute value template for a computed value:
 
 ```xsl
-<fo:block>
-  <xsl:attribute name="line"><xsl:value-of select="@l"/></xsl:attribute>
-  <xsl:attribute name="kind">head</xsl:attribute>
+<td>
+  <xsl:attribute name="class"><xsl:value-of select="@c"/></xsl:attribute>
+  <xsl:attribute name="role">cell</xsl:attribute>
 ```
 
 becomes
 
 ```xsl
-<fo:block line="{@l}" kind="head">
+<td class="{@c}" role="cell">
 ```
 
 The inline form is shorter and keeps the attribute next to the element it
