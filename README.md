@@ -22,7 +22,7 @@ exact line and column, in your terminal or in CI.
 Run it on your stylesheets — no install needed:
 
 ```bash
-npx @maxonfjvipon/xslint@0.0.13 path/to/stylesheets
+npx @maxonfjvipon/xslint@0.0.14 path/to/stylesheets
 ```
 
 Given a stylesheet like this:
@@ -83,7 +83,7 @@ for decades.
 To install `xslint` globally, install [npm] first, then run:
 
 ```bash
-npm install -g @maxonfjvipon/xslint@0.0.13
+npm install -g @maxonfjvipon/xslint@0.0.14
 xslint --version
 ```
 
