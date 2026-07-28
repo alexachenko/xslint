@@ -9,6 +9,8 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+## 0.0.13 - 2026-07-28
+
 - Drop the `unsorted-imports` check. Ordering `xsl:import` elements alphabetically
   can change import precedence — a later import overrides an earlier one on a
   template conflict — so advising that reorder risked changing behavior (#423).
