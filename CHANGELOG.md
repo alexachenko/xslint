@@ -9,6 +9,8 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+## 0.0.14 - 2026-07-28
+
 - Make the `starts-with-double-slash` and `use-double-slash` messages honest.
   They blamed a "document scan" that a match pattern never performs; they now
   say a leading `//` is redundant and an inner `//` matches at any depth,
