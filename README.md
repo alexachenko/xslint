@@ -248,7 +248,7 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers four checks:
+Today this covers five checks:
 
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
@@ -258,6 +258,9 @@ Today this covers four checks:
   stylesheet but never used is deleted.
 - `use-node-set-extension` — the redundant `node-set()` extension is unwrapped
   in XSLT 2.0 and later: `exsl:node-set($x)` becomes `$x`.
+- `count-compared-to-zero` — an existence test spelled as a count is
+  simplified: `count($x) > 0` becomes `exists($x)`, `count($x) = 0` becomes
+  `empty($x)`.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the

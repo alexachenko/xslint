@@ -21,6 +21,7 @@ const PACKS = [
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'axis-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'namespace-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'node-set-packs')),
+  ...allFilesFrom(path.resolve(__dirname, 'resources', 'count-packs')),
 ]
 
 /**
