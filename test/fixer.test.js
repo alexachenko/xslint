@@ -166,8 +166,8 @@ describe('fixer', function() {
       fixture('translate-for-case.xsl'),
     )
   })
-  it('should rewrite a translate case fold to lower/upper-case with '
-    + '--fix-suggestions', function() {
+  it('should rewrite a translate case fold to lower/upper-case with ' +
+    '--fix-suggestions', function() {
     const file = scratch(fixture('translate-for-case.xsl'))
     runXslint(['--fix-suggestions', file])
     assert.equal(
