@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Drop the `unsorted-imports` check. Ordering `xsl:import` elements alphabetically
+  can change import precedence — a later import overrides an earlier one on a
+  template conflict — so advising that reorder risked changing behavior (#423).
+
 - Rework the size and count checks into one coherent band, split by node type so
   they never double-report (#423):
   - `too-many-small-templates` → **`too-many-templates`**: fire when a stylesheet
