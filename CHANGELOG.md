@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Drop the `not-using-schema-types` check. It fired on a 2.0/3.0 stylesheet that
+  used no `xs:` type anywhere — an arbitrary "use at least one type" rule that a
+  single token type silenced and that flagged perfectly valid untyped
+  stylesheets. A precise per-binding replacement is parked in #430 (#423).
+
 - Refresh the real-code proof after the check audit: 1,974 findings across 22
   checks on the same 70 DocBook/TEI/DITA files (was 2,019 across 23), and bump
   the stale install-example version in the README (#423).

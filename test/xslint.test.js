@@ -29,7 +29,6 @@ describe('xslint', function() {
     const stdout = runXslint(['test/resources/stylesheets/xsl-with-some-violations.xsl'])
     const expected = [
       'Processed files: 1',
-      '(6:1) No built-in Schema types are used in XSLT 2.0 or 3.0 mode. Declare variable types with xs:string, xs:integer, or similar. (not-using-schema-types)',
       '(16:3) A variable is assigned via a nested xsl:value-of instead of the select attribute. Use select syntax instead. (setting-value-of-variable-incorrectly)',
       '(16:3) A variable, function, or template has a single-character name. Use a descriptive name that reveals intent. (short-names)',
       '(31:3) The match attribute of xsl:template starts with //, which scans the entire document tree. Use a more specific pattern. (starts-with-double-slash)',
@@ -106,7 +105,6 @@ describe('xslint', function() {
     ])
     const expected = [
       'Processed files: 1',
-      '(6:1) No built-in Schema types are used in XSLT 2.0 or 3.0 mode. Declare variable types with xs:string, xs:integer, or similar. (not-using-schema-types)',
       '(16:3) A variable is assigned via a nested xsl:value-of instead of the select attribute. Use select syntax instead. (setting-value-of-variable-incorrectly)',
       '(16:3) A variable, function, or template has a single-character name. Use a descriptive name that reveals intent. (short-names)',
       '(31:3) The match attribute of xsl:template starts with //, which scans the entire document tree. Use a more specific pattern. (starts-with-double-slash)',
@@ -334,7 +332,7 @@ describe('xslint', function() {
   })
   it('should leave other defects when a disable-next-line is targeted', function() {
     const streams = xslintStreams(['test/resources/directives/targeted.xsl'])
-    assert.ok(streams.stdout.includes('not-using-schema-types'))
+    assert.ok(streams.stdout.includes('not-using-output'))
   })
   it('should suppress across the file with an inline disable-file', function() {
     const streams = xslintStreams(['test/resources/directives/disable-file.xsl'])
