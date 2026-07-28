@@ -51,11 +51,13 @@ const TAIL = /^\s*(!=|<=|>=|=|<|>)\s*([01])(?![\w.])/
 const HEAD = /(^|[^\w.])([01])\s*(!=|<=|>=|=|<|>)\s*$/
 
 /**
- * Each operator with its sides swapped, so a reversed `0 < count(x)` can be read
- * as `count(x) > 0` and fed to the same collapsing rule.
+ * Each operator with its sides swapped, so a reversed `0 < count(x)` can be
+ * read as `count(x) > 0` and fed to the same collapsing rule.
  * @type {{[operator: string]: string}}
  */
-const FLIP = {'<': '>', '>': '<', '<=': '>=', '>=': '<=', '=': '=', '!=': '!='}
+const FLIP = {
+  '<': '>', '>': '<', '<=': '>=', '>=': '<=', '=': '=', '!=': '!=',
+}
 
 /**
  * The function a comparison collapses to, or null when it is a genuine count

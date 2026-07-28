@@ -88,6 +88,14 @@ describe('fixer', function() {
       fixture('use-node-set-extension.fixed.xsl'),
     )
   })
+  it('should rewrite a count comparison to exists/empty with --fix', function() {
+    const file = scratch(fixture('count-compared-to-zero.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('count-compared-to-zero.fixed.xsl'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])
