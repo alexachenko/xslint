@@ -1,7 +1,11 @@
 # Use double slash
 
-Using `//` anywhere inside the `match` attribute of `xsl:template` forces
-a full document scan and should be replaced with a more specific path.
+A `//` step in a `match` pattern matches the node at *any* depth, so the
+pattern is broader and vaguer than a named path. It is not a performance
+problem — a match pattern is tested against a node, not walked as a query — but
+`root//item` will also match an `item` nested far deeper than you meant as the
+document grows, and it hides the structure the template actually expects. When
+you know the shape of the input, name the path.
 
 Incorrect:
 
@@ -14,7 +18,7 @@ Incorrect:
 Correct:
 
 ```xsl
-<xsl:template match="item">
+<xsl:template match="root/list/item">
   <xsl:value-of select="."/>
 </xsl:template>
 ```

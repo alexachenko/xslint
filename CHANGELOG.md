@@ -13,6 +13,14 @@ publication date only; detailed notes begin with the Unreleased section.
   can change import precedence — a later import overrides an earlier one on a
   template conflict — so advising that reorder risked changing behavior (#423).
 
+- Rewrite four check motives to argue their real rationale instead of a false
+  one. `missing-id-in-stylesheet` and `not-using-output` are consistency rules,
+  not technical necessities — an `id` does nothing on a standalone stylesheet,
+  and the default output method is defined by the spec rather than left
+  implementation-defined. `use-double-slash` and `starts-with-double-slash`
+  are about over-broad, under-specific match patterns, not a "full document
+  scan" that a match pattern never performs (#423).
+
 ## 0.0.12 - 2026-07-27
 
 - Fix a family of false positives surfaced by linting real-world XSLT

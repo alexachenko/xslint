@@ -1,10 +1,14 @@
 # Not using output
 
-Every stylesheet that has templates must declare `xsl:output` to specify the
-serialization format explicitly. Omitting it leaves the output method
-implementation-defined and leads to inconsistent results across processors. A
-module with no templates — one imported into a pipeline that sets the output
-itself — is exempt, since it never serializes on its own.
+The default serialization method is *not* undefined — the spec fixes it to
+`xml`, or to `html` when the root output element is `<html>`. So this is not
+about avoiding implementation-defined behavior; it is about stating the
+serialization intent explicitly and uniformly. A reader should not have to
+infer the output method from the shape of the first element, and the choice
+should be visible in one place. The only coherent policies are "every
+stylesheet that serializes declares its output" or "none does", so xslint asks
+for the first. A module with no templates — one imported into a pipeline that
+sets the output itself — is exempt, since it never serializes on its own.
 
 Incorrect:
 

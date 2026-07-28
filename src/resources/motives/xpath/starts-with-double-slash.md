@@ -1,8 +1,10 @@
 # Starts with double slash
 
-Starting the `match` attribute of `xsl:template` with `//` forces the
-processor to scan the entire document tree, which is expensive and rarely
-necessary.
+A leading `//` on a `match` pattern is redundant: a template pattern is not
+anchored, so `match="//item"` already selects exactly the same nodes as
+`match="item"` — every `item`, at any depth. The `//` adds nothing but noise
+(and, read carelessly, suggests a document scan that never happens). Drop it
+and let the pattern say plainly which element it matches.
 
 Incorrect:
 

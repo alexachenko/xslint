@@ -1,8 +1,13 @@
-# Missing version in stylesheet
+# Missing id in stylesheet
 
-Every `xsl:stylesheet` should declare an `id` attribute with a unique value.
-Without it, stylesheets are indistinguishable in logs, error messages, and
-tooling that processes multiple stylesheets together.
+The `id` attribute on `xsl:stylesheet` is optional, and on a standalone
+stylesheet it changes nothing about how the transform runs — it matters only
+for a stylesheet embedded in another document and referenced by fragment. So
+this is not a correctness rule; it is a consistency one. Declaring identity is
+still worth doing: it distinguishes a stylesheet in logs, error messages, and
+tooling that processes several at once. The only coherent policies are "every
+stylesheet declares an id" or "none does", and the second cannot be enforced,
+so xslint asks for the first.
 
 Incorrect:
 
