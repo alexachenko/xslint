@@ -50,7 +50,7 @@ get inline annotations on your pull requests:
 
 ```yaml
 - uses: actions/checkout@v6
-- uses: xslint/xslint-action@0.0.6
+- uses: xslint/xslint-action@0.0.7
 ```
 
 Or run it on commit with [pre-commit](https://pre-commit.com) — add to your
