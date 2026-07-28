@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+severity: warning
+message: string-length(...) is compared with 0 to test emptiness, which measures the whole string. Compare the value with '' instead.

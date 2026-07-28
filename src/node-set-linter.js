@@ -4,7 +4,7 @@
  */
 
 const {nodes} = require('./xpath')
-const {tokenized, TOKENS} = require('./tokens')
+const {masked, closes} = require('./expressions')
 const {yaml} = require('./helpers')
 const path = require('path')
 const {logger} = require('./logger')
@@ -40,47 +40,6 @@ const MODERN = ['2.0', '3.0']
  * @type {RegExp}
  */
 const CALL = /[\w.-]+:node-set\s*\(/g
-
-/**
- * A select value with its string and comment spans blanked to spaces, so a
- * `node-set(` call can be found and its parentheses balanced without tripping
- * over text inside a literal. Blanking keeps every offset intact.
- * @param {string} select - The `select` attribute value
- * @return {string} - The value with literals blanked
- */
-const masked = function(select) {
-  const chars = Array.from(select)
-  for (const token of tokenized(select)) {
-    if (token.type === TOKENS.STRING || token.type === TOKENS.COMMENT) {
-      for (let at = token.start; at < token.start + token.value.length; at++) {
-        chars[at] = ' '
-      }
-    }
-  }
-  return chars.join('')
-}
-
-/**
- * Offset of the `)` that closes the `(` at `open` in a literal-free expression,
- * or -1 when it is unbalanced.
- * @param {string} expression - Expression with literals already blanked
- * @param {number} open - Offset of the opening `(`
- * @return {number} - Offset of the matching `)`, or -1
- */
-const closes = function(expression, open) {
-  let depth = 0
-  for (let at = open; at < expression.length; at++) {
-    if (expression[at] === '(') {
-      depth++
-    } else if (expression[at] === ')') {
-      depth--
-      if (depth === 0) {
-        return at
-      }
-    }
-  }
-  return -1
-}
 
 /**
  * The node-set() wrappers in a select value: each carries the offset it starts

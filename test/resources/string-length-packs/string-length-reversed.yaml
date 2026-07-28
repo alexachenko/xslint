@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: string-length-compared-to-zero
+found:
+  amount: 6
+  positions: [ [ 4, 36 ], [ 5, 36 ], [ 6, 36 ], [ 7, 36 ], [ 8, 36 ], [ 9, 36 ] ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="s">
+    <xsl:template match="/">
+      <xsl:variable name="a" select="0 &lt; string-length(@x)"/>
+      <xsl:variable name="b" select="0 = string-length(@x)"/>
+      <xsl:variable name="c" select="0 != string-length(@x)"/>
+      <xsl:variable name="d" select="1 &gt; string-length(@x)"/>
+      <xsl:variable name="e" select="1 &lt;= string-length(@x)"/>
+      <xsl:variable name="f" select="0 &gt;= string-length(@x)"/>
+    </xsl:template>
+  </xsl:stylesheet>

@@ -13,7 +13,7 @@ const {logger} = require('./logger')
  * Name of the check this linter owns.
  * @type {string}
  */
-const CHECK = 'count-compared-to-zero'
+const CHECK = 'string-length-compared-to-zero'
 
 /**
  * Defect metadata of the check.
@@ -30,29 +30,28 @@ const META = yaml.parsedFromFile(
 const names = [CHECK]
 
 /**
- * A `count(` call opener, unprefixed so a custom `my:count()` is left alone.
+ * A `string-length(` call opener, unprefixed so a custom
+ * `my:string-length()` is left alone.
  * @type {RegExp}
  */
-const CALL = /(^|[^\w:.-])count\s*\(/g
+const CALL = /(^|[^\w:.-])string-length\s*\(/g
 
 /**
  * The comparison that follows the call: an operator and a `0` or `1` that turns
- * the whole thing into an existence test.
+ * it into an emptiness test.
  * @type {RegExp}
  */
 const TAIL = /^\s*(!=|<=|>=|=|<|>)\s*([01])(?![\w.])/
 
 /**
- * The operand-reversed comparison sitting just before a call: a `0` or `1` and
- * an operator, as in `0 < count(x)`. The leading group keeps the digit from
- * being the tail of a longer number.
+ * The operand-reversed comparison sitting just before the call, `0 < ...`.
  * @type {RegExp}
  */
 const HEAD = /(^|[^\w.])([01])\s*(!=|<=|>=|=|<|>)\s*$/
 
 /**
- * Each operator with its sides swapped, so a reversed `0 < count(x)` can be
- * read as `count(x) > 0` and fed to the same collapsing rule.
+ * Each operator with its sides swapped, so a reversed
+ * `0 < string-length(x)` can be read as `string-length(x) > 0`.
  * @type {{[operator: string]: string}}
  */
 const FLIP = {
@@ -60,40 +59,73 @@ const FLIP = {
 }
 
 /**
- * The function a comparison collapses to, or null when it is a genuine count
- * rather than an existence test (`> 1`, `>= 0`, and the like).
+ * Whether the comparison tests for a non-empty string (`true`), an empty one
+ * (`false`), or is a genuine length check that is left alone (`null`).
  * @param {string} operator - The comparison operator
  * @param {string} zero - The right-hand side, `0` or `1`
- * @return {?string} - `exists`, `empty`, or null
+ * @return {?boolean} - Non-empty, empty, or null
  */
-const collapses = function(operator, zero) {
+const empty = function(operator, zero) {
   if (zero === '0') {
     if (operator === '>' || operator === '!=') {
-      return 'exists'
+      return false
     }
     if (operator === '=' || operator === '<=') {
-      return 'empty'
+      return true
     }
   }
   if (zero === '1') {
     if (operator === '>=') {
-      return 'exists'
+      return false
     }
     if (operator === '<') {
-      return 'empty'
+      return true
     }
   }
   return null
 }
 
 /**
- * The `count(...)`-versus-zero comparisons in an expression, in either operand
- * order (`count(x) > 0` and `0 < count(x)` alike): each carries the offset it
- * starts at, its verbatim text, and the existence test that replaces it. A call
- * whose parentheses do not balance, or that is compared with anything but
- * `0`/`1` in an existence-testing way, is skipped.
+ * Whether an argument is a single operand that binds tighter than `!=`, so
+ * `X != ''` keeps the original meaning. An argument carrying a top-level `|` or
+ * space (a union or a binary operator) does not, and gets no fix.
+ * @param {string} argument - The call's argument, already literal-blanked
+ * @return {boolean} - Whether the argument is a simple operand
+ */
+const simple = function(argument) {
+  let depth = 0
+  for (const char of argument) {
+    if (char === '(' || char === '[') {
+      depth++
+    } else if (char === ')' || char === ']') {
+      depth--
+    } else if (depth === 0 && (char === '|' || char === ' ')) {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * The emptiness test that replaces a comparison, or null when the argument is
+ * not a simple operand and so cannot be rewritten with one edit.
+ * @param {boolean} clean - Whether the argument is a simple operand
+ * @param {string} argument - The call's argument
+ * @param {boolean} hollow - Whether the comparison tests for an empty string
+ * @return {?string} - The replacement expression, or null
+ */
+const replaced = function(clean, argument, hollow) {
+  return clean ? `${argument} ${hollow ? '=' : '!='} ''` : null
+}
+
+/**
+ * The `string-length(...)`-versus-zero comparisons in an expression, in either
+ * operand order: each carries the offset it starts at, its verbatim text, and
+ * the emptiness test that replaces it — or no replacement when the argument is
+ * not a simple operand. A call whose parentheses do not balance, or that is
+ * compared with anything but `0`/`1` in an emptiness-testing way, is skipped.
  * @param {string} expression - The attribute value
- * @return {Array.<{offset: number, value: string, replacement: string}>} -
+ * @return {Array.<{offset: number, value: string, replacement: ?string}>} -
  *  The comparisons found
  */
 const comparisons = function(expression) {
@@ -107,24 +139,25 @@ const comparisons = function(expression) {
       continue
     }
     const argument = expression.slice(open + 1, close)
+    const clean = simple(blanked.slice(open + 1, close))
     const tail = TAIL.exec(blanked.slice(close + 1))
-    const test = tail && collapses(tail[1], tail[2])
-    if (test) {
+    const hollow = tail ? empty(tail[1], tail[2]) : null
+    if (hollow !== null) {
       found.push({
         offset: start,
         value: expression.slice(start, close + 1 + tail[0].length),
-        replacement: `${test}(${argument})`,
+        replacement: replaced(clean, argument, hollow),
       })
       continue
     }
     const head = HEAD.exec(blanked.slice(0, start))
-    const reversed = head && collapses(FLIP[head[3]], head[2])
-    if (reversed) {
+    const reversed = head ? empty(FLIP[head[3]], head[2]) : null
+    if (reversed !== null) {
       const from = start - head[0].length + head[1].length
       found.push({
         offset: from,
         value: expression.slice(from, close + 1),
-        replacement: `${reversed}(${argument})`,
+        replacement: replaced(clean, argument, reversed),
       })
     }
   }
@@ -132,16 +165,16 @@ const comparisons = function(expression) {
 }
 
 /**
- * Lint the corpus for `count(...)` compared with zero to test existence,
- * reporting one defect per comparison with the fix that rewrites it to
- * `exists()` or `empty()`.
+ * Lint the corpus for `string-length(...)` compared with zero to test
+ * emptiness, reporting one defect per comparison with the fix that rewrites it
+ * to `X != ''` or `X = ''` when the argument is a simple operand.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
- *  line: number, pos: number, fix: object}[]} - Defects found
+ *  line: number, pos: number, fix: ?object}[]} - Defects found
  */
-const lintByCount = function(corpus, suppressions = []) {
-  logger.debug(`Count-comparison linting started`)
+const lintByStringLength = function(corpus, suppressions = []) {
+  logger.debug(`String-length-comparison linting started`)
   const defects = []
   if (!suppressions.some((sup) => CHECK.includes(sup))) {
     for (const {file, xsl} of corpus) {
@@ -157,7 +190,7 @@ const lintByCount = function(corpus, suppressions = []) {
             file: file,
             line: attribute.lineNumber,
             pos: pos,
-            fix: {
+            fix: replacement === null ? undefined : {
               line: attribute.lineNumber,
               col: pos,
               value: value,
@@ -168,11 +201,11 @@ const lintByCount = function(corpus, suppressions = []) {
       }
     }
   }
-  logger.debug(`Found ${defects.length} count comparison defects`)
+  logger.debug(`Found ${defects.length} string-length comparison defects`)
   return defects
 }
 
 module.exports = {
-  lintByCount,
+  lintByStringLength,
   names,
 }

@@ -9,6 +9,15 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `string-length-compared-to-zero` check: `string-length(X)` compared
+  with `0` to test emptiness (in either operand order, inside larger boolean
+  expressions) is flagged, with a `--fix` that rewrites it to `X != ''` or
+  `X = ''` when `X` is a simple operand. A genuine length check such as
+  `string-length(X) > 1` is left alone, and a union argument is reported but
+  left for a human. The lexer helpers `masked`/`closes` are extracted to
+  `src/expressions.js`, shared by the count, node-set, and string-length
+  linters (#437).
+
 - Add the `count-compared-to-zero` check: `count(X)` compared with `0` to test
   existence (`> 0`, `= 0`, `!= 0`, `>= 1`, `<= 0`, `< 1`, in either operand
   order) is flagged, with a `--fix` that rewrites it to `exists(X)` or

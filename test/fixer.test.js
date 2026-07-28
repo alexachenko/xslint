@@ -110,6 +110,30 @@ describe('fixer', function() {
       !xslintStreams(['--fix', file]).stdout.includes('count-compared-to-zero'),
     )
   })
+  it('should rewrite a string-length comparison to != / = with --fix',
+    function() {
+      const file = scratch(fixture('string-length-compared-to-zero.xsl'))
+      runXslint(['--fix', file])
+      assert.equal(
+        fs.readFileSync(file, 'utf-8'),
+        fixture('string-length-compared-to-zero.fixed.xsl'),
+      )
+    })
+  it('cannot rewrite a string-length comparison with --fix-dry-run', function() {
+    const file = scratch(fixture('string-length-compared-to-zero.xsl'))
+    runXslint(['--fix-dry-run', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('string-length-compared-to-zero.xsl'),
+    )
+  })
+  it('should drop the fixed string-length defect from the report', function() {
+    const file = scratch(fixture('string-length-compared-to-zero.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix', file])
+        .stdout.includes('string-length-compared-to-zero'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])
