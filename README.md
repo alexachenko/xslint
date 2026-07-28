@@ -72,11 +72,11 @@ Pointed at core stylesheets from the three most widely-used XSLT projects —
 [DocBook-XSL](https://github.com/docbook/xslt10-stylesheets) (1.0),
 [TEI](https://github.com/TEIC/Stylesheets) (2.0), and
 [DITA-OT](https://github.com/dita-ot/dita-ot) (1.0/2.0), 70 files in all —
-xslint surfaced **2,191 findings across 25 different checks, with no false
+xslint surfaced **2,019 findings across 23 different checks, with no false
 positives from its validators**: 106 `xsl:choose` blocks with no
-`xsl:otherwise`, 71 stylesheet functions never called, 67 unused named
-templates, 54 uses of the string `'true'` as a boolean, and more. Real
-stylistic and logical findings in code that has shipped for decades.
+`xsl:otherwise`, 67 unused named templates, 40 stylesheet functions never
+called, and more. Real stylistic and logical findings in code that has shipped
+for decades.
 
 ## Installation
 
