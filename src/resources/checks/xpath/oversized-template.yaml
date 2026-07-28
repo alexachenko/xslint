@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+xpath: //xsl:template[count(.//xsl:*) > 100]
+severity: warning
+message: The template contains more than 100 XSLT elements. Decompose it with apply-templates into focused templates.

@@ -139,7 +139,7 @@ xslint --suppress=unused
 If you want to suppress many checks, use `--suppress` as many times as you need:
 
 ```bash
-xslint --suppress=monolithic-design --suppress=short-names
+xslint --suppress=oversized-template --suppress=short-names
 ```
 
 ## Configuration
