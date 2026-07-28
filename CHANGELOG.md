@@ -9,6 +9,13 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `translate-for-case` check: in an XSLT 2.0/3.0 stylesheet, a
+  `translate(x, 'A..Z', 'a..z')` (or the reverse) that folds case over the ASCII
+  alphabet is flagged, with a `--fix-suggestions` that rewrites it to
+  `lower-case(x)` or `upper-case(x)`. A suggestion because those fold all of
+  Unicode, not just ASCII. Fires only in 2.0/3.0, since 1.0 has no such
+  function; any other `translate` is left alone (#440).
+
 - Add the `name-compared-to-string` check: `name()`/`local-name()` compared with
   a string literal (either operand order) is prefix-fragile and slower than a
   node test. A `--fix-suggestions` rewrites `name() = 'x'` → `self::x`,

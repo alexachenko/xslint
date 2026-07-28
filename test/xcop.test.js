@@ -24,6 +24,7 @@ const PACKS = [
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'count-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'string-length-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'name-packs')),
+  ...allFilesFrom(path.resolve(__dirname, 'resources', 'translate-packs')),
 ]
 
 /**

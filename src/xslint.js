@@ -19,6 +19,7 @@ const {lintByCount, names: countChecks} = require('./count-linter')
 const {lintByStringLength, names: stringLengthChecks} =
   require('./string-length-linter')
 const {lintByName, names: nameChecks} = require('./name-linter')
+const {lintByTranslate, names: translateChecks} = require('./translate-linter')
 const {lintByFormat, names: formatChecks} = require('./xpath-format-linter')
 const {fixed} = require('./fixer')
 const {logger, levels} = require('./logger')
@@ -41,6 +42,7 @@ const LINTERS = [
   lintByCount,
   lintByStringLength,
   lintByName,
+  lintByTranslate,
 ]
 
 /**
@@ -62,6 +64,7 @@ const CHECKS = [
   ...xslChecks, ...xpathValidatorChecks,
   ...xpathChecks, ...corpusChecks, ...axisChecks, ...namespaceChecks,
   ...nodeSetChecks, ...countChecks, ...stringLengthChecks, ...nameChecks,
+  ...translateChecks,
   ...formatChecks,
 ]
 

@@ -158,6 +158,30 @@ describe('fixer', function() {
         .stdout.includes('name-compared-to-string'),
     )
   })
+  it('cannot rewrite a translate case fold with plain --fix', function() {
+    const file = scratch(fixture('translate-for-case.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('translate-for-case.xsl'),
+    )
+  })
+  it('should rewrite a translate case fold to lower/upper-case with '
+    + '--fix-suggestions', function() {
+    const file = scratch(fixture('translate-for-case.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('translate-for-case.fixed.xsl'),
+    )
+  })
+  it('should drop the fixed translate defect with --fix-suggestions', function() {
+    const file = scratch(fixture('translate-for-case.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix-suggestions', file])
+        .stdout.includes('translate-for-case'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])

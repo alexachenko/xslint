@@ -291,6 +291,8 @@ Today this covers:
 - `name-compared-to-string` — `name() = 'x'` becomes `self::x` and
   `local-name() = 'x'` becomes `self::*:x`, shifting from lexical-QName to
   expanded-name matching.
+- `translate-for-case` — an alphabet `translate(x, 'A…Z', 'a…z')` becomes
+  `lower-case(x)` (or `upper-case(x)`), which also folds non-ASCII characters.
 
 Checks whose correction needs real judgment (a fresh name, a more specific
 path) stay report-only. A run without `--fix` reports how many defects each
