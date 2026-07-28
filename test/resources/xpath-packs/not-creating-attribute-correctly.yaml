@@ -4,14 +4,16 @@
 pack: not-creating-attribute-correctly
 found:
   amount: 2
-  positions: [ [ 6, 7 ], [ 7, 7 ] ]
+  positions: [ [ 6, 7 ], [ 9, 7 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="style1">
     <xsl:output encoding="UTF-8" method="xml"/>
     <xsl:template match="/objects/o">
       <div>
-        <xsl:attribute name="class"><xsl:value-of select="@c"/></xsl:attribute>
+        <xsl:attribute name="class">
+          <xsl:value-of select="@c"/>
+        </xsl:attribute>
         <xsl:attribute name="id">fixed</xsl:attribute>
       </div>
     </xsl:template>

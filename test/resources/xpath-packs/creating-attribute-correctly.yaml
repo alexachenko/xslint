@@ -11,10 +11,14 @@ input: |-
     <xsl:output encoding="UTF-8" method="xml"/>
     <xsl:template match="/objects/o">
       <xsl:element name="{$dyn}">
-        <xsl:attribute name="role"><xsl:value-of select="@r"/></xsl:attribute>
+        <xsl:attribute name="role">
+          <xsl:value-of select="@r"/>
+        </xsl:attribute>
       </xsl:element>
       <p>
-        <xsl:attribute name="{$attr}"><xsl:value-of select="@x"/></xsl:attribute>
+        <xsl:attribute name="{$attr}">
+          <xsl:value-of select="@x"/>
+        </xsl:attribute>
       </p>
     </xsl:template>
   </xsl:stylesheet>
