@@ -9,6 +9,20 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Rework the size and count checks into one coherent band, split by node type so
+  they never double-report (#423):
+  - `too-many-small-templates` → **`too-many-templates`**: fire when a stylesheet
+    declares ten or more `xsl:template`, whatever their size, since a file with
+    that many templates is hard to read (breaking: the `--suppress`/config name
+    changes).
+  - `function-template-complexity` → **`function-complexity`**: look only at
+    `xsl:function` (more than 50 elements); a large template is a different smell
+    (breaking rename).
+  - `monolithic-design` → **`oversized-template`**: fire on a single
+    `xsl:template` holding more than 100 XSLT elements, rather than on any
+    one-template stylesheet — a small one-template sheet is fine, an undecomposed
+    hundred-element one is not (breaking rename).
+
 ## 0.0.12 - 2026-07-27
 
 - Fix a family of false positives surfaced by linting real-world XSLT
