@@ -11,5 +11,6 @@ mochawesome-report/
 coverage.html
 target/
 temp/
+test/temp-*.xsl
 *.tgz
 .DS_Store
