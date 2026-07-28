@@ -22,7 +22,7 @@ exact line and column, in your terminal or in CI.
 Run it on your stylesheets — no install needed:
 
 ```bash
-npx @maxonfjvipon/xslint@0.0.12 path/to/stylesheets
+npx @maxonfjvipon/xslint@0.0.13 path/to/stylesheets
 ```
 
 Given a stylesheet like this:
@@ -72,7 +72,7 @@ Pointed at core stylesheets from the three most widely-used XSLT projects —
 [DocBook-XSL](https://github.com/docbook/xslt10-stylesheets) (1.0),
 [TEI](https://github.com/TEIC/Stylesheets) (2.0), and
 [DITA-OT](https://github.com/dita-ot/dita-ot) (1.0/2.0), 70 files in all —
-xslint surfaced **2,019 findings across 23 different checks, with no false
+xslint surfaced **1,974 findings across 22 different checks, with no false
 positives from its validators**: 106 `xsl:choose` blocks with no
 `xsl:otherwise`, 67 unused named templates, 40 stylesheet functions never
 called, and more. Real stylistic and logical findings in code that has shipped
@@ -83,7 +83,7 @@ for decades.
 To install `xslint` globally, install [npm] first, then run:
 
 ```bash
-npm install -g @maxonfjvipon/xslint@0.0.12
+npm install -g @maxonfjvipon/xslint@0.0.13
 xslint --version
 ```
 

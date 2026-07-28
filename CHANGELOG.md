@@ -9,6 +9,10 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Refresh the real-code proof after the check audit: 1,974 findings across 22
+  checks on the same 70 DocBook/TEI/DITA files (was 2,019 across 23), and bump
+  the stale install-example version in the README (#423).
+
 ## 0.0.13 - 2026-07-28
 
 - Drop the `unsorted-imports` check. Ordering `xsl:import` elements alphabetically
