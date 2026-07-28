@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make the `starts-with-double-slash` and `use-double-slash` messages honest.
+  They blamed a "document scan" that a match pattern never performs; they now
+  say a leading `//` is redundant and an inner `//` matches at any depth,
+  matching the motives corrected earlier (#423).
+
 - Drop the `not-using-schema-types` check. It fired on a 2.0/3.0 stylesheet that
   used no `xs:` type anywhere — an arbitrary "use at least one type" rule that a
   single token type silenced and that flagged perfectly valid untyped

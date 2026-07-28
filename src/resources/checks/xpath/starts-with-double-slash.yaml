@@ -3,4 +3,4 @@
 ---
 xpath: //xsl:template[starts-with(@match, '//')]
 severity: warning
-message: The match attribute of xsl:template starts with //, which scans the entire document tree. Use a more specific pattern.
+message: The match attribute of xsl:template starts with //, which is redundant since an unanchored pattern already matches at any depth. Remove the leading //.
