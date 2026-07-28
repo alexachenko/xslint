@@ -10,9 +10,10 @@ publication date only; detailed notes begin with the Unreleased section.
 ## Unreleased
 
 - Add the `count-compared-to-zero` check: `count(X)` compared with `0` to test
-  existence (`> 0`, `= 0`, `!= 0`, `>= 1`, `<= 0`, `< 1`) is flagged, with a
-  `--fix` that rewrites it to `exists(X)` or `empty(X)`. A genuine count such as
-  `count(X) > 1` is left alone (#436).
+  existence (`> 0`, `= 0`, `!= 0`, `>= 1`, `<= 0`, `< 1`, in either operand
+  order) is flagged, with a `--fix` that rewrites it to `exists(X)` or
+  `empty(X)`. It works inside larger boolean expressions and leaves a genuine
+  count such as `count(X) > 1` alone (#436).
 
 ## 0.0.14 - 2026-07-28
 

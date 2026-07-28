@@ -12,5 +12,7 @@ input: |-
       <xsl:value-of select="my:count($x) &gt; 0"/>
       <xsl:value-of select="'count(z) = 0'"/>
       <xsl:value-of select="count(x"/>
+      <xsl:value-of select="1 &lt; count(x)"/>
+      <xsl:value-of select="10 &lt; count(x)"/>
     </xsl:template>
   </xsl:stylesheet>

@@ -20,5 +20,7 @@ Correct:
 <xsl:if test="empty($items)">
 ```
 
-A comparison that is not an existence test — `count($x) &gt; 1`, `count($x) = 5`
-— is a genuine count and is left alone.
+The operand order does not matter: `0 &lt; count($items)` and
+`0 = count($items)` are flagged the same way. A comparison that is not an
+existence test — `count($x) &gt; 1`, `count($x) = 5` — is a genuine count and is
+left alone.
