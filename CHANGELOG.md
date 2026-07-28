@@ -9,6 +9,13 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `not-creating-attribute-correctly` check: an `xsl:attribute` with a
+  static name on a literal result element, whose value is simple (a single
+  `xsl:value-of`, text, or empty), can be written inline as a literal attribute
+  (an AVT for a computed value). Warning only — the inline rewrite is structural
+  and waits on the full-fidelity parser (#228). `xsl:element`/`xsl:copy` parents,
+  computed names, and `xsl:choose` values are left alone (#438).
+
 - Add the `translate-for-case` check: in an XSLT 2.0/3.0 stylesheet, a
   `translate(x, 'A..Z', 'a..z')` (or the reverse) that folds case over the ASCII
   alphabet is flagged, with a `--fix-suggestions` that rewrites it to
