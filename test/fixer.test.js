@@ -96,6 +96,20 @@ describe('fixer', function() {
       fixture('count-compared-to-zero.fixed.xsl'),
     )
   })
+  it('cannot rewrite a count comparison with --fix-dry-run', function() {
+    const file = scratch(fixture('count-compared-to-zero.xsl'))
+    runXslint(['--fix-dry-run', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('count-compared-to-zero.xsl'),
+    )
+  })
+  it('should drop the fixed count defect from the report', function() {
+    const file = scratch(fixture('count-compared-to-zero.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix', file]).stdout.includes('count-compared-to-zero'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])
