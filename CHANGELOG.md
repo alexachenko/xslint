@@ -9,6 +9,13 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `select-starts-with-double-slash` check: a `select` whose XPath begins
+  with `//` scans the whole document from the root every time it runs — a real,
+  repeated scan, unlike the merely redundant leading `//` in a match pattern.
+  Warning only, since the right anchor (`.//` or a specific path) depends on
+  intent. An inner `//`, one inside a string, or one reached through a variable
+  is left alone (#435).
+
 - Add the `string-length-compared-to-zero` check: `string-length(X)` compared
   with `0` to test emptiness (in either operand order, inside larger boolean
   expressions) is flagged, with a `--fix` that rewrites it to `X != ''` or
