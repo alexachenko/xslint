@@ -9,6 +9,14 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `name-compared-to-string` check: `name()`/`local-name()` compared with
+  a string literal (either operand order) is prefix-fragile and slower than a
+  node test. A `--fix-suggestions` rewrites `name() = 'x'` → `self::x`,
+  `!= 'x'` → `not(self::x)`, and `local-name() = 'x'` → `self::*:x` (the
+  wildcard, so 2.0/3.0 only); it is a suggestion because it shifts lexical-name
+  to expanded-name matching. Only a comparison over the current node with a
+  valid name is rewritten (#439).
+
 - Add the `select-starts-with-double-slash` check: a `select` whose XPath begins
   with `//` scans the whole document from the root every time it runs — a real,
   repeated scan, unlike the merely redundant leading `//` in a match pattern.

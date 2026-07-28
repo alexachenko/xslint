@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: name-compared-to-string
+found:
+  amount: 4
+  positions: [ [ 4, 36 ], [ 5, 36 ], [ 6, 36 ], [ 7, 36 ] ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="s">
+    <xsl:template match="/">
+      <xsl:variable name="a" select="name() = 'p'"/>
+      <xsl:variable name="b" select="name() != 'q'"/>
+      <xsl:variable name="c" select="local-name() = 'r'"/>
+      <xsl:variable name="d" select="'s' = name()"/>
+    </xsl:template>
+  </xsl:stylesheet>

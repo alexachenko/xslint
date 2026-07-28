@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+severity: warning
+message: name() or local-name() is compared with a string, which is prefix-fragile and slower than a node test. Use self::name instead.

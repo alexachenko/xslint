@@ -134,6 +134,30 @@ describe('fixer', function() {
         .stdout.includes('string-length-compared-to-zero'),
     )
   })
+  it('cannot rewrite a name comparison with plain --fix', function() {
+    const file = scratch(fixture('name-compared-to-string.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('name-compared-to-string.xsl'),
+    )
+  })
+  it('should rewrite a name comparison to a node test with --fix-suggestions',
+    function() {
+      const file = scratch(fixture('name-compared-to-string.xsl'))
+      runXslint(['--fix-suggestions', file])
+      assert.equal(
+        fs.readFileSync(file, 'utf-8'),
+        fixture('name-compared-to-string.fixed.xsl'),
+      )
+    })
+  it('should drop the fixed name defect with --fix-suggestions', function() {
+    const file = scratch(fixture('name-compared-to-string.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix-suggestions', file])
+        .stdout.includes('name-compared-to-string'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])
