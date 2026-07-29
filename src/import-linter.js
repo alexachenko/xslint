@@ -124,7 +124,7 @@ const byCircularity = function(corpus) {
  * from the element as its indentation, the self-closing tag with its single
  * `href`, and the trailing newline. The fixer applies it only when the source
  * is exactly that, so an oddly formatted, single-quoted, or non-self-closing
- * import is reported but left untouched rather than mis-edited. Deleting a
+ * import is reported but left untouched rather than wrongly cut. Deleting a
  * duplicate is semantics-preserving — the module stays imported by the first
  * reference — so it is a safe fix, not a suggestion.
  * @param {Element} node - The duplicate import/include element
