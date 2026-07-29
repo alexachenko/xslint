@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `starts-with-double-slash` fixable: `--fix` drops the redundant leading
+  `//` of a template's `@match` (`match="//para"` becomes `match="para"`). It is
+  a safe fix, not a suggestion, since a match pattern is already unanchored and
+  the shortened pattern selects the same nodes (#455).
+
 - Add the `leaking-result-namespace` check: a namespace prefix a stylesheet
   declares only for its own logic — `xs` for a sequence type, a helper `my`/`eo`
   called from a `select` — is copied into the serialized output by any literal

@@ -248,7 +248,7 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers six checks:
+Today this covers seven checks:
 
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
@@ -264,6 +264,9 @@ Today this covers six checks:
 - `string-length-compared-to-zero` — an emptiness test spelled as a length is
   simplified: `string-length(@x) > 0` becomes `@x != ''`, and `= 0` becomes
   `@x = ''`.
+- `starts-with-double-slash` — the redundant leading `//` of a template's
+  `@match` is dropped: `match="//para"` becomes `match="para"`, which selects
+  the same nodes.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the

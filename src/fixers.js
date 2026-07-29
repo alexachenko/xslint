@@ -67,6 +67,24 @@ const modeOrPriority = function(node) {
 }
 
 /**
+ * Fix for `starts-with-double-slash`: drop the leading `//` of the template's
+ * `@match`. In a match pattern the leading `//` is redundant — a pattern is
+ * already unanchored — so removing it preserves the matched nodes, which makes
+ * this a safe fix rather than a suggestion.
+ * @param {Element} node - The `xsl:template` element
+ * @return {object} - The safe fix
+ */
+const startsWithDoubleSlash = function(node) {
+  const match = node.getAttributeNode('match')
+  return {
+    line: match.lineNumber,
+    col: match.columnNumber - match.name.length - 1,
+    value: `${match.name}="${match.value}"`,
+    replacement: `${match.name}="${match.value.slice(2)}"`,
+  }
+}
+
+/**
  * Fix builders for declarative Xpath checks, keyed by check name. The per-file
  * linter attaches the fix a builder returns to the defect it found for that
  * check, so a rule stays declarative while still carrying a fix; a builder
@@ -78,6 +96,7 @@ const FIXERS = {
   'output-method-xml': outputMethodXml,
   'missing-version-in-stylesheet': missingVersion,
   'mode-or-priority-without-match': modeOrPriority,
+  'starts-with-double-slash': startsWithDoubleSlash,
 }
 
 module.exports = {

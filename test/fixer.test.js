@@ -80,6 +80,31 @@ describe('fixer', function() {
       fixture('redundant-namespace-declarations.fixed.xsl'),
     )
   })
+  it('should drop the redundant leading slashes of a match with --fix',
+    function() {
+      const file = scratch(fixture('starts-with-double-slash.xsl'))
+      runXslint(['--fix', file])
+      assert.equal(
+        fs.readFileSync(file, 'utf-8'),
+        fixture('starts-with-double-slash.fixed.xsl'),
+      )
+    })
+  it('cannot drop the leading slashes with --fix-dry-run', function() {
+    const file = scratch(fixture('starts-with-double-slash.xsl'))
+    runXslint(['--fix-dry-run', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('starts-with-double-slash.xsl'),
+    )
+  })
+  it('should drop the fixed starts-with-double-slash defect from the report',
+    function() {
+      const file = scratch(fixture('starts-with-double-slash.xsl'))
+      assert.ok(
+        !xslintStreams(['--fix', file])
+          .stdout.includes('starts-with-double-slash'),
+      )
+    })
   it('should unwrap the node-set extension with --fix', function() {
     const file = scratch(fixture('use-node-set-extension.xsl'))
     runXslint(['--fix', file])
