@@ -292,6 +292,10 @@ Today this covers:
 - `confusing-variable-and-node` — a bare variable name used as a node selector
   gets its `$`: `<xsl:apply-templates select="items"/>` becomes
   `select="$items"`, assuming the variable was meant over a child element.
+- `text-outside-xsl-text` — loose literal text inside an instruction is wrapped:
+  `<xsl:if test="a">hello</xsl:if>` becomes
+  `<xsl:if test="a"><xsl:text>hello</xsl:text></xsl:if>` (only when there is a
+  single run of text to wrap).
 - `using-disable-output-escaping` — the attribute is removed, which changes how
   the output is escaped.
 - `output-method-xml` — `method="xml"` becomes `"html"` when the stylesheet

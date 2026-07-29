@@ -9,6 +9,13 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `text-outside-xsl-text` fixable: `--fix-suggestions` wraps loose literal
+  text inside an instruction in `xsl:text` (`<xsl:if test="a">hello</xsl:if>`
+  becomes `<xsl:if test="a"><xsl:text>hello</xsl:text></xsl:if>`). A suggestion,
+  and offered only when the instruction holds a single non-whitespace text node,
+  since text on both sides of a child element needs several wraps that one edit
+  cannot make (#459).
+
 - Make `confusing-variable-and-node` fixable: `--fix-suggestions` prepends `$`
   to a bare variable name used as a node selector in an `xsl:apply-templates`
   `@select` (`select="items"` becomes `select="$items"`). A suggestion, since it

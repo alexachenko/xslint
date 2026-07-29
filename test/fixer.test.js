@@ -315,6 +315,30 @@ describe('fixer', function() {
         .stdout.includes('confusing-variable-and-node'),
     )
   })
+  it('cannot wrap loose text in xsl:text with plain --fix', function() {
+    const file = scratch(fixture('text-outside-xsl-text.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('text-outside-xsl-text.xsl'),
+    )
+  })
+  it('should wrap loose text in xsl:text with --fix-suggestions', function() {
+    const file = scratch(fixture('text-outside-xsl-text.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('text-outside-xsl-text.fixed.xsl'),
+    )
+  })
+  it('should drop the fixed text-outside-xsl-text defect with ' +
+    '--fix-suggestions', function() {
+    const file = scratch(fixture('text-outside-xsl-text.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix-suggestions', file])
+        .stdout.includes('text-outside-xsl-text'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])

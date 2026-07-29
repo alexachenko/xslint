@@ -146,6 +146,30 @@ const confusingVariable = function(node) {
 }
 
 /**
+ * Fix for `text-outside-xsl-text`: wrap the literal text in `xsl:text`. A
+ * suggestion, since it is a stylistic rewrite that inserts an element. Only
+ * when the instruction holds exactly one non-whitespace text node can a single
+ * edit resolve the defect — with text on both sides of a child element there
+ * are several nodes to wrap, so there is no fix.
+ * @param {Element} node - The instruction element holding the loose text
+ * @return {?object} - The suggestion fix, or null
+ */
+const textOutsideXslText = function(node) {
+  const texts = Array.from(node.childNodes).filter(
+    (child) => child.nodeType === 3 && child.nodeValue.trim() !== '',
+  )
+  return texts.length === 1 ?
+    {
+      line: texts[0].lineNumber,
+      col: texts[0].columnNumber,
+      value: texts[0].nodeValue,
+      replacement: `<xsl:text>${texts[0].nodeValue}</xsl:text>`,
+      suggestion: true,
+    } :
+    null
+}
+
+/**
  * Fix builders for declarative Xpath checks, keyed by check name. The per-file
  * linter attaches the fix a builder returns to the defect it found for that
  * check, so a rule stays declarative while still carrying a fix; a builder
@@ -161,6 +185,7 @@ const FIXERS = {
   'incorrect-use-of-boolean-constants': booleanConstant,
   'select-starts-with-double-slash': selectDoubleSlash,
   'confusing-variable-and-node': confusingVariable,
+  'text-outside-xsl-text': textOutsideXslText,
 }
 
 module.exports = {
