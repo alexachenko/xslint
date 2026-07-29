@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `sort-not-first` check: an `xsl:sort` that follows other content in
+  its `xsl:for-each` or `xsl:apply-templates` is invalid and silently ignored
+  by some processors. Report-only, since moving it to the front is structural
+  (#372).
+
 - Add the `empty-choose` check: an `xsl:choose` with no `xsl:when` is
   degenerate — XSLT requires at least one, and a `choose` holding only an
   `xsl:otherwise` is a wrapper that always runs. Report-only, since the fix
