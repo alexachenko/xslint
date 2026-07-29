@@ -21,6 +21,8 @@ const {lintByNodeSet, names: nodeSetChecks} = require('./node-set-linter')
 const {lintByCount, names: countChecks} = require('./count-linter')
 const {lintByDoubleNegation, names: doubleNegationChecks} =
   require('./redundant-double-negation-linter')
+const {lintByPredicatePosition, names: predicatePositionChecks} =
+  require('./predicate-position-linter')
 const {lintByBooleanCall, names: booleanCallChecks} =
   require('./redundant-boolean-call-linter')
 const {lintByStringLength, names: stringLengthChecks} =
@@ -54,6 +56,7 @@ const LINTERS = [
   lintByTranslate,
   lintByDoubleNegation,
   lintByBooleanCall,
+  lintByPredicatePosition,
 ]
 
 /**
@@ -77,6 +80,7 @@ const CHECKS = [
   ...resultNamespaceChecks, ...importChecks,
   ...nodeSetChecks, ...countChecks, ...stringLengthChecks, ...nameChecks,
   ...translateChecks, ...doubleNegationChecks, ...booleanCallChecks,
+  ...predicatePositionChecks,
   ...formatChecks,
 ]
 

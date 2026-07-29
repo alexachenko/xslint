@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+severity: warning
+message: A positional predicate is written the long way; [position() = N] is just [N] and [position() = last()] is just [last()]. Shorten it.

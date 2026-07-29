@@ -98,6 +98,12 @@ const APPLIED = [
     after: 'redundant-boolean-call.fixed.xsl',
   },
   {
+    name: 'should shorten positional predicates with --fix',
+    flag: '--fix',
+    before: 'predicate-position-literal.xsl',
+    after: 'predicate-position-literal.fixed.xsl',
+  },
+  {
     name: 'should rewrite a count comparison to exists/empty with --fix',
     flag: '--fix',
     before: 'count-compared-to-zero.xsl',
@@ -214,6 +220,11 @@ const UNCHANGED = [
     sheet: 'redundant-boolean-call.xsl',
   },
   {
+    name: 'cannot shorten positional predicates with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'predicate-position-literal.xsl',
+  },
+  {
     name: 'cannot rewrite a count comparison with --fix-dry-run',
     flag: '--fix-dry-run',
     sheet: 'count-compared-to-zero.xsl',
@@ -299,6 +310,12 @@ const DROPPED = [
     flag: '--fix',
     sheet: 'redundant-boolean-call.xsl',
     check: 'redundant-boolean-call',
+  },
+  {
+    name: 'should drop the fixed predicate-position defect from the report',
+    flag: '--fix',
+    sheet: 'predicate-position-literal.xsl',
+    check: 'predicate-position-literal',
   },
   {
     name: 'should drop the fixed count defect from the report',

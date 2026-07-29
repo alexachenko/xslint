@@ -276,6 +276,9 @@ Today this covers nine checks:
 - `redundant-boolean-call` — a whole `@test` wrapped in `boolean()` drops the
   wrapper: `test="boolean(@x)"` becomes `test="@x"`, since a test already
   coerces its value to a boolean.
+- `predicate-position-literal` — a positional predicate written the long way is
+  shortened: `item[position() = 1]` becomes `item[1]`, and
+  `item[position() = last()]` becomes `item[last()]`.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the
