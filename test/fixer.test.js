@@ -182,6 +182,39 @@ describe('fixer', function() {
         .stdout.includes('translate-for-case'),
     )
   })
+  it('cannot exclude a leaking prefix with plain --fix', function() {
+    const file = scratch(fixture('leaking-result-namespace.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('leaking-result-namespace.xsl'),
+    )
+  })
+  it('should exclude a leaking prefix with --fix-suggestions', function() {
+    const file = scratch(fixture('leaking-result-namespace.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('leaking-result-namespace.fixed.xsl'),
+    )
+  })
+  it('should drop the fixed leaking-result-namespace defect with ' +
+    '--fix-suggestions', function() {
+    const file = scratch(fixture('leaking-result-namespace.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix-suggestions', file])
+        .stdout.includes('leaking-result-namespace'),
+    )
+  })
+  it('should append to an existing exclude-result-prefixes with ' +
+    '--fix-suggestions', function() {
+    const file = scratch(fixture('leaking-result-namespace-appended.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('leaking-result-namespace-appended.fixed.xsl'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])

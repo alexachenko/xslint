@@ -13,9 +13,11 @@ publication date only; detailed notes begin with the Unreleased section.
   declares only for its own logic — `xs` for a sequence type, a helper `my`/`eo`
   called from a `select` — is copied into the serialized output by any literal
   result element, unless it is listed in `exclude-result-prefixes`. The check
-  flags such a prefix (warning, no fix yet), skipping text-output stylesheets,
+  flags such a prefix, with a `--fix-suggestions` that adds it to
+  `exclude-result-prefixes` (inserting the attribute or appending to it, and
+  only when a single prefix leaks). It skips text-output stylesheets,
   `#all`/already-excluded and extension prefixes, and any prefix a result
-  element genuinely uses. It complements `redundant-namespace-declarations`
+  element genuinely uses, and complements `redundant-namespace-declarations`
   (a prefix used nowhere) rather than overlapping it, and catches the class of
   regression seen in objectionary/eo#6079 (#453).
 

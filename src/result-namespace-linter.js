@@ -135,6 +135,37 @@ const textual = function(elements) {
 }
 
 /**
+ * A suggestion fix that stops a prefix leaking by adding it to the root's
+ * `exclude-result-prefixes` — appended to the existing attribute, or a new one
+ * inserted after the element name. It is a suggestion because it changes the
+ * serialized output. Only offered when a single prefix leaks, since several
+ * would each edit the one shared attribute and collide.
+ * @param {Element} root - The stylesheet root
+ * @param {string} prefix - The leaking prefix to exclude
+ * @return {{line: number, col: number, value: string, replacement: string,
+ *  suggestion: boolean}} - The fix
+ */
+const exclusion = function(root, prefix) {
+  const attribute = root.getAttributeNode('exclude-result-prefixes')
+  if (attribute) {
+    return {
+      line: attribute.lineNumber,
+      col: attribute.columnNumber - attribute.name.length - 1,
+      value: `${attribute.name}="${attribute.value}"`,
+      replacement: `${attribute.name}="${attribute.value} ${prefix}"`,
+      suggestion: true,
+    }
+  }
+  return {
+    line: root.lineNumber,
+    col: root.columnNumber + root.nodeName.length + 1,
+    value: '',
+    replacement: ` exclude-result-prefixes="${prefix}"`,
+    suggestion: true,
+  }
+}
+
+/**
  * Lint the corpus for namespace prefixes declared on the stylesheet, used only
  * in its logic, and copied into the output by a literal result element. A
  * prefix is a defect when the stylesheet emits a literal result element, the
@@ -164,20 +195,25 @@ const lintByResultNamespace = function(corpus, suppressions = []) {
         !textual(elements) &&
         elements.some((element) => literal(element, extension))
       const output = leaks ? outputs(elements, extension) : new Set()
-      for (const attribute of Array.from(root.attributes)) {
-        const prefix = declared(attribute.name)
-        if (leaks && prefix && prefix !== 'xml' && prefix !== root.prefix &&
-          !excluded.has(prefix) && !extension.has(prefix) &&
-          !output.has(prefix) && used(elements, prefix)) {
-          defects.push({
-            name: CHECK,
-            severity: META.severity,
-            message: META.message,
-            file: file,
-            line: attribute.lineNumber,
-            pos: attribute.columnNumber - attribute.name.length - 1,
-          })
-        }
+      const leaking = leaks ?
+        Array.from(root.attributes).filter((attribute) => {
+          const prefix = declared(attribute.name)
+          return prefix && prefix !== 'xml' && prefix !== root.prefix &&
+            !excluded.has(prefix) && !extension.has(prefix) &&
+            !output.has(prefix) && used(elements, prefix)
+        }) :
+        []
+      for (const attribute of leaking) {
+        defects.push({
+          name: CHECK,
+          severity: META.severity,
+          message: META.message,
+          file: file,
+          line: attribute.lineNumber,
+          pos: attribute.columnNumber - attribute.name.length - 1,
+          ...(leaking.length === 1 &&
+            {fix: exclusion(root, declared(attribute.name))}),
+        })
       }
     }
   }
