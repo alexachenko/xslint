@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `param-after-content` check: an `xsl:param` that follows real
+  content in its `xsl:template` or `xsl:function` is invalid XSLT that XML
+  well-formedness never catches (only other params and an `xsl:context-item`
+  may precede it). Report-only, since moving the param up is structural
+  (#367).
+
 - Add the `sort-not-first` check: an `xsl:sort` that follows other content in
   its `xsl:for-each` or `xsl:apply-templates` is invalid and silently ignored
   by some processors. Report-only, since moving it to the front is structural
