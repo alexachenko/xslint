@@ -9,11 +9,13 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
-- Fix `unused-function`: mutually recursive functions that nothing else calls
-  are now flagged. Use is followed as reachability from a reference outside
-  every function body (a call from a template), so a cycle of functions that
-  only call one another is dead and reported whole, rather than each masking
-  the other (#175).
+- Add the `unreachable-function` check and narrow `unused-function` to suit.
+  `unused-function` now flags only a function whose name appears in no call at
+  all; a function that *is* called, but only from within a recursion cycle that
+  nothing enters — a self-loop, or a `my:even`/`my:odd` pair — is dead code the
+  new `unreachable-function` reports, following the call graph from calls that
+  sit outside every function body. Previously such cycles slipped through, each
+  reference propping the other up (#175).
 
 - Add the `not-creating-attribute-correctly` check: an `xsl:attribute` with a
   static name on a literal result element, whose value is simple (a single

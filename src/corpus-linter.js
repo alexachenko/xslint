@@ -115,7 +115,7 @@ const enclosing = function(declarations, usage) {
  * declaration's body — by following the call graph: a declaration is used
  * when an in-scope reference to it sits outside all declarations, or inside
  * another declaration that is itself used. Mutually recursive functions that
- * nothing else calls are reached by neither, so both stay unused.
+ * nothing else calls are reached by neither, so both stay unreachable.
  * @param {object} check - The check to apply, carrying a `reference` template
  * @param {Array.<{file: string, node: Node}>} declarations - Declaring nodes
  * @param {Array.<Node>} usages - Usage attributes across the corpus
@@ -149,24 +149,82 @@ const reachable = function(check, declarations, usages) {
 }
 
 /**
- * Defects of a check that searches for a declaration's name as a substring of
- * the usage values — a stylesheet function or a variable is referenced from
- * within an XPath expression (`name(`, `$name`), not by an attribute of its
- * own, and the reference can live in any file that imports the declaring one.
- * A declaration is a defect when the reachability walk never reaches it, so a
- * cycle of functions that only call each other is flagged whole.
+ * Defects of a check that flags a declaration whose reference string appears
+ * in no usage value anywhere in the corpus — a stylesheet function nothing
+ * calls (`name(`), counting its own body too, so a function that only calls
+ * itself is referenced and left to the reachability check instead.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {object} check - The check to apply, carrying a `reference` template
  * @return {Array.<object>} - Defects found
  */
-const byReference = function(corpus, check) {
+const byCall = function(corpus, check) {
+  const usages = corpus.flatMap(({xsl}) => nodes(xsl, check.usage))
+  return corpus.flatMap(({file, xsl}) => nodes(xsl, check.declaration)
+    .filter((node) =>
+      usages.every((usage) => !usage.value.includes(needle(check, node))))
+    .map((node) => defect(check, file, node)))
+}
+
+/**
+ * Defects of a scoped check that flags a declaration referenced by no in-scope
+ * usage — a variable read by `$name` from nowhere its scope reaches. Its own
+ * subtree is excluded, so a self-reference is not use.
+ * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @param {object} check - The check to apply, carrying a `reference` template
+ * @return {Array.<object>} - Defects found
+ */
+const byScope = function(corpus, check) {
+  const usages = corpus.flatMap(({xsl}) => nodes(xsl, check.usage))
+  return corpus.flatMap(({file, xsl}) => nodes(xsl, check.declaration)
+    .filter((node) => !usages.some((usage) =>
+      !within(node, usage) &&
+      usage.value.includes(needle(check, node)) &&
+      inScope(check, node, usage)))
+    .map((node) => defect(check, file, node)))
+}
+
+/**
+ * Defects of a reachability check that flags a declaration referenced
+ * somewhere yet reached by no call from outside a function body — a function
+ * called only from within a recursion cycle (self or mutual) that nothing
+ * enters, so it never runs. A function nothing references at all is left to
+ * the by-call check, not double-reported here.
+ * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @param {object} check - The check to apply, carrying a `reference` template
+ * @return {Array.<object>} - Defects found
+ */
+const byReachability = function(corpus, check) {
   const usages = corpus.flatMap(({xsl}) => nodes(xsl, check.usage))
   const declarations = corpus.flatMap(({file, xsl}) =>
     nodes(xsl, check.declaration).map((node) => ({file, node})))
   const used = reachable(check, declarations, usages)
   return declarations
     .filter(({node}) => !used.has(node))
+    .filter(({node}) =>
+      usages.some((usage) => usage.value.includes(needle(check, node))))
     .map(({file, node}) => defect(check, file, node))
+}
+
+/**
+ * Defects of one check, dispatched by how it defines use: a named template by
+ * the exact identity of a called name, a function by whether it is called at
+ * all, a function unreachable when called only from within a dead recursion
+ * cycle, and a variable by an in-scope reference.
+ * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @param {object} check - The check to apply
+ * @return {Array.<object>} - Defects found
+ */
+const defectsOf = function(corpus, check) {
+  if (!check.reference) {
+    return byName(corpus, check)
+  }
+  if (check.reachable) {
+    return byReachability(corpus, check)
+  }
+  if (check.scoped) {
+    return byScope(corpus, check)
+  }
+  return byCall(corpus, check)
 }
 
 /**
@@ -190,9 +248,9 @@ const defect = function(check, file, node) {
 /**
  * Lint the whole corpus of stylesheets by cross-file checks. A declaration is
  * a defect only when it is used by no stylesheet in the corpus — matched by
- * name for a named template, or by reference within an expression for a
- * function or variable — so one defined in one file but used from another is
- * not flagged.
+ * name for a named template, by call for a function, by reachability for a
+ * function trapped in a dead recursion cycle, or by in-scope reference for a
+ * variable — so one defined in one file but used from another is not flagged.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
@@ -202,9 +260,7 @@ const lintByCorpus = function(corpus, suppressions = []) {
   logger.debug(`Corpus linting started`)
   const defects = CHECKS
     .filter((check) => !suppressions.some((sup) => check.name.includes(sup)))
-    .flatMap((check) => check.reference ?
-      byReference(corpus, check) :
-      byName(corpus, check))
+    .flatMap((check) => defectsOf(corpus, check))
   logger.debug(`Found ${defects.length} corpus defects`)
   return defects
 }
