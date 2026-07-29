@@ -19,6 +19,14 @@ publication date only; detailed notes begin with the Unreleased section.
   (a prefix used nowhere) rather than overlapping it, and catches the class of
   regression seen in objectionary/eo#6079 (#453).
 
+- Add the `unreachable-function` check and narrow `unused-function` to suit.
+  `unused-function` now flags only a function whose name appears in no call at
+  all; a function that *is* called, but only from within a recursion cycle that
+  nothing enters — a self-loop, or a `my:even`/`my:odd` pair — is dead code the
+  new `unreachable-function` reports, following the call graph from calls that
+  sit outside every function body. Previously such cycles slipped through, each
+  reference propping the other up (#175).
+
 - Add the `not-creating-attribute-correctly` check: an `xsl:attribute` with a
   static name on a literal result element, whose value is simple (a single
   `xsl:value-of`, text, or empty), can be written inline as a literal attribute
