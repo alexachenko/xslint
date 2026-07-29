@@ -6,6 +6,7 @@
 const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
+const {SELECTOR} = require('./attributes')
 const {logger} = require('./logger')
 
 /**
@@ -143,7 +144,7 @@ const lintByName = function(corpus, suppressions = []) {
       const modern = MODERN.includes(
         xsl.documentElement.getAttribute('version'),
       )
-      for (const attribute of nodes(xsl, '//@test | //@select')) {
+      for (const attribute of nodes(xsl, SELECTOR)) {
         for (const {offset, value, replacement} of comparisons(
           attribute.nodeValue, modern,
         )) {

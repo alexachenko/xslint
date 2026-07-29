@@ -6,6 +6,7 @@
 const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
+const {SELECTOR} = require('./attributes')
 const {logger} = require('./logger')
 
 /**
@@ -153,7 +154,7 @@ const lintByTranslate = function(corpus, suppressions = []) {
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
       if (MODERN.includes(xsl.documentElement.getAttribute('version'))) {
-        for (const attribute of nodes(xsl, '//@test | //@select')) {
+        for (const attribute of nodes(xsl, SELECTOR)) {
           for (const {offset, value, replacement} of folded(
             attribute.nodeValue,
           )) {

@@ -6,6 +6,7 @@
 const {nodes} = require('./xpath')
 const {comparedToZero} = require('./comparisons')
 const {metaOf, suppressed, defect} = require('./checks')
+const {SELECTOR} = require('./attributes')
 const {logger} = require('./logger')
 
 /**
@@ -92,7 +93,7 @@ const lintByCount = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      for (const attribute of nodes(xsl, '//@test | //@select')) {
+      for (const attribute of nodes(xsl, SELECTOR)) {
         for (const {offset, value, replacement} of comparisons(
           attribute.nodeValue,
         )) {

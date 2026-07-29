@@ -3,8 +3,8 @@
 ---
 pack: count-compared-to-zero
 found:
-  amount: 6
-  positions: [ [ 4, 36 ], [ 5, 36 ], [ 6, 36 ], [ 7, 36 ], [ 8, 36 ], [ 9, 36 ] ]
+  amount: 7
+  positions: [ [ 4, 36 ], [ 5, 36 ], [ 6, 36 ], [ 7, 36 ], [ 8, 36 ], [ 9, 36 ], [ 11, 32 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="s">
@@ -15,5 +15,8 @@ input: |-
       <xsl:variable name="d" select="count(x) &lt;= 0"/>
       <xsl:variable name="e" select="count(x) &gt;= 1"/>
       <xsl:variable name="f" select="count(x) &lt; 1"/>
+    </xsl:template>
+    <xsl:template match="section[count(para) &gt; 0]">
+      <hit/>
     </xsl:template>
   </xsl:stylesheet>

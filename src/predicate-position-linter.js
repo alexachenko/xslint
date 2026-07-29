@@ -6,6 +6,7 @@
 const {nodes} = require('./xpath')
 const {tokenized, TOKENS} = require('./tokens')
 const {metaOf, suppressed, defect} = require('./checks')
+const {SELECTOR} = require('./attributes')
 const {logger} = require('./logger')
 
 /**
@@ -25,25 +26,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * Attributes that hold an XPath expression or a pattern, the only places a
- * predicate can appear — patterns (`match` and the grouping attributes) among
- * them, so a positional predicate in a template match is caught too.
- * @type {Array.<string>}
- */
-const ATTRIBUTES = [
-  'select', 'test', 'use', 'value', 'group-by', 'group-adjacent', 'key',
-  'initial-value', 'xpath', 'context-item', 'with-params', 'namespace-context',
-  'match', 'count', 'from', 'group-starting-with', 'group-ending-with',
-]
-
-/**
- * XPath selecting every attribute a predicate could live in, across the
- * document.
- * @type {string}
- */
-const SELECTOR = ATTRIBUTES.map((name) => `//@${name}`).join(' | ')
 
 /**
  * One-character symbol standing for a significant token, so a predicate's

@@ -6,6 +6,7 @@
 const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
+const {SELECTOR} = require('./attributes')
 const {logger} = require('./logger')
 
 /**
@@ -92,7 +93,7 @@ const lintByDoubleNegation = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      for (const attribute of nodes(xsl, '//@test | //@select')) {
+      for (const attribute of nodes(xsl, SELECTOR)) {
         for (const {offset, value, argument} of negations(
           attribute.nodeValue,
         )) {

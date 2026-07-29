@@ -6,6 +6,7 @@
 const {nodes} = require('./xpath')
 const {tokenized, TOKENS} = require('./tokens')
 const {metaOf, suppressed, defect} = require('./checks')
+const {SELECTOR} = require('./attributes')
 const {logger} = require('./logger')
 
 /**
@@ -25,25 +26,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * Attributes that hold an XPath expression or a pattern, the only places an
- * axis specifier can appear. Patterns (`match` and the grouping attributes) are
- * scanned too, so an axis in a template match is caught — the expression stream
- * the format linter reads leaves patterns out.
- * @type {Array.<string>}
- */
-const ATTRIBUTES = [
-  'select', 'test', 'use', 'value', 'group-by', 'group-adjacent', 'key',
-  'initial-value', 'xpath', 'context-item', 'with-params', 'namespace-context',
-  'match', 'count', 'from', 'group-starting-with', 'group-ending-with',
-]
-
-/**
- * XPath selecting every attribute an axis could live in, across the document.
- * @type {string}
- */
-const SELECTOR = ATTRIBUTES.map((name) => `//@${name}`).join(' | ')
 
 /**
  * The abbreviation of each single-token axis specifier.

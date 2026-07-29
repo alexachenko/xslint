@@ -3,8 +3,8 @@
 ---
 pack: redundant-double-negation
 found:
-  amount: 6
-  positions: [ [ 4, 43 ], [ 5, 41 ], [ 6, 36 ], [ 6, 52 ], [ 6, 68 ], [ 7, 19 ] ]
+  amount: 7
+  positions: [ [ 4, 43 ], [ 5, 41 ], [ 6, 36 ], [ 6, 52 ], [ 6, 68 ], [ 7, 19 ], [ 11, 28 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="s">
@@ -15,5 +15,8 @@ input: |-
       <xsl:if test="not( not(@enabled) )">
         <p>on</p>
       </xsl:if>
+    </xsl:template>
+    <xsl:template match="row[not(not(@sel))]">
+      <hit/>
     </xsl:template>
   </xsl:stylesheet>
