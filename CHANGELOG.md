@@ -9,6 +9,14 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make the degenerate-`xsl:choose` checks disjoint, so each fires once with
+  the right advice: `empty-choose` on no `xsl:when`, `use-single-option-for-
+  choose` on exactly one `xsl:when` and no `xsl:otherwise` (use `xsl:if`), and
+  `use-choose-without-otherwise` on two or more `xsl:when` and no
+  `xsl:otherwise` (add one). Previously `use-single-option-for-choose` fired
+  on any one-child `choose` — including a lone `xsl:otherwise`, where its
+  advice was nonsense and it overlapped with `empty-choose` (#480).
+
 - Add the `param-after-content` check: an `xsl:param` that follows real
   content in its `xsl:template` or `xsl:function` is invalid XSLT that XML
   well-formedness never catches (only other params and an `xsl:context-item`

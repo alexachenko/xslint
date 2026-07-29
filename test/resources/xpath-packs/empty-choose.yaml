@@ -3,8 +3,8 @@
 ---
 pack: empty-choose
 found:
-  amount: 2
-  positions: [ [ 5, 5 ], [ 5, 5, use-single-option-for-choose ] ]
+  amount: 1
+  positions: [ [ 5, 5 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="style1">

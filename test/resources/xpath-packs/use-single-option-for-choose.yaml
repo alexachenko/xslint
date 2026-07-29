@@ -3,17 +3,17 @@
 ---
 pack: use-single-option-for-choose
 found:
-  amount: 2
-  positions: [ [ 5, 5, empty-choose ], [ 5, 5 ] ]
+  amount: 1
+  positions: [ [ 5, 5 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" id="style1">
     <xsl:output encoding="UTF-8" method="xml"/>
     <xsl:template match="/objects/o/o[1]/o[1]">
       <xsl:choose>
-        <xsl:otherwise>
+        <xsl:when test="@active">
           <BR/>
-        </xsl:otherwise>
+        </xsl:when>
       </xsl:choose>
     </xsl:template>
     <xsl:template match="/objects/o/o[1]/o[2]">

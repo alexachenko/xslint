@@ -1,8 +1,10 @@
 # Use choose without otherwise
 
-An `xsl:choose` without an `xsl:otherwise` branch silently produces no output
-when no `xsl:when` condition matches. Add `xsl:otherwise` to handle unexpected
-values explicitly.
+An `xsl:choose` with two or more `xsl:when` branches but no `xsl:otherwise`
+silently produces no output when none of them matches. Add `xsl:otherwise` to
+handle unexpected values explicitly. (A single-`when` `choose` is better
+written as an `xsl:if` — `use-single-option-for-choose` — and one with no
+`xsl:when` at all is reported by `empty-choose`.)
 
 Incorrect:
 
