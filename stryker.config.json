@@ -7,6 +7,11 @@
     "html"
   ],
   "coverageAnalysis": "perTest",
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 60
+  },
   "mutate": [
     "src/**/*.js",
     "!src/xslint.js",
@@ -15,12 +20,7 @@
   ],
   "mochaOptions": {
     "spec": [
-      "test/tokens.test.js",
-      "test/xpath-linter.test.js",
-      "test/corpus-linter.test.js",
-      "test/xpath-validator.test.js",
-      "test/xsl-validator.test.js",
-      "test/xpath-format-linter.test.js"
+      "test/**/*.test.js"
     ]
   }
 }
