@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+xpath: "//xsl:when[not(parent::xsl:choose)] | //xsl:otherwise[not(parent::xsl:choose)]"
+severity: error
+message: "'xsl:when' and 'xsl:otherwise' are valid only as children of 'xsl:choose'. Move it into an 'xsl:choose', or use 'xsl:if'."

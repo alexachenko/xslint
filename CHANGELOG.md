@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `when-or-otherwise-outside-choose` check: an `xsl:when` or
+  `xsl:otherwise` whose parent is not `xsl:choose` is invalid XSLT that XML
+  well-formedness never catches. Report-only — wrapping the branch in an
+  `xsl:choose` or rewriting an `xsl:when` as an `xsl:if` is a judgement call,
+  not one mechanical edit (#368).
+
 - Add the `redundant-import` check: the same module `xsl:import`ed or
   `xsl:include`d more than once within one stylesheet's own list is flagged (a
   warning) at the second and later references, with a safe `--fix` that deletes
