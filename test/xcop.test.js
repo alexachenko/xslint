@@ -44,8 +44,25 @@ const PACKS = [
  */
 const available = cmdAvailable('xcop')
 
+/**
+ * Packs whose fixture must carry a construct xcop rejects, so it cannot also be
+ * canonical XML — an unused namespace declaration is the very thing
+ * `redundant-namespace-declarations` exists to flag. Excluded from the
+ * formatting check, as the fix fixtures are in the xcop workflow.
+ * @type {Array.<string>}
+ */
+const UNFORMATTED = ['redundant-namespace-declarations.yaml']
+
+/**
+ * Packs whose inline XSL is well-formed and worth formatting-checking.
+ * @type {Array.<string>}
+ */
+const CHECKED = PACKS.filter(
+  (pack) => !UNFORMATTED.includes(path.basename(pack)),
+)
+
 describe('xcop', function() {
-  PACKS.forEach((pack) => {
+  CHECKED.forEach((pack) => {
     const yml = yaml.parsedFromFile(pack)
     const inputs = yml.inputs || [yml.input]
     inputs.forEach((input, index) => {

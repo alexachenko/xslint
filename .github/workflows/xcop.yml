@@ -18,6 +18,11 @@ jobs:
         with:
           ruby-version: '3.3'
       - run: gem install xcop -v 0.11.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx mocha test/xcop.test.js --timeout 30000
       - run: >-
           xcop --license LICENSE.txt
           --include '**/*.xsl' --include '**/*.xml'
