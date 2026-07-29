@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `empty-choose` check: an `xsl:choose` with no `xsl:when` is
+  degenerate — XSLT requires at least one, and a `choose` holding only an
+  `xsl:otherwise` is a wrapper that always runs. Report-only, since the fix
+  (add a `when`, or drop the `choose`) is a judgement call (#374).
+
 - Add the `otherwise-not-last` check: an `xsl:otherwise` followed by another
   branch is invalid — it is the default and must come last in its
   `xsl:choose`. Report-only, since reordering the branches is structural
