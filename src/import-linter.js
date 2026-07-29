@@ -4,29 +4,72 @@
  */
 
 const {yaml} = require('./helpers')
-const {graphOf} = require('./import-graph')
+const {importsOf, graphOf} = require('./import-graph')
 const path = require('path')
 const {logger} = require('./logger')
 
 /**
- * Name of the check this linter owns.
+ * Name of the cycle check.
  * @type {string}
  */
-const CHECK = 'circular-import'
+const CIRCULAR = 'circular-import'
 
 /**
- * Defect metadata of the check.
- * @type {{severity: string, message: string}}
+ * Name of the duplicate-import check.
+ * @type {string}
  */
-const META = yaml.parsedFromFile(
-  path.join(__dirname, 'resources', 'checks', 'format', `${CHECK}.yaml`),
-)
+const REDUNDANT = 'redundant-import'
+
+/**
+ * Defect metadata of a check, read from its formatting YAML.
+ * @param {string} check - Check name
+ * @return {{severity: string, message: string}} - The metadata
+ */
+const meta = function(check) {
+  return yaml.parsedFromFile(
+    path.join(__dirname, 'resources', 'checks', 'format', `${check}.yaml`),
+  )
+}
+
+/**
+ * Metadata of both checks, keyed by name.
+ * @type {{[check: string]: {severity: string, message: string}}}
+ */
+const META = {[CIRCULAR]: meta(CIRCULAR), [REDUNDANT]: meta(REDUNDANT)}
 
 /**
  * Names of the checks this linter owns.
  * @type {Array.<string>}
  */
-const names = [CHECK]
+const names = [CIRCULAR, REDUNDANT]
+
+/**
+ * A defect of one of the import checks.
+ * @param {string} check - Check name
+ * @param {string} file - File the import sits in
+ * @param {Element} node - The `xsl:import`/`xsl:include` element
+ * @return {object} - Defect
+ */
+const defect = function(check, file, node) {
+  return {
+    name: check,
+    severity: META[check].severity,
+    message: META[check].message,
+    file: file,
+    line: node.lineNumber,
+    pos: node.columnNumber,
+  }
+}
+
+/**
+ * Whether a check is suppressed — a suppression matches it as a substring.
+ * @param {string} check - Check name
+ * @param {Array.<string>} suppressions - Suppressed checks
+ * @return {boolean} - True when suppressed
+ */
+const suppressed = function(check, suppressions) {
+  return suppressions.some((sup) => check.includes(sup))
+}
 
 /**
  * Whether the goal file is reachable from the start file by following import
@@ -56,12 +99,53 @@ const reaches = function(adjacency, start, goal) {
 }
 
 /**
- * Lint the corpus for `xsl:import`/`xsl:include` cycles — a stylesheet that
- * imports, directly or through a chain, a stylesheet that imports it back, or
- * one that imports itself. Each import/include edge whose target can reach its
- * own source is reported at the declaring element. A cycle needs every edge in
- * it to resolve within the corpus, so an external href is never part of one
- * and a partial corpus cannot raise a false cycle.
+ * Defects for `circular-import` — each import/include edge whose target can
+ * reach back to its own source, so the stylesheet is part of a cycle (or
+ * imports itself).
+ * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @return {Array.<object>} - Defects found
+ */
+const byCircularity = function(corpus) {
+  const edges = graphOf(corpus)
+  const adjacency = new Map()
+  for (const edge of edges) {
+    if (!adjacency.has(edge.from)) {
+      adjacency.set(edge.from, [])
+    }
+    adjacency.get(edge.from).push(edge)
+  }
+  return edges
+    .filter((edge) => reaches(adjacency, edge.to, edge.from))
+    .map((edge) => defect(CIRCULAR, edge.from, edge.node))
+}
+
+/**
+ * Defects for `redundant-import` — the second and later `xsl:import`/
+ * `xsl:include` of the same resolved target within one stylesheet's own list.
+ * The target need not be a corpus file: importing the same external library
+ * twice is redundant too.
+ * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @return {Array.<object>} - Defects found
+ */
+const byRedundancy = function(corpus) {
+  const seen = new Set()
+  const defects = []
+  for (const {file, node, to} of importsOf(corpus)) {
+    const key = `${file}|${to}`
+    if (seen.has(key)) {
+      defects.push(defect(REDUNDANT, file, node))
+    } else {
+      seen.add(key)
+    }
+  }
+  return defects
+}
+
+/**
+ * Lint the corpus for import-graph defects: `xsl:import`/`xsl:include` cycles
+ * (`circular-import`, an error) and the same module imported more than once in
+ * one stylesheet (`redundant-import`, a warning). Both resolve hrefs against
+ * the importing file's directory (`src/import-graph.js`).
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
@@ -69,30 +153,11 @@ const reaches = function(adjacency, start, goal) {
  */
 const lintByImports = function(corpus, suppressions = []) {
   logger.debug(`Import linting started`)
-  const defects = []
-  if (!suppressions.some((sup) => CHECK.includes(sup))) {
-    const edges = graphOf(corpus)
-    const adjacency = new Map()
-    for (const edge of edges) {
-      if (!adjacency.has(edge.from)) {
-        adjacency.set(edge.from, [])
-      }
-      adjacency.get(edge.from).push(edge)
-    }
-    for (const edge of edges) {
-      if (reaches(adjacency, edge.to, edge.from)) {
-        defects.push({
-          name: CHECK,
-          severity: META.severity,
-          message: META.message,
-          file: edge.from,
-          line: edge.node.lineNumber,
-          pos: edge.node.columnNumber,
-        })
-      }
-    }
-  }
-  logger.debug(`Found ${defects.length} circular imports`)
+  const defects = [
+    ...suppressed(CIRCULAR, suppressions) ? [] : byCircularity(corpus),
+    ...suppressed(REDUNDANT, suppressions) ? [] : byRedundancy(corpus),
+  ]
+  logger.debug(`Found ${defects.length} import defects`)
   return defects
 }
 

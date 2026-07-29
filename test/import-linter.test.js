@@ -33,4 +33,14 @@ describe('import-linter', function() {
       })
     })
   })
+  it('cannot report an import check that is suppressed', function() {
+    const yml = yaml.parsedFromFile(
+      path.resolve(__dirname, 'resources', 'import-packs', 'circular-import.yaml'),
+    )
+    const corpus = yml.inputs.map((input, index) => ({
+      file: `file${index}.xsl`,
+      xsl: xml.parsedFromString(input),
+    }))
+    assert.equal(lintByImports(corpus, ['import']).length, 0)
+  })
 })

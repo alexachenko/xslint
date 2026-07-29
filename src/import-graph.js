@@ -23,18 +23,15 @@ const target = function(file, href) {
 }
 
 /**
- * The import/include dependency edges among the corpus stylesheets. Each
- * `xsl:import`/`xsl:include` whose `@href` resolves to a file in the corpus
- * yields one edge, carrying the declaring element so a defect can point at it;
- * an href that resolves outside the corpus is external and yields no edge, so
- * a stylesheet that imports a library it was not handed alongside is never
- * mistaken for a dependency. No file is read here — the corpus already holds
- * every parsed stylesheet with its path.
+ * Every `xsl:import`/`xsl:include` in the corpus, each with its declaring file,
+ * declaring element, and the path its `@href` resolves to (relative to the
+ * declaring file's own directory). The target may or may not be a file in the
+ * corpus; membership is left to the caller. No file is read — the corpus
+ * already holds every parsed stylesheet with its path.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
- * @return {Array.<{from: string, to: string, node: Element}>} - The edges
+ * @return {Array.<{file: string, node: Element, to: string}>} - The imports
  */
-const graphOf = function(corpus) {
-  const files = new Set(corpus.map(({file}) => path.normalize(file)))
+const importsOf = function(corpus) {
   return corpus.flatMap(({file, xsl}) =>
     Array.from(xsl.getElementsByTagName('*'))
       .filter(
@@ -43,13 +40,29 @@ const graphOf = function(corpus) {
           (element.localName === 'import' || element.localName === 'include'),
       )
       .map((node) => ({
-        from: path.normalize(file),
-        to: target(file, node.getAttribute('href')),
+        file: path.normalize(file),
         node: node,
-      }))
-      .filter((edge) => files.has(edge.to)))
+        to: target(file, node.getAttribute('href')),
+      })))
+}
+
+/**
+ * The import/include dependency edges among the corpus stylesheets — every
+ * import whose target resolves to a file in the corpus, carrying the declaring
+ * element so a defect can point at it. An href that resolves outside the
+ * corpus is external and yields no edge, so a stylesheet that imports a library
+ * it was not handed alongside is never mistaken for a dependency.
+ * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @return {Array.<{from: string, to: string, node: Element}>} - The edges
+ */
+const graphOf = function(corpus) {
+  const files = new Set(corpus.map(({file}) => path.normalize(file)))
+  return importsOf(corpus)
+    .filter((edge) => files.has(edge.to))
+    .map((edge) => ({from: edge.file, to: edge.to, node: edge.node}))
 }
 
 module.exports = {
+  importsOf,
   graphOf,
 }
