@@ -9,6 +9,18 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `leaking-result-namespace` check: a namespace prefix a stylesheet
+  declares only for its own logic — `xs` for a sequence type, a helper `my`/`eo`
+  called from a `select` — is copied into the serialized output by any literal
+  result element, unless it is listed in `exclude-result-prefixes`. The check
+  flags such a prefix, with a `--fix-suggestions` that adds it to
+  `exclude-result-prefixes` (inserting the attribute or appending to it, and
+  only when a single prefix leaks). It skips text-output stylesheets,
+  `#all`/already-excluded and extension prefixes, and any prefix a result
+  element genuinely uses, and complements `redundant-namespace-declarations`
+  (a prefix used nowhere) rather than overlapping it, and catches the class of
+  regression seen in objectionary/eo#6079 (#453).
+
 - Add the `unreachable-function` check and narrow `unused-function` to suit.
   `unused-function` now flags only a function whose name appears in no call at
   all; a function that *is* called, but only from within a recursion cycle that
