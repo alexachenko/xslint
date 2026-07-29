@@ -21,6 +21,7 @@ inputs:
   - |-
     <?xml version="1.0"?>
     <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="main">
+      <xsl:import href="lib.xsl"/>
       <xsl:template match="/">
         <xsl:value-of select="my:used(5)"/>
       </xsl:template>
