@@ -38,50 +38,53 @@ const {directivesFrom, suppresses, unused} = require('./directives')
 const {minimatch} = require('minimatch')
 
 /**
- * Linters, each given the corpus of well-formed stylesheets.
- * @type {Array.<function(Array.<{file: string, xsl: Document}>,
- *  Array.<string>): Array.<object>>}
+ * Linters paired with the checks they own, each given the corpus of well-formed
+ * stylesheets. `checks` feeds `CHECKS`, so a linter and its names stay in step.
+ * @type {Array.<{run: function(Array.<{file: string, xsl: Document}>,
+ *  Array.<string>): Array.<object>, checks: Array.<string>}>}
  */
 const LINTERS = [
-  lintByXpath,
-  lintByCorpus,
-  lintByAxis,
-  lintByNamespace,
-  lintByResultNamespace,
-  lintByImports,
-  lintByNodeSet,
-  lintByCount,
-  lintByStringLength,
-  lintByName,
-  lintByTranslate,
-  lintByDoubleNegation,
-  lintByBooleanCall,
-  lintByPredicatePosition,
+  {run: lintByXpath, checks: xpathChecks},
+  {run: lintByCorpus, checks: corpusChecks},
+  {run: lintByAxis, checks: axisChecks},
+  {run: lintByNamespace, checks: namespaceChecks},
+  {run: lintByResultNamespace, checks: resultNamespaceChecks},
+  {run: lintByImports, checks: importChecks},
+  {run: lintByNodeSet, checks: nodeSetChecks},
+  {run: lintByCount, checks: countChecks},
+  {run: lintByStringLength, checks: stringLengthChecks},
+  {run: lintByName, checks: nameChecks},
+  {run: lintByTranslate, checks: translateChecks},
+  {run: lintByDoubleNegation, checks: doubleNegationChecks},
+  {run: lintByBooleanCall, checks: booleanCallChecks},
+  {run: lintByPredicatePosition, checks: predicatePositionChecks},
 ]
 
 /**
- * Expression linters, each given the valid Xpath expressions the validator kept
- * so they never reason over malformed input.
- * @type {Array.<function(Array.<{file: string, expression: Node}>,
- *  Array.<string>): Array.<object>>}
+ * Expression linters paired with their checks, each given the valid Xpath
+ * expressions the validator kept so they never reason over malformed input.
+ * @type {Array.<{run: function(Array.<{file: string, expression: Node}>,
+ *  Array.<string>): Array.<object>, checks: Array.<string>}>}
  */
 const EXPRESSION_LINTERS = [
-  lintByFormat,
+  {run: lintByFormat, checks: formatChecks},
 ]
+
+/**
+ * Check names owned by the two validators, which run outside the linter loop.
+ * @type {Array.<string>}
+ */
+const VALIDATOR_CHECKS = [...xslChecks, ...xpathValidatorChecks]
 
 /**
  * Names of every check across all validators and linters, that suppressions
- * match against.
+ * match against — derived from the linters so it cannot fall out of sync.
  * @type {Array.<string>}
  */
 const CHECKS = [
-  ...xslChecks, ...xpathValidatorChecks,
-  ...xpathChecks, ...corpusChecks, ...axisChecks, ...namespaceChecks,
-  ...resultNamespaceChecks, ...importChecks,
-  ...nodeSetChecks, ...countChecks, ...stringLengthChecks, ...nameChecks,
-  ...translateChecks, ...doubleNegationChecks, ...booleanCallChecks,
-  ...predicatePositionChecks,
-  ...formatChecks,
+  ...VALIDATOR_CHECKS,
+  ...LINTERS.flatMap((stage) => stage.checks),
+  ...EXPRESSION_LINTERS.flatMap((stage) => stage.checks),
 ]
 
 /**
@@ -164,11 +167,11 @@ const lint = function(sources, {suppress = [], overrides = {}} = {}) {
   const {corpus, defects} = validateXsls(sources, suppressions)
   const {expressions, defects: invalid} = validateXpaths(corpus, suppressions)
   defects.push(...invalid)
-  for (const linter of LINTERS) {
-    defects.push(...linter(corpus, suppressions))
+  for (const {run} of LINTERS) {
+    defects.push(...run(corpus, suppressions))
   }
-  for (const linter of EXPRESSION_LINTERS) {
-    defects.push(...linter(expressions, suppressions))
+  for (const {run} of EXPRESSION_LINTERS) {
+    defects.push(...run(expressions, suppressions))
   }
   for (const defect of defects) {
     if (overrides[defect.name]) {
