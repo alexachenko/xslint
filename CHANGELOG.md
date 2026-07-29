@@ -9,6 +9,16 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `leaking-result-namespace` check: a namespace prefix a stylesheet
+  declares only for its own logic — `xs` for a sequence type, a helper `my`/`eo`
+  called from a `select` — is copied into the serialized output by any literal
+  result element, unless it is listed in `exclude-result-prefixes`. The check
+  flags such a prefix (warning, no fix yet), skipping text-output stylesheets,
+  `#all`/already-excluded and extension prefixes, and any prefix a result
+  element genuinely uses. It complements `redundant-namespace-declarations`
+  (a prefix used nowhere) rather than overlapping it, and catches the class of
+  regression seen in objectionary/eo#6079 (#453).
+
 - Add the `not-creating-attribute-correctly` check: an `xsl:attribute` with a
   static name on a literal result element, whose value is simple (a single
   `xsl:value-of`, text, or empty), can be written inline as a literal attribute
