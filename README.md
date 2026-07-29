@@ -286,6 +286,9 @@ Today this covers:
 - `incorrect-use-of-boolean-constants` — the string test `'true'`/`'false'`
   becomes `true()`/`false()`, which changes the truth value of a `'false'` test
   (a non-empty string is always true).
+- `select-starts-with-double-slash` — the leading `//` of a `@select` is
+  anchored as `.//`: `select="//title"` becomes `select=".//title"`, scanning
+  descendants of the context node instead of the whole document.
 - `using-disable-output-escaping` — the attribute is removed, which changes how
   the output is escaped.
 - `output-method-xml` — `method="xml"` becomes `"html"` when the stylesheet

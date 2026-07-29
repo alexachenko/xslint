@@ -105,6 +105,27 @@ const booleanConstant = function(node) {
 }
 
 /**
+ * Fix for `select-starts-with-double-slash`: anchor the leading `//` of a
+ * `@select` as `.//`, so it scans the context node's descendants rather than
+ * the whole document. A suggestion, since it changes behaviour (absolute to
+ * relative) and `.//` is one of several valid anchors.
+ * @param {Element} node - The element carrying the `@select`
+ * @return {object} - The suggestion fix
+ */
+const selectDoubleSlash = function(node) {
+  const select = node.getAttributeNode('select')
+  const at = select.value.indexOf('//')
+  return {
+    line: select.lineNumber,
+    col: select.columnNumber - select.name.length - 1,
+    value: `${select.name}="${select.value}"`,
+    replacement:
+      `${select.name}="${select.value.slice(0, at)}.${select.value.slice(at)}"`,
+    suggestion: true,
+  }
+}
+
+/**
  * Fix builders for declarative Xpath checks, keyed by check name. The per-file
  * linter attaches the fix a builder returns to the defect it found for that
  * check, so a rule stays declarative while still carrying a fix; a builder
@@ -118,6 +139,7 @@ const FIXERS = {
   'mode-or-priority-without-match': modeOrPriority,
   'starts-with-double-slash': startsWithDoubleSlash,
   'incorrect-use-of-boolean-constants': booleanConstant,
+  'select-starts-with-double-slash': selectDoubleSlash,
 }
 
 module.exports = {

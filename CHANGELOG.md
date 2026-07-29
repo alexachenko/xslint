@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `select-starts-with-double-slash` fixable: `--fix-suggestions` anchors
+  the leading `//` of a `@select` as `.//` (`select="//title"` becomes
+  `select=".//title"`). A suggestion, since it changes behaviour from an
+  absolute scan to a relative one and `.//` is one of several valid anchors
+  (a specific path is often better) (#457).
+
 - Make `incorrect-use-of-boolean-constants` fixable: `--fix-suggestions`
   replaces the string test `'true'`/`'false'` with `true()`/`false()`. A
   suggestion, not a safe fix, because `'false'` is a non-empty string that is

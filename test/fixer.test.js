@@ -265,6 +265,31 @@ describe('fixer', function() {
           .stdout.includes('incorrect-use-of-boolean-constants'),
       )
     })
+  it('cannot anchor a leading // select with plain --fix', function() {
+    const file = scratch(fixture('select-starts-with-double-slash.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('select-starts-with-double-slash.xsl'),
+    )
+  })
+  it('should anchor a leading // select as .// with --fix-suggestions',
+    function() {
+      const file = scratch(fixture('select-starts-with-double-slash.xsl'))
+      runXslint(['--fix-suggestions', file])
+      assert.equal(
+        fs.readFileSync(file, 'utf-8'),
+        fixture('select-starts-with-double-slash.fixed.xsl'),
+      )
+    })
+  it('should drop the fixed select-starts-with-double-slash defect with ' +
+    '--fix-suggestions', function() {
+    const file = scratch(fixture('select-starts-with-double-slash.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix-suggestions', file])
+        .stdout.includes('select-starts-with-double-slash'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])
