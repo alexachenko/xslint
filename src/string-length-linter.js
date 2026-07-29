@@ -4,7 +4,7 @@
  */
 
 const {nodes} = require('./xpath')
-const {masked, closes} = require('./expressions')
+const {comparedToZero} = require('./comparisons')
 const {metaOf, suppressed, defect} = require('./checks')
 const {logger} = require('./logger')
 
@@ -25,35 +25,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * A `string-length(` call opener, unprefixed so a custom
- * `my:string-length()` is left alone.
- * @type {RegExp}
- */
-const CALL = /(^|[^\w:.-])string-length\s*\(/g
-
-/**
- * The comparison that follows the call: an operator and a `0` or `1` that turns
- * it into an emptiness test.
- * @type {RegExp}
- */
-const TAIL = /^\s*(!=|<=|>=|=|<|>)\s*([01])(?![\w.])/
-
-/**
- * The operand-reversed comparison sitting just before the call, `0 < ...`.
- * @type {RegExp}
- */
-const HEAD = /(^|[^\w.])([01])\s*(!=|<=|>=|=|<|>)\s*$/
-
-/**
- * Each operator with its sides swapped, so a reversed
- * `0 < string-length(x)` can be read as `string-length(x) > 0`.
- * @type {{[operator: string]: string}}
- */
-const FLIP = {
-  '<': '>', '>': '<', '<=': '>=', '>=': '<=', '=': '=', '!=': '!=',
-}
 
 /**
  * Whether the comparison tests for a non-empty string (`true`), an empty one
@@ -104,61 +75,37 @@ const simple = function(argument) {
 }
 
 /**
- * The emptiness test that replaces a comparison, or null when the argument is
- * not a simple operand and so cannot be rewritten with one edit.
- * @param {boolean} clean - Whether the argument is a simple operand
+ * Classify a `string-length(...)`-versus-`0`/`1` comparison for
+ * `comparedToZero`. An emptiness test is reported; it rewrites to
+ * `argument = ''`/`argument != ''` when the argument is a simple operand, and
+ * carries no replacement (report-only) otherwise. A genuine length check is
+ * left alone.
+ * @param {string} operator - The comparison operator
+ * @param {string} zero - The compared digit, `0` or `1`
  * @param {string} argument - The call's argument
- * @param {boolean} hollow - Whether the comparison tests for an empty string
- * @return {?string} - The replacement expression, or null
+ * @param {string} blanked - The argument with string/comment spans blanked
+ * @return {?{replacement: ?string}} - The rewrite, or null when not emptiness
  */
-const replaced = function(clean, argument, hollow) {
-  return clean ? `${argument} ${hollow ? '=' : '!='} ''` : null
+const decide = function(operator, zero, argument, blanked) {
+  const hollow = empty(operator, zero)
+  if (hollow === null) {
+    return null
+  }
+  return {
+    replacement: simple(blanked) ?
+      `${argument} ${hollow ? '=' : '!='} ''` : null,
+  }
 }
 
 /**
- * The `string-length(...)`-versus-zero comparisons in an expression, in either
- * operand order: each carries the offset it starts at, its verbatim text, and
- * the emptiness test that replaces it — or no replacement when the argument is
- * not a simple operand. A call whose parentheses do not balance, or that is
- * compared with anything but `0`/`1` in an emptiness-testing way, is skipped.
+ * The `string-length(...)`-versus-zero emptiness tests in an expression, in
+ * either operand order.
  * @param {string} expression - The attribute value
  * @return {Array.<{offset: number, value: string, replacement: ?string}>} -
  *  The comparisons found
  */
 const comparisons = function(expression) {
-  const found = []
-  const blanked = masked(expression)
-  for (const match of blanked.matchAll(CALL)) {
-    const start = match.index + match[1].length
-    const open = match.index + match[0].length - 1
-    const close = closes(blanked, open)
-    if (close < 0) {
-      continue
-    }
-    const argument = expression.slice(open + 1, close)
-    const clean = simple(blanked.slice(open + 1, close))
-    const tail = TAIL.exec(blanked.slice(close + 1))
-    const hollow = tail ? empty(tail[1], tail[2]) : null
-    if (hollow !== null) {
-      found.push({
-        offset: start,
-        value: expression.slice(start, close + 1 + tail[0].length),
-        replacement: replaced(clean, argument, hollow),
-      })
-      continue
-    }
-    const head = HEAD.exec(blanked.slice(0, start))
-    const reversed = head ? empty(FLIP[head[3]], head[2]) : null
-    if (reversed !== null) {
-      const from = start - head[0].length + head[1].length
-      found.push({
-        offset: from,
-        value: expression.slice(from, close + 1),
-        replacement: replaced(clean, argument, reversed),
-      })
-    }
-  }
-  return found
+  return comparedToZero(expression, 'string-length', decide)
 }
 
 /**
