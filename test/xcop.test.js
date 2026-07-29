@@ -24,6 +24,9 @@ const PACKS = [
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'import-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'node-set-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'count-packs')),
+  ...allFilesFrom(
+    path.resolve(__dirname, 'resources', 'redundant-double-negation-packs'),
+  ),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'string-length-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'name-packs')),
   ...allFilesFrom(path.resolve(__dirname, 'resources', 'translate-packs')),

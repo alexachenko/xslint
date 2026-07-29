@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `redundant-double-negation` check: `not(not(x))` is a redundant
+  double negation — exactly `boolean(x)`. Reported in any `@test`/`@select`,
+  with a safe `--fix` that rewrites it to `boolean(x)` (always equivalent). An
+  outer `not(...)` whose content is more than a lone inner `not(...)`, and a
+  custom `my:not(...)`, are left alone (#366).
+
 - Make the degenerate-`xsl:choose` checks disjoint, so each fires once with
   the right advice: `empty-choose` on no `xsl:when`, `use-single-option-for-
   choose` on exactly one `xsl:when` and no `xsl:otherwise` (use `xsl:if`), and

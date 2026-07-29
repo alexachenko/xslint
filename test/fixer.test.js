@@ -85,6 +85,12 @@ const APPLIED = [
     after: 'use-node-set-extension.fixed.xsl',
   },
   {
+    name: 'should rewrite a double negation to boolean() with --fix',
+    flag: '--fix',
+    before: 'redundant-double-negation.xsl',
+    after: 'redundant-double-negation.fixed.xsl',
+  },
+  {
     name: 'should rewrite a count comparison to exists/empty with --fix',
     flag: '--fix',
     before: 'count-compared-to-zero.xsl',
@@ -201,6 +207,11 @@ const UNCHANGED = [
     sheet: 'count-compared-to-zero.xsl',
   },
   {
+    name: 'cannot rewrite a double negation with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'redundant-double-negation.xsl',
+  },
+  {
     name: 'cannot rewrite a string-length comparison with --fix-dry-run',
     flag: '--fix-dry-run',
     sheet: 'string-length-compared-to-zero.xsl',
@@ -276,6 +287,12 @@ const DROPPED = [
     flag: '--fix',
     sheet: 'count-compared-to-zero.xsl',
     check: 'count-compared-to-zero',
+  },
+  {
+    name: 'should drop the fixed double-negation defect from the report',
+    flag: '--fix',
+    sheet: 'redundant-double-negation.xsl',
+    check: 'redundant-double-negation',
   },
   {
     name: 'should drop the fixed string-length defect from the report',

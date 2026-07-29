@@ -19,6 +19,8 @@ const {lintByResultNamespace, names: resultNamespaceChecks} =
 const {lintByImports, names: importChecks} = require('./import-linter')
 const {lintByNodeSet, names: nodeSetChecks} = require('./node-set-linter')
 const {lintByCount, names: countChecks} = require('./count-linter')
+const {lintByDoubleNegation, names: doubleNegationChecks} =
+  require('./redundant-double-negation-linter')
 const {lintByStringLength, names: stringLengthChecks} =
   require('./string-length-linter')
 const {lintByName, names: nameChecks} = require('./name-linter')
@@ -48,6 +50,7 @@ const LINTERS = [
   lintByStringLength,
   lintByName,
   lintByTranslate,
+  lintByDoubleNegation,
 ]
 
 /**
@@ -70,7 +73,7 @@ const CHECKS = [
   ...xpathChecks, ...corpusChecks, ...axisChecks, ...namespaceChecks,
   ...resultNamespaceChecks, ...importChecks,
   ...nodeSetChecks, ...countChecks, ...stringLengthChecks, ...nameChecks,
-  ...translateChecks,
+  ...translateChecks, ...doubleNegationChecks,
   ...formatChecks,
 ]
 

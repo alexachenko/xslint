@@ -248,7 +248,7 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers eight checks:
+Today this covers nine checks:
 
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
@@ -270,6 +270,8 @@ Today this covers eight checks:
 - `redundant-import` — a duplicate `xsl:import`/`xsl:include` of a module
   already imported in the same stylesheet is removed; the module stays imported
   by the first reference.
+- `redundant-double-negation` — `not(not(x))` becomes `boolean(x)`, the
+  equivalent it spells out the long way.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the
