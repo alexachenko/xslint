@@ -120,10 +120,32 @@ const byCircularity = function(corpus) {
 }
 
 /**
+ * A safe fix that deletes a redundant import — its whole line, reconstructed
+ * from the element as its indentation, the self-closing tag with its single
+ * `href`, and the trailing newline. The fixer applies it only when the source
+ * is exactly that, so an oddly formatted, single-quoted, or non-self-closing
+ * import is reported but left untouched rather than mis-edited. Deleting a
+ * duplicate is semantics-preserving — the module stays imported by the first
+ * reference — so it is a safe fix, not a suggestion.
+ * @param {Element} node - The duplicate import/include element
+ * @return {{line: number, col: number, value: string, replacement: string}} -
+ *  The fix
+ */
+const removal = function(node) {
+  return {
+    line: node.lineNumber,
+    col: 1,
+    value: `${' '.repeat(node.columnNumber - 1)}` +
+      `<${node.nodeName} href="${node.getAttribute('href')}"/>\n`,
+    replacement: '',
+  }
+}
+
+/**
  * Defects for `redundant-import` — the second and later `xsl:import`/
  * `xsl:include` of the same resolved target within one stylesheet's own list.
  * The target need not be a corpus file: importing the same external library
- * twice is redundant too.
+ * twice is redundant too. Each carries a fix that deletes the duplicate line.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @return {Array.<object>} - Defects found
  */
@@ -133,7 +155,7 @@ const byRedundancy = function(corpus) {
   for (const {file, node, to} of importsOf(corpus)) {
     const key = `${file}|${to}`
     if (seen.has(key)) {
-      defects.push(defect(REDUNDANT, file, node))
+      defects.push({...defect(REDUNDANT, file, node), fix: removal(node)})
     } else {
       seen.add(key)
     }

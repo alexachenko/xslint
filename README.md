@@ -248,7 +248,7 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers seven checks:
+Today this covers eight checks:
 
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
@@ -267,6 +267,9 @@ Today this covers seven checks:
 - `starts-with-double-slash` — the redundant leading `//` of a template's
   `@match` is dropped: `match="//para"` becomes `match="para"`, which selects
   the same nodes.
+- `redundant-import` — a duplicate `xsl:import`/`xsl:include` of a module
+  already imported in the same stylesheet is removed; the module stays imported
+  by the first reference.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the

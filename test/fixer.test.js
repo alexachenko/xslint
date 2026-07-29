@@ -105,6 +105,29 @@ describe('fixer', function() {
           .stdout.includes('starts-with-double-slash'),
       )
     })
+  it('should delete a redundant import with --fix', function() {
+    const file = scratch(fixture('redundant-import.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('redundant-import.fixed.xsl'),
+    )
+  })
+  it('cannot delete a redundant import with --fix-dry-run', function() {
+    const file = scratch(fixture('redundant-import.xsl'))
+    runXslint(['--fix-dry-run', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('redundant-import.xsl'),
+    )
+  })
+  it('should drop the fixed redundant-import defect from the report',
+    function() {
+      const file = scratch(fixture('redundant-import.xsl'))
+      assert.ok(
+        !xslintStreams(['--fix', file]).stdout.includes('redundant-import'),
+      )
+    })
   it('should unwrap the node-set extension with --fix', function() {
     const file = scratch(fixture('use-node-set-extension.xsl'))
     runXslint(['--fix', file])

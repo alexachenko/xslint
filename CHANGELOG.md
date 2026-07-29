@@ -11,11 +11,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 - Add the `redundant-import` check: the same module `xsl:import`ed or
   `xsl:include`d more than once within one stylesheet's own list is flagged (a
-  warning) at the second and later references. Hrefs are resolved against the
-  importing file's directory, so two spellings of the same file count as one,
-  and the target need not be in the corpus — importing the same external
-  library twice is redundant too. A self-import or cross-file cycle is a
-  different fault, left to `circular-import` (#467).
+  warning) at the second and later references, with a safe `--fix` that deletes
+  the duplicate line (the module stays imported by the first reference). Hrefs
+  are resolved against the importing file's directory, so two spellings of the
+  same file count as one, and the target need not be in the corpus — importing
+  the same external library twice is redundant too. A self-import or cross-file
+  cycle is a different fault, left to `circular-import` (#467).
 
 - Add the `circular-import` check and an import-graph foundation
   (`src/import-graph.js`): resolve every `xsl:import`/`xsl:include` `@href`
