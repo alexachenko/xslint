@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `otherwise-not-last` check: an `xsl:otherwise` followed by another
+  branch is invalid — it is the default and must come last in its
+  `xsl:choose`. Report-only, since reordering the branches is structural
+  (#373).
+
 - Add the `when-or-otherwise-outside-choose` check: an `xsl:when` or
   `xsl:otherwise` whose parent is not `xsl:choose` is invalid XSLT that XML
   well-formedness never catches. Report-only — wrapping the branch in an
