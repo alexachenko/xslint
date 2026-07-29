@@ -44,12 +44,12 @@ const INNER = /^\s*not\s*\(/
 /**
  * The double negations in an expression: an outer `not(...)` whose only content
  * is an inner `not(...)`. Each carries its start offset, verbatim text, and the
- * `boolean(...)` that replaces it — `not(not(x))` is `boolean(x)` in every
- * context, so the rewrite is always equivalent. A `not(` whose parentheses do
- * not balance, or whose content is more than a lone inner `not(...)`, is
- * skipped.
+ * inner argument `x` — `not(not(x))` equals `boolean(x)`, so the caller wraps
+ * the argument in `boolean(...)` for a value context and drops the wrapper for
+ * a whole `@test`, which already coerces. A `not(` whose parentheses do not
+ * balance, or whose content is more than a lone inner `not(...)`, is skipped.
  * @param {string} expression - The attribute value
- * @return {Array.<{offset: number, value: string, replacement: string}>} -
+ * @return {Array.<{offset: number, value: string, argument: string}>} -
  *  The negations found
  */
 const negations = function(expression) {
@@ -74,7 +74,7 @@ const negations = function(expression) {
     found.push({
       offset: start,
       value: expression.slice(start, close + 1),
-      replacement: `boolean(${expression.slice(innerOpen + 1, innerClose)})`,
+      argument: expression.slice(innerOpen + 1, innerClose),
     })
   }
   return found
@@ -82,7 +82,9 @@ const negations = function(expression) {
 
 /**
  * Lint the corpus for `not(not(x))`, a redundant double negation, reporting one
- * defect per occurrence with the safe fix that rewrites it to `boolean(x)`.
+ * defect per occurrence with a safe fix: bare `x` when the double negation is a
+ * whole `@test` (which already coerces to a boolean), and `boolean(x)`
+ * everywhere else, where the boolean value itself is what is wanted.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
@@ -94,9 +96,11 @@ const lintByDoubleNegation = function(corpus, suppressions = []) {
   if (!suppressions.some((sup) => CHECK.includes(sup))) {
     for (const {file, xsl} of corpus) {
       for (const attribute of nodes(xsl, '//@test | //@select')) {
-        for (const {offset, value, replacement} of negations(
+        for (const {offset, value, argument} of negations(
           attribute.nodeValue,
         )) {
+          const bare = attribute.nodeName === 'test' &&
+            attribute.nodeValue.trim() === value
           const pos = attribute.columnNumber + 1 + offset
           defects.push({
             name: CHECK,
@@ -109,7 +113,7 @@ const lintByDoubleNegation = function(corpus, suppressions = []) {
               line: attribute.lineNumber,
               col: pos,
               value: value,
-              replacement: replacement,
+              replacement: bare ? argument : `boolean(${argument})`,
             },
           })
         }

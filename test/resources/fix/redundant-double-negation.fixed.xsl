@@ -5,8 +5,9 @@
 -->
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/">
-    <xsl:if test="boolean(@enabled)">
-      <p>on</p>
+    <xsl:variable name="flag" select="@a and boolean(@enabled)"/>
+    <xsl:if test="@enabled">
+      <xsl:value-of select="$flag"/>
     </xsl:if>
   </xsl:template>
 </xsl:stylesheet>

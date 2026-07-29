@@ -6,16 +6,22 @@ coerces `x` to a boolean. It is exactly `boolean(x)`, and in a boolean context
 negation it reads as a puzzle: the reader has to cancel the two `not`s in their
 head to see what it means.
 
-The rewrite to `boolean(x)` is always equivalent, so `--fix` applies it safely.
+`not(not(x))` equals `boolean(x)` in every context, so `--fix` rewrites it
+there. In a whole `@test` the value is already coerced to a boolean, so the fix
+goes one step further to bare `x` — the same form `redundant-boolean-call`
+would reduce `boolean(x)` to — rather than leaving a `boolean(x)` that check
+would then flag.
 
 Incorrect:
 
 ```xsl
 <xsl:if test="not(not(@enabled))">
+<xsl:value-of select="not(not(@enabled))"/>
 ```
 
 Correct:
 
 ```xsl
-<xsl:if test="boolean(@enabled)">
+<xsl:if test="@enabled">
+<xsl:value-of select="boolean(@enabled)"/>
 ```

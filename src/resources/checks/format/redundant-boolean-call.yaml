@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+severity: warning
+message: The whole test is wrapped in boolean(); a test already coerces to a boolean, so the wrapper is redundant. Drop it.

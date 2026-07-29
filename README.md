@@ -271,7 +271,11 @@ Today this covers nine checks:
   already imported in the same stylesheet is removed; the module stays imported
   by the first reference.
 - `redundant-double-negation` — `not(not(x))` becomes `boolean(x)`, the
-  equivalent it spells out the long way.
+  equivalent it spells out the long way; in a whole `@test`, which already
+  coerces to a boolean, it becomes plain `x`.
+- `redundant-boolean-call` — a whole `@test` wrapped in `boolean()` drops the
+  wrapper: `test="boolean(@x)"` becomes `test="@x"`, since a test already
+  coerces its value to a boolean.
 
 Only the exact span that was flagged is rewritten — the rest of the file is
 left byte-for-byte intact — and a fix is skipped rather than applied when the

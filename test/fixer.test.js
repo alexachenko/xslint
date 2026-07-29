@@ -85,10 +85,17 @@ const APPLIED = [
     after: 'use-node-set-extension.fixed.xsl',
   },
   {
-    name: 'should rewrite a double negation to boolean() with --fix',
+    name: 'should rewrite double negations, to boolean() in a select and to ' +
+      'the bare argument in a whole test, with --fix',
     flag: '--fix',
     before: 'redundant-double-negation.xsl',
     after: 'redundant-double-negation.fixed.xsl',
+  },
+  {
+    name: 'should strip a boolean() wrapping a whole test with --fix',
+    flag: '--fix',
+    before: 'redundant-boolean-call.xsl',
+    after: 'redundant-boolean-call.fixed.xsl',
   },
   {
     name: 'should rewrite a count comparison to exists/empty with --fix',
@@ -202,6 +209,11 @@ const UNCHANGED = [
     sheet: 'redundant-import.xsl',
   },
   {
+    name: 'cannot strip a boolean() wrapper with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'redundant-boolean-call.xsl',
+  },
+  {
     name: 'cannot rewrite a count comparison with --fix-dry-run',
     flag: '--fix-dry-run',
     sheet: 'count-compared-to-zero.xsl',
@@ -281,6 +293,12 @@ const DROPPED = [
     flag: '--fix',
     sheet: 'redundant-import.xsl',
     check: 'redundant-import',
+  },
+  {
+    name: 'should drop the fixed boolean-call defect from the report',
+    flag: '--fix',
+    sheet: 'redundant-boolean-call.xsl',
+    check: 'redundant-boolean-call',
   },
   {
     name: 'should drop the fixed count defect from the report',
