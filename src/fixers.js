@@ -85,6 +85,26 @@ const startsWithDoubleSlash = function(node) {
 }
 
 /**
+ * Fix for `incorrect-use-of-boolean-constants`: replace the string literal
+ * test `'true'`/`'false'` with the boolean `true()`/`false()`. A suggestion,
+ * since `'false'` is a non-empty string that is always true, so the rewrite
+ * changes the test's truth value — which is the point.
+ * @param {Element} node - The `xsl:if`/`xsl:when` element
+ * @return {object} - The suggestion fix
+ */
+const booleanConstant = function(node) {
+  const test = node.getAttributeNode('test')
+  return {
+    line: test.lineNumber,
+    col: test.columnNumber - test.name.length - 1,
+    value: `${test.name}="${test.value}"`,
+    replacement:
+      `${test.name}="${test.value.includes('true') ? 'true()' : 'false()'}"`,
+    suggestion: true,
+  }
+}
+
+/**
  * Fix builders for declarative Xpath checks, keyed by check name. The per-file
  * linter attaches the fix a builder returns to the defect it found for that
  * check, so a rule stays declarative while still carrying a fix; a builder
@@ -97,6 +117,7 @@ const FIXERS = {
   'missing-version-in-stylesheet': missingVersion,
   'mode-or-priority-without-match': modeOrPriority,
   'starts-with-double-slash': startsWithDoubleSlash,
+  'incorrect-use-of-boolean-constants': booleanConstant,
 }
 
 module.exports = {

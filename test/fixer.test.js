@@ -240,6 +240,31 @@ describe('fixer', function() {
       fixture('leaking-result-namespace-appended.fixed.xsl'),
     )
   })
+  it('cannot rewrite a boolean-constant test with plain --fix', function() {
+    const file = scratch(fixture('incorrect-use-of-boolean-constants.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('incorrect-use-of-boolean-constants.xsl'),
+    )
+  })
+  it('should rewrite a boolean-constant test to true()/false() with ' +
+    '--fix-suggestions', function() {
+    const file = scratch(fixture('incorrect-use-of-boolean-constants.xsl'))
+    runXslint(['--fix-suggestions', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('incorrect-use-of-boolean-constants.fixed.xsl'),
+    )
+  })
+  it('should drop the fixed boolean-constant defect with --fix-suggestions',
+    function() {
+      const file = scratch(fixture('incorrect-use-of-boolean-constants.xsl'))
+      assert.ok(
+        !xslintStreams(['--fix-suggestions', file])
+          .stdout.includes('incorrect-use-of-boolean-constants'),
+      )
+    })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])

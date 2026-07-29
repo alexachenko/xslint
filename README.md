@@ -283,6 +283,9 @@ xslint --fix-suggestions path/to/dir
 
 Today this covers:
 
+- `incorrect-use-of-boolean-constants` — the string test `'true'`/`'false'`
+  becomes `true()`/`false()`, which changes the truth value of a `'false'` test
+  (a non-empty string is always true).
 - `using-disable-output-escaping` — the attribute is removed, which changes how
   the output is escaped.
 - `output-method-xml` — `method="xml"` becomes `"html"` when the stylesheet

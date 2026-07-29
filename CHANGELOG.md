@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `incorrect-use-of-boolean-constants` fixable: `--fix-suggestions`
+  replaces the string test `'true'`/`'false'` with `true()`/`false()`. A
+  suggestion, not a safe fix, because `'false'` is a non-empty string that is
+  always true, so the rewrite changes the test's truth value — which is the
+  bug it flags (#456).
+
 - Make `starts-with-double-slash` fixable: `--fix` drops the redundant leading
   `//` of a template's `@match` (`match="//para"` becomes `match="para"`). It is
   a safe fix, not a suggestion, since a match pattern is already unanchored and
