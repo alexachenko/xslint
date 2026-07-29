@@ -113,6 +113,14 @@ describe('fixer', function() {
       fixture('redundant-import.fixed.xsl'),
     )
   })
+  it('should delete four of five duplicate imports with --fix', function() {
+    const file = scratch(fixture('redundant-import-many.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('redundant-import-many.fixed.xsl'),
+    )
+  })
   it('cannot delete a redundant import with --fix-dry-run', function() {
     const file = scratch(fixture('redundant-import.xsl'))
     runXslint(['--fix-dry-run', file])
