@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: unreachable-function
+found:
+  amount: 1
+  positions: [ [ 0, 7, 3 ] ]
+inputs:
+  - |-
+    <?xml version="1.0"?>
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.0" id="lib">
+      <xsl:function name="my:used" as="xs:integer">
+        <xsl:param name="number" as="xs:integer"/>
+        <xsl:sequence select="if ($number = 0) then 1 else $number * my:used($number - 1)"/>
+      </xsl:function>
+      <xsl:function name="my:dead" as="xs:integer">
+        <xsl:param name="number" as="xs:integer"/>
+        <xsl:sequence select="if ($number = 0) then 0 else my:dead($number - 1)"/>
+      </xsl:function>
+    </xsl:stylesheet>
+  - |-
+    <?xml version="1.0"?>
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="main">
+      <xsl:import href="lib.xsl"/>
+      <xsl:template match="/">
+        <xsl:value-of select="my:used(5)"/>
+      </xsl:template>
+    </xsl:stylesheet>
