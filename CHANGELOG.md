@@ -9,6 +9,12 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Fix `unused-function`: mutually recursive functions that nothing else calls
+  are now flagged. Use is followed as reachability from a reference outside
+  every function body (a call from a template), so a cycle of functions that
+  only call one another is dead and reported whole, rather than each masking
+  the other (#175).
+
 - Add the `not-creating-attribute-correctly` check: an `xsl:attribute` with a
   static name on a literal result element, whose value is simple (a single
   `xsl:value-of`, text, or empty), can be written inline as a literal attribute

@@ -81,22 +81,71 @@ const inScope = function(check, declaration, usage) {
 }
 
 /**
- * Whether the declaration is referenced by an in-scope usage, matching its
- * name as a substring (`name(` for a function, `$name` for a variable). Its
- * own subtree is excluded, so recursion alone is not use.
+ * The reference string that stands for a declaration in an expression —
+ * `name(` for a function, `$name` for a variable.
  * @param {object} check - The check to apply, carrying a `reference` template
  * @param {Node} declaration - Declaring node
- * @param {Array.<Node>} usages - Usage attributes across the corpus
- * @return {boolean} - True when referenced
+ * @return {string} - Substring a referencing usage value contains
  */
-const used = function(check, declaration, usages) {
-  const needle = check.reference.replaceAll(
-    '{name}', declaration.getAttribute('name'),
-  )
-  return usages.some((usage) =>
-    !within(declaration, usage) &&
-    usage.value.includes(needle) &&
-    inScope(check, declaration, usage))
+const needle = function(check, declaration) {
+  return check.reference.replaceAll('{name}', declaration.getAttribute('name'))
+}
+
+/**
+ * The innermost declaration whose subtree holds the usage, or null when the
+ * usage sits outside every declaration — a call from a template is such a
+ * root, a call from another function's body is not.
+ * @param {Set.<Node>} declarations - The declaring nodes
+ * @param {Node} usage - Usage attribute
+ * @return {?Node} - Enclosing declaration, or null
+ */
+const enclosing = function(declarations, usage) {
+  let node = usage.ownerElement
+  while (node) {
+    if (declarations.has(node)) {
+      return node
+    }
+    node = node.parentNode
+  }
+  return null
+}
+
+/**
+ * The declarations reached from a root reference — one outside every
+ * declaration's body — by following the call graph: a declaration is used
+ * when an in-scope reference to it sits outside all declarations, or inside
+ * another declaration that is itself used. Mutually recursive functions that
+ * nothing else calls are reached by neither, so both stay unused.
+ * @param {object} check - The check to apply, carrying a `reference` template
+ * @param {Array.<{file: string, node: Node}>} declarations - Declaring nodes
+ * @param {Array.<Node>} usages - Usage attributes across the corpus
+ * @return {Set.<Node>} - The used declarations
+ */
+const reachable = function(check, declarations, usages) {
+  const subtrees = new Set(declarations.map(({node}) => node))
+  const references = declarations.map(({node}) => ({
+    node,
+    hosts: usages
+      .filter((usage) =>
+        !within(node, usage) &&
+        usage.value.includes(needle(check, node)) &&
+        inScope(check, node, usage))
+      .map((usage) => enclosing(subtrees, usage)),
+  }))
+  const used = new Set()
+  let growing = true
+  while (growing) {
+    growing = false
+    references
+      .filter((reference) => !used.has(reference.node))
+      .filter((reference) =>
+        reference.hosts.some((host) => host === null || used.has(host)))
+      .forEach((reference) => {
+        used.add(reference.node)
+        growing = true
+      })
+  }
+  return used
 }
 
 /**
@@ -104,15 +153,20 @@ const used = function(check, declaration, usages) {
  * the usage values — a stylesheet function or a variable is referenced from
  * within an XPath expression (`name(`, `$name`), not by an attribute of its
  * own, and the reference can live in any file that imports the declaring one.
+ * A declaration is a defect when the reachability walk never reaches it, so a
+ * cycle of functions that only call each other is flagged whole.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {object} check - The check to apply, carrying a `reference` template
  * @return {Array.<object>} - Defects found
  */
 const byReference = function(corpus, check) {
   const usages = corpus.flatMap(({xsl}) => nodes(xsl, check.usage))
-  return corpus.flatMap(({file, xsl}) => nodes(xsl, check.declaration)
-    .filter((node) => !used(check, node, usages))
-    .map((node) => defect(check, file, node)))
+  const declarations = corpus.flatMap(({file, xsl}) =>
+    nodes(xsl, check.declaration).map((node) => ({file, node})))
+  const used = reachable(check, declarations, usages)
+  return declarations
+    .filter(({node}) => !used.has(node))
+    .map(({file, node}) => defect(check, file, node))
 }
 
 /**
