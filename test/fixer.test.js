@@ -290,6 +290,31 @@ describe('fixer', function() {
         .stdout.includes('select-starts-with-double-slash'),
     )
   })
+  it('cannot prepend $ to a bare variable name with plain --fix', function() {
+    const file = scratch(fixture('confusing-variable-and-node.xsl'))
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('confusing-variable-and-node.xsl'),
+    )
+  })
+  it('should prepend $ to a bare variable name with --fix-suggestions',
+    function() {
+      const file = scratch(fixture('confusing-variable-and-node.xsl'))
+      runXslint(['--fix-suggestions', file])
+      assert.equal(
+        fs.readFileSync(file, 'utf-8'),
+        fixture('confusing-variable-and-node.fixed.xsl'),
+      )
+    })
+  it('should drop the fixed confusing-variable-and-node defect with ' +
+    '--fix-suggestions', function() {
+    const file = scratch(fixture('confusing-variable-and-node.xsl'))
+    assert.ok(
+      !xslintStreams(['--fix-suggestions', file])
+        .stdout.includes('confusing-variable-and-node'),
+    )
+  })
   it('cannot apply a suggestion with plain --fix', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
     runXslint(['--fix', file])

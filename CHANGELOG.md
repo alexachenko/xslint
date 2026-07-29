@@ -9,6 +9,11 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Make `confusing-variable-and-node` fixable: `--fix-suggestions` prepends `$`
+  to a bare variable name used as a node selector in an `xsl:apply-templates`
+  `@select` (`select="items"` becomes `select="$items"`). A suggestion, since it
+  assumes the author meant the variable rather than a child element (#458).
+
 - Make `select-starts-with-double-slash` fixable: `--fix-suggestions` anchors
   the leading `//` of a `@select` as `.//` (`select="//title"` becomes
   `select=".//title"`). A suggestion, since it changes behaviour from an

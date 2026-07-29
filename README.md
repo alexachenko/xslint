@@ -289,6 +289,9 @@ Today this covers:
 - `select-starts-with-double-slash` — the leading `//` of a `@select` is
   anchored as `.//`: `select="//title"` becomes `select=".//title"`, scanning
   descendants of the context node instead of the whole document.
+- `confusing-variable-and-node` — a bare variable name used as a node selector
+  gets its `$`: `<xsl:apply-templates select="items"/>` becomes
+  `select="$items"`, assuming the variable was meant over a child element.
 - `using-disable-output-escaping` — the attribute is removed, which changes how
   the output is escaped.
 - `output-method-xml` — `method="xml"` becomes `"html"` when the stylesheet

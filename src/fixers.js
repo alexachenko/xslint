@@ -126,6 +126,26 @@ const selectDoubleSlash = function(node) {
 }
 
 /**
+ * Fix for `confusing-variable-and-node`: prepend `$` to the bare name in the
+ * `xsl:apply-templates` `@select`, turning a node selector into the variable
+ * reference the author meant. The rule fires only when the name is at the start
+ * of `@select`, so a single insert after the opening quote suffices. A
+ * suggestion, since it assumes the variable was intended over a child element.
+ * @param {Element} node - The `xsl:apply-templates` element
+ * @return {object} - The suggestion fix
+ */
+const confusingVariable = function(node) {
+  const select = node.getAttributeNode('select')
+  return {
+    line: select.lineNumber,
+    col: select.columnNumber - select.name.length - 1,
+    value: `${select.name}="`,
+    replacement: `${select.name}="$`,
+    suggestion: true,
+  }
+}
+
+/**
  * Fix builders for declarative Xpath checks, keyed by check name. The per-file
  * linter attaches the fix a builder returns to the defect it found for that
  * check, so a rule stays declarative while still carrying a fix; a builder
@@ -140,6 +160,7 @@ const FIXERS = {
   'starts-with-double-slash': startsWithDoubleSlash,
   'incorrect-use-of-boolean-constants': booleanConstant,
   'select-starts-with-double-slash': selectDoubleSlash,
+  'confusing-variable-and-node': confusingVariable,
 }
 
 module.exports = {
