@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {yaml} = require('./helpers')
+const {metaOf, suppressed} = require('./checks')
 const {importsOf, graphOf} = require('./import-graph')
-const path = require('path')
 const {logger} = require('./logger')
 
 /**
@@ -21,21 +20,10 @@ const CIRCULAR = 'circular-import'
 const REDUNDANT = 'redundant-import'
 
 /**
- * Defect metadata of a check, read from its formatting YAML.
- * @param {string} check - Check name
- * @return {{severity: string, message: string}} - The metadata
- */
-const meta = function(check) {
-  return yaml.parsedFromFile(
-    path.join(__dirname, 'resources', 'checks', 'format', `${check}.yaml`),
-  )
-}
-
-/**
  * Metadata of both checks, keyed by name.
  * @type {{[check: string]: {severity: string, message: string}}}
  */
-const META = {[CIRCULAR]: meta(CIRCULAR), [REDUNDANT]: meta(REDUNDANT)}
+const META = {[CIRCULAR]: metaOf(CIRCULAR), [REDUNDANT]: metaOf(REDUNDANT)}
 
 /**
  * Names of the checks this linter owns.
@@ -59,16 +47,6 @@ const defect = function(check, file, node) {
     line: node.lineNumber,
     pos: node.columnNumber,
   }
-}
-
-/**
- * Whether a check is suppressed — a suppression matches it as a substring.
- * @param {string} check - Check name
- * @param {Array.<string>} suppressions - Suppressed checks
- * @return {boolean} - True when suppressed
- */
-const suppressed = function(check, suppressions) {
-  return suppressions.some((sup) => check.includes(sup))
 }
 
 /**

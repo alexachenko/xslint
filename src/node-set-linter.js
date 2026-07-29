@@ -5,8 +5,7 @@
 
 const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
-const {yaml} = require('./helpers')
-const path = require('path')
+const {metaOf, suppressed, defect} = require('./checks')
 const {logger} = require('./logger')
 
 /**
@@ -19,9 +18,7 @@ const CHECK = 'use-node-set-extension'
  * Defect metadata of the check.
  * @type {{severity: string, message: string}}
  */
-const META = yaml.parsedFromFile(
-  path.join(__dirname, 'resources', 'checks', 'format', `${CHECK}.yaml`),
-)
+const META = metaOf(CHECK)
 
 /**
  * Names of the checks this linter owns.
@@ -78,28 +75,18 @@ const wrappers = function(select) {
 const lintByNodeSet = function(corpus, suppressions = []) {
   logger.debug(`Node-set linting started`)
   const defects = []
-  if (!suppressions.some((sup) => CHECK.includes(sup))) {
+  if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
       if (MODERN.includes(xsl.documentElement.getAttribute('version'))) {
         for (const attribute of nodes(xsl, '//@select')) {
           for (const {offset, value, replacement} of wrappers(
             attribute.nodeValue,
           )) {
-            const pos = attribute.columnNumber + 1 + offset
-            defects.push({
-              name: CHECK,
-              severity: META.severity,
-              message: META.message,
-              file: file,
-              line: attribute.lineNumber,
-              pos: pos,
-              fix: {
-                line: attribute.lineNumber,
-                col: pos,
-                value: value,
-                replacement: replacement,
-              },
-            })
+            defects.push(
+              defect(
+                CHECK, META, file, attribute, offset, {value, replacement},
+              ),
+            )
           }
         }
       }

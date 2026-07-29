@@ -4,8 +4,7 @@
  */
 
 const {tokenized, TOKENS} = require('./tokens')
-const {yaml} = require('./helpers')
-const path = require('path')
+const {metaOf, suppressed, defect} = require('./checks')
 const {logger} = require('./logger')
 
 /**
@@ -18,9 +17,7 @@ const CHECK = 'redundant-whitespace'
  * Defect metadata of the check.
  * @type {{severity: string, message: string}}
  */
-const META = yaml.parsedFromFile(
-  path.join(__dirname, 'resources', 'checks', 'format', `${CHECK}.yaml`),
-)
+const META = metaOf(CHECK)
 
 /**
  * Names of the checks this linter owns.
@@ -72,26 +69,14 @@ const redundancies = function(expression) {
 const lintByFormat = function(expressions, suppressions = []) {
   logger.debug(`Format linting started`)
   const defects = []
-  if (!suppressions.some((sup) => CHECK.includes(sup))) {
+  if (!suppressed(CHECK, suppressions)) {
     for (const {file, expression} of expressions) {
       for (const {offset, value, replacement} of redundancies(
         expression.nodeValue,
       )) {
-        const pos = expression.columnNumber + 1 + offset
-        defects.push({
-          name: CHECK,
-          severity: META.severity,
-          message: META.message,
-          file: file,
-          line: expression.lineNumber,
-          pos: pos,
-          fix: {
-            line: expression.lineNumber,
-            col: pos,
-            value: value,
-            replacement: replacement,
-          },
-        })
+        defects.push(
+          defect(CHECK, META, file, expression, offset, {value, replacement}),
+        )
       }
     }
   }

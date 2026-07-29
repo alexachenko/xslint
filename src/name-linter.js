@@ -5,8 +5,7 @@
 
 const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
-const {yaml} = require('./helpers')
-const path = require('path')
+const {metaOf, suppressed, defect} = require('./checks')
 const {logger} = require('./logger')
 
 /**
@@ -19,9 +18,7 @@ const CHECK = 'name-compared-to-string'
  * Defect metadata of the check.
  * @type {{severity: string, message: string}}
  */
-const META = yaml.parsedFromFile(
-  path.join(__dirname, 'resources', 'checks', 'format', `${CHECK}.yaml`),
-)
+const META = metaOf(CHECK)
 
 /**
  * Names of the checks this linter owns.
@@ -141,7 +138,7 @@ const comparisons = function(expression, modern) {
 const lintByName = function(corpus, suppressions = []) {
   logger.debug(`Name-comparison linting started`)
   const defects = []
-  if (!suppressions.some((sup) => CHECK.includes(sup))) {
+  if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
       const modern = MODERN.includes(
         xsl.documentElement.getAttribute('version'),
@@ -150,22 +147,13 @@ const lintByName = function(corpus, suppressions = []) {
         for (const {offset, value, replacement} of comparisons(
           attribute.nodeValue, modern,
         )) {
-          const pos = attribute.columnNumber + 1 + offset
-          defects.push({
-            name: CHECK,
-            severity: META.severity,
-            message: META.message,
-            file: file,
-            line: attribute.lineNumber,
-            pos: pos,
-            fix: replacement === null ? undefined : {
-              line: attribute.lineNumber,
-              col: pos,
-              value: value,
-              replacement: replacement,
-              suggestion: true,
-            },
-          })
+          defects.push(
+            defect(
+              CHECK, META, file, attribute, offset,
+              replacement === null ?
+                undefined : {value, replacement, suggestion: true},
+            ),
+          )
         }
       }
     }

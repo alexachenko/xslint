@@ -5,8 +5,7 @@
 
 const {nodes} = require('./xpath')
 const {tokenized, TOKENS} = require('./tokens')
-const {yaml} = require('./helpers')
-const path = require('path')
+const {metaOf, suppressed, defect} = require('./checks')
 const {logger} = require('./logger')
 
 /**
@@ -19,9 +18,7 @@ const CHECK = 'predicate-position-literal'
  * Defect metadata of the check.
  * @type {{severity: string, message: string}}
  */
-const META = yaml.parsedFromFile(
-  path.join(__dirname, 'resources', 'checks', 'format', `${CHECK}.yaml`),
-)
+const META = metaOf(CHECK)
 
 /**
  * Names of the checks this linter owns.
@@ -151,27 +148,15 @@ const literals = function(expression) {
 const lintByPredicatePosition = function(corpus, suppressions = []) {
   logger.debug(`Predicate-position linting started`)
   const defects = []
-  if (!suppressions.some((sup) => CHECK.includes(sup))) {
+  if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
       for (const attribute of nodes(xsl, SELECTOR)) {
         for (const {offset, value, replacement} of literals(
           attribute.nodeValue,
         )) {
-          const pos = attribute.columnNumber + 1 + offset
-          defects.push({
-            name: CHECK,
-            severity: META.severity,
-            message: META.message,
-            file: file,
-            line: attribute.lineNumber,
-            pos: pos,
-            fix: {
-              line: attribute.lineNumber,
-              col: pos,
-              value: value,
-              replacement: replacement,
-            },
-          })
+          defects.push(
+            defect(CHECK, META, file, attribute, offset, {value, replacement}),
+          )
         }
       }
     }

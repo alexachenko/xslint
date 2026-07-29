@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {yaml} = require('./helpers')
-const path = require('path')
+const {metaOf, suppressed} = require('./checks')
 const {logger} = require('./logger')
 
 /**
@@ -23,9 +22,7 @@ const XSLT = 'http://www.w3.org/1999/XSL/Transform'
  * Defect metadata of the check.
  * @type {{severity: string, message: string}}
  */
-const META = yaml.parsedFromFile(
-  path.join(__dirname, 'resources', 'checks', 'format', `${CHECK}.yaml`),
-)
+const META = metaOf(CHECK)
 
 /**
  * Names of the checks this linter owns.
@@ -181,7 +178,7 @@ const exclusion = function(root, prefix) {
 const lintByResultNamespace = function(corpus, suppressions = []) {
   logger.debug(`Result-namespace linting started`)
   const defects = []
-  if (!suppressions.some((sup) => CHECK.includes(sup))) {
+  if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
       const root = xsl.documentElement
       const elements = Array.from(xsl.getElementsByTagName('*'))
