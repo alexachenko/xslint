@@ -6,62 +6,90 @@
 const {validate} = require('../src/xsl-validator')
 const assert = require('assert')
 
+/**
+ * Sources whose content is well-formed enough to stay in the corpus.
+ * @type {Array.<{name: string, file: string, content: string}>}
+ */
+const KEPT = [
+  {
+    name: 'should keep a well-formed stylesheet in the corpus',
+    file: 'good.xsl',
+    content: '<a><b/></a>',
+  },
+  {
+    name: 'should keep a stylesheet that declares an internal entity',
+    file: 'declared.xsl',
+    content: '<!DOCTYPE a [<!ENTITY sc "x">]>\n<a>&sc;</a>',
+  },
+  {
+    name: 'should keep a stylesheet whose entities come from an external subset',
+    file: 'external.xsl',
+    content: '<!DOCTYPE a [<!ENTITY % ent SYSTEM "e.ent"> %ent;]>\n<a>&primary;</a>',
+  },
+]
+
+/**
+ * Sources reported as malformed and left out of the corpus.
+ * @type {Array.<{name: string, file: string, content: string}>}
+ */
+const REPORTED = [
+  {
+    name: 'should report a malformed stylesheet as a defect',
+    file: 'broken.xsl',
+    content: '<a><b></a>',
+  },
+  {
+    name: 'should report an undefined entity as a defect',
+    file: 'entity.xsl',
+    content: '<a>&nope; text</a>',
+  },
+  {
+    name: 'should report a reference to an entity the subset leaves undeclared',
+    file: 'gap.xsl',
+    content: '<!DOCTYPE a [<!ENTITY sc "x">]>\n<a>&other;</a>',
+  },
+]
+
+/**
+ * Sources whose declared entities expand into a `t` attribute value.
+ * @type {Array.<{name: string, content: string, expected: string}>}
+ */
+const EXPAND = [
+  {
+    name: 'should expand an internal entity into the parsed value',
+    content: '<!DOCTYPE a [<!ENTITY lc "\'abc\'">]>\n<a t="translate(.,&lc;,X)"/>',
+    expected: 'translate(.,\'abc\',X)',
+  },
+  {
+    name: 'should expand a declared entity and leave an unresolvable one alone',
+    content: '<!DOCTYPE a [<!ENTITY lc \'abc\'> <!ENTITY % x SYSTEM "x.ent">]>\n' +
+      '<a t="&lc;-&primary;"/>',
+    expected: 'abc-&primary;',
+  },
+]
+
 describe('xsl-validator', function() {
-  it('should keep a well-formed stylesheet in the corpus', function() {
-    const {corpus} = validate([
-      {file: 'good.xsl', content: '<a><b/></a>'},
-    ])
-    assert.equal(corpus[0].file, 'good.xsl')
-  })
-  it('should report a malformed stylesheet as a defect', function() {
-    const {defects} = validate([
-      {file: 'broken.xsl', content: '<a><b></a>'},
-    ])
-    assert.equal(defects[0].name, 'malformed-stylesheet')
-  })
-  it('should report an undefined entity as a defect', function() {
-    const {defects} = validate([
-      {file: 'entity.xsl', content: '<a>&nope; text</a>'},
-    ])
-    assert.equal(defects[0].name, 'malformed-stylesheet')
-  })
-  it('should keep a stylesheet that declares an internal entity', function() {
-    const {corpus} = validate([
-      {file: 'declared.xsl', content: '<!DOCTYPE a [<!ENTITY sc "x">]>\n<a>&sc;</a>'},
-    ])
-    assert.equal(corpus[0].file, 'declared.xsl')
-  })
-  it('should report a reference to an entity the subset leaves undeclared',
-    function() {
-      const {defects} = validate([
-        {file: 'gap.xsl', content: '<!DOCTYPE a [<!ENTITY sc "x">]>\n<a>&other;</a>'},
-      ])
-      assert.equal(defects[0].name, 'malformed-stylesheet')
+  KEPT.forEach(({name, file, content}) => {
+    it(name, function() {
+      assert.equal(validate([{file, content}]).corpus[0].file, file)
     })
-  it('should keep a stylesheet whose entities come from an external subset',
-    function() {
-      const {corpus} = validate([
-        {file: 'external.xsl', content: '<!DOCTYPE a [<!ENTITY % ent SYSTEM "e.ent"> %ent;]>\n<a>&primary;</a>'},
-      ])
-      assert.equal(corpus[0].file, 'external.xsl')
-    })
-  it('should expand an internal entity into the parsed value', function() {
-    const {corpus} = validate([
-      {file: 'expand.xsl', content: '<!DOCTYPE a [<!ENTITY lc "\'abc\'">]>\n<a t="translate(.,&lc;,X)"/>'},
-    ])
-    assert.equal(
-      corpus[0].xsl.documentElement.getAttribute('t'), 'translate(.,\'abc\',X)',
-    )
   })
-  it('should expand a declared entity and leave an unresolvable one alone',
-    function() {
-      const {corpus} = validate([
-        {file: 'mix.xsl', content: '<!DOCTYPE a [<!ENTITY lc \'abc\'> <!ENTITY % x SYSTEM "x.ent">]>\n<a t="&lc;-&primary;"/>'},
-      ])
+  REPORTED.forEach(({name, file, content}) => {
+    it(name, function() {
       assert.equal(
-        corpus[0].xsl.documentElement.getAttribute('t'), 'abc-&primary;',
+        validate([{file, content}]).defects[0].name, 'malformed-stylesheet',
       )
     })
+  })
+  EXPAND.forEach(({name, content, expected}) => {
+    it(name, function() {
+      assert.equal(
+        validate([{file: 'e.xsl', content}])
+          .corpus[0].xsl.documentElement.getAttribute('t'),
+        expected,
+      )
+    })
+  })
   it('should not leak parser diagnostics to the console', function() {
     const original = console.error
     const lines = []

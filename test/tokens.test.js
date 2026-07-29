@@ -6,6 +6,99 @@
 const {tokenized, TOKENS} = require('../src/tokens')
 const assert = require('assert')
 
+/**
+ * Cases where each input yields a first NUMBER token of an expected value.
+ * @type {Array.<{name: string, inputs: Array.<string>,
+ *  values: Array.<string>}>}
+ */
+const NUMBERS = [
+  {
+    name: 'checks the correct value of number with whitespaces around',
+    inputs: ['w 123 q', 'w 123.1 q', 'w .1 q', 'w 123. q', 'w 1.5e10 q',
+      'w 123e-45 q'],
+    values: ['123', '123.1', '.1', '123.', '1.5e10', '123e-45'],
+  },
+  {
+    name: 'checks the incorrect value of number with no whitespaces around',
+    inputs: ['123.45.6', '123e45E6', '123e45.6', '1e', '1e+'],
+    values: ['123.45', '123e45', '123e45', '1', '1'],
+  },
+]
+
+/**
+ * Cases where each input holds `count` tokens of the paired type.
+ * @type {Array.<{name: string, count: number,
+ *  pairs: Array.<[string, string]>}>}
+ */
+const SCANS = [
+  {
+    name: 'finds brackets and parentheses',
+    count: 1,
+    pairs: [
+      ['( w e', TOKENS.LPAREN],
+      ['w ) e', TOKENS.RPAREN],
+      ['w [ e', TOKENS.LBRACKET],
+      ['t t ]', TOKENS.RBRACKET],
+    ],
+  },
+  {
+    name: 'finds operators',
+    count: 1,
+    pairs: [
+      ['+ w e', TOKENS.PLUS],
+      ['w -e', TOKENS.MINUS],
+      ['w 7*', TOKENS.MULTI],
+      ['t = t', TOKENS.EQUAL],
+      ['!= w e', TOKENS.NOT_EQUAL],
+      ['t eq t', TOKENS.EQ],
+      ['2div7', TOKENS.DIV],
+      ['union w e', TOKENS.UNION],
+      ['instance of', TOKENS.INSTANCE_OF],
+    ],
+  },
+  {
+    name: 'finds axes',
+    count: 1,
+    pairs: [
+      ['child::abc', TOKENS.CHILD],
+      ['descendant-or-self::def', TOKENS.DESCENDANT_OR_SELF],
+      ['attribute::ghi', TOKENS.ATTRIBUTE],
+    ],
+  },
+  {
+    name: 'finds no axes',
+    count: 0,
+    pairs: [
+      ['child:abc', TOKENS.CHILD],
+      ['descendant-or-self', TOKENS.DESCENDANT_OR_SELF],
+    ],
+  },
+]
+
+/**
+ * Fragments assembled into random expressions for the round-trip properties.
+ * @type {Array.<string>}
+ */
+const PIECES = [
+  'a', 'ns:n', '"x"', '\'a\'\'b\'', '(: c :)', '(: (:n:) :)', '123', '4.5',
+  '.5', '1e3', 'child::', 'descendant-or-self::', '@', ' ', '  ', '\t',
+  '\n', '//', '/', '(', ')', '[', ']', '*', '+', '-', '=', '!=', '<=',
+  '>=', '|', '||', 'and', 'or', 'div', 'mod', 'instance of', '$v', ',', ':',
+]
+
+/**
+ * A random expression built from one to twelve pieces.
+ * @return {string} - The generated expression
+ */
+const generated = function() {
+  let expression = ''
+  const parts = 1 + Math.floor(Math.random() * 12)
+  for (let part = 0; part < parts; part += 1) {
+    expression += PIECES[Math.floor(Math.random() * PIECES.length)]
+  }
+  return expression
+}
+
 describe('tokens', function() {
   it('tokenizes a run of spaces as one whitespace token', function() {
     assert.equal(
@@ -38,103 +131,24 @@ describe('tokens', function() {
       5,
     )
   })
-  it('checks the correct value of number with whitespaces around', function() {
-    const FULL = [
-      'w 123 q',
-      'w 123.1 q',
-      'w .1 q',
-      'w 123. q',
-      'w 1.5e10 q',
-      'w 123e-45 q',
-    ]
-    const ACTUAL = [
-      '123',
-      '123.1',
-      '.1',
-      '123.',
-      '1.5e10',
-      '123e-45',
-    ]
-    FULL.forEach((string, index) => {
-      assert.equal(
-        tokenized(string).find((token) => token.type === TOKENS.NUMBER).value,
-        ACTUAL[index],
-      )
+  NUMBERS.forEach(({name, inputs, values}) => {
+    it(name, function() {
+      inputs.forEach((string, index) => {
+        assert.equal(
+          tokenized(string).find((token) => token.type === TOKENS.NUMBER).value,
+          values[index],
+        )
+      })
     })
   })
-  it('checks the incorrect value of number with no whitespaces around', function() {
-    const FULL = [
-      '123.45.6',
-      '123e45E6',
-      '123e45.6',
-      '1e',
-      '1e+',
-    ]
-    const ACTUAL = [
-      '123.45',
-      '123e45',
-      '123e45',
-      '1',
-      '1',
-    ]
-    FULL.forEach((string, index) => {
-      assert.equal(
-        tokenized(string).find((token) => token.type === TOKENS.NUMBER).value,
-        ACTUAL[index],
-      )
-    })
-  })
-  it('treats doubled quotes inside a literal as an escape', function() {
-    assert.equal(tokenized('"a""b"').length, 1)
-  })
-  it('finds brackets and parentheses', function() {
-    const FULL = [
-      '( w e',
-      'w ) e',
-      'w [ e',
-      't t ]',
-    ]
-    const ACTUAL = [
-      TOKENS.LPAREN,
-      TOKENS.RPAREN,
-      TOKENS.LBRACKET,
-      TOKENS.RBRACKET,
-    ]
-    FULL.forEach((string, index) => {
-      assert.ok(
-        tokenized(string).filter((token) => token.type === ACTUAL[index])
-          .length === 1,
-      )
-    })
-  })
-  it('finds operators', function() {
-    const FULL = [
-      '+ w e',
-      'w -e',
-      'w 7*',
-      't = t',
-      '!= w e',
-      't eq t',
-      '2div7',
-      'union w e',
-      'instance of',
-    ]
-    const ACTUAL = [
-      TOKENS.PLUS,
-      TOKENS.MINUS,
-      TOKENS.MULTI,
-      TOKENS.EQUAL,
-      TOKENS.NOT_EQUAL,
-      TOKENS.EQ,
-      TOKENS.DIV,
-      TOKENS.UNION,
-      TOKENS.INSTANCE_OF,
-    ]
-    FULL.forEach((string, index) => {
-      assert.ok(
-        tokenized(string).filter((token) => token.type === ACTUAL[index])
-          .length === 1,
-      )
+  SCANS.forEach(({name, count, pairs}) => {
+    it(name, function() {
+      pairs.forEach(([string, type]) => {
+        assert.equal(
+          tokenized(string).filter((token) => token.type === type).length,
+          count,
+        )
+      })
     })
   })
   it('finds any user functions', function() {
@@ -156,53 +170,9 @@ describe('tokens', function() {
         .length === 0,
     )
   })
-  it('finds axes', function() {
-    const FULL = [
-      'child::abc',
-      'descendant-or-self::def',
-      'attribute::ghi',
-    ]
-    const ACTUAL = [
-      TOKENS.CHILD,
-      TOKENS.DESCENDANT_OR_SELF,
-      TOKENS.ATTRIBUTE,
-    ]
-    FULL.forEach((string, index) => {
-      assert.ok(
-        tokenized(string).filter((token) => token.type === ACTUAL[index])
-          .length === 1,
-      )
-    })
-  })
-  it('finds no axes', function() {
-    const FULL = [
-      'child:abc',
-      'descendant-or-self',
-    ]
-    const ACTUAL = [
-      TOKENS.CHILD,
-      TOKENS.DESCENDANT_OR_SELF,
-    ]
-    FULL.forEach((string, index) => {
-      assert.ok(
-        tokenized(string).filter((token) => token.type === ACTUAL[index])
-          .length === 0,
-      )
-    })
-  })
   it('reconstructs every generated expression from its tokens', function() {
-    const pieces = [
-      'a', 'ns:n', '"x"', '\'a\'\'b\'', '(: c :)', '(: (:n:) :)', '123', '4.5',
-      '.5', '1e3', 'child::', 'descendant-or-self::', '@', ' ', '  ', '\t',
-      '\n', '//', '/', '(', ')', '[', ']', '*', '+', '-', '=', '!=', '<=',
-      '>=', '|', '||', 'and', 'or', 'div', 'mod', 'instance of', '$v', ',', ':',
-    ]
     for (let count = 0; count < 500; count += 1) {
-      let expression = ''
-      const parts = 1 + Math.floor(Math.random() * 12)
-      for (let part = 0; part < parts; part += 1) {
-        expression += pieces[Math.floor(Math.random() * pieces.length)]
-      }
+      const expression = generated()
       assert.equal(
         tokenized(expression).map((token) => token.value).join(''),
         expression,
@@ -210,18 +180,8 @@ describe('tokens', function() {
     }
   })
   it('positions generated expression tokens at contiguous offsets', function() {
-    const pieces = [
-      'a', 'ns:n', '"x"', '\'a\'\'b\'', '(: c :)', '(: (:n:) :)', '123', '4.5',
-      '.5', '1e3', 'child::', 'descendant-or-self::', '@', ' ', '  ', '\t',
-      '\n', '//', '/', '(', ')', '[', ']', '*', '+', '-', '=', '!=', '<=',
-      '>=', '|', '||', 'and', 'or', 'div', 'mod', 'instance of', '$v', ',', ':',
-    ]
     for (let count = 0; count < 500; count += 1) {
-      let expression = ''
-      const parts = 1 + Math.floor(Math.random() * 12)
-      for (let part = 0; part < parts; part += 1) {
-        expression += pieces[Math.floor(Math.random() * pieces.length)]
-      }
+      const expression = generated()
       let offset = 0
       for (const token of tokenized(expression)) {
         assert.equal(token.start, offset)

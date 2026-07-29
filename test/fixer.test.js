@@ -23,13 +23,6 @@ const fixture = function(name) {
 }
 
 /**
- * A stylesheet carrying redundant whitespace, and its collapsed form.
- * @type {string}
- */
-const dirty = fixture('redundant-whitespace.xsl')
-const clean = fixture('redundant-whitespace.fixed.xsl')
-
-/**
  * Copy the given content into a fresh temporary file, so a fixing run never
  * mutates the committed fixture, and return its path.
  * @param {string} content - Stylesheet to seed the file with
@@ -44,377 +37,335 @@ const scratch = function(content) {
   return file
 }
 
+/**
+ * Cases where a flag rewrites the `before` fixture into the `after` one.
+ * @type {Array.<{name: string, flag: string, before: string, after: string}>}
+ */
+const APPLIED = [
+  {
+    name: 'should collapse redundant whitespace in place with --fix',
+    flag: '--fix',
+    before: 'redundant-whitespace.xsl',
+    after: 'redundant-whitespace.fixed.xsl',
+  },
+  {
+    name: 'should abbreviate verbose axes in place with --fix',
+    flag: '--fix',
+    before: 'unabbreviated-axis.xsl',
+    after: 'unabbreviated-axis.fixed.xsl',
+  },
+  {
+    name: 'should delete a redundant namespace declaration with --fix',
+    flag: '--fix',
+    before: 'redundant-namespace-declarations.xsl',
+    after: 'redundant-namespace-declarations.fixed.xsl',
+  },
+  {
+    name: 'should drop the redundant leading slashes of a match with --fix',
+    flag: '--fix',
+    before: 'starts-with-double-slash.xsl',
+    after: 'starts-with-double-slash.fixed.xsl',
+  },
+  {
+    name: 'should delete a redundant import with --fix',
+    flag: '--fix',
+    before: 'redundant-import.xsl',
+    after: 'redundant-import.fixed.xsl',
+  },
+  {
+    name: 'should delete four of five duplicate imports with --fix',
+    flag: '--fix',
+    before: 'redundant-import-many.xsl',
+    after: 'redundant-import-many.fixed.xsl',
+  },
+  {
+    name: 'should unwrap the node-set extension with --fix',
+    flag: '--fix',
+    before: 'use-node-set-extension.xsl',
+    after: 'use-node-set-extension.fixed.xsl',
+  },
+  {
+    name: 'should rewrite a count comparison to exists/empty with --fix',
+    flag: '--fix',
+    before: 'count-compared-to-zero.xsl',
+    after: 'count-compared-to-zero.fixed.xsl',
+  },
+  {
+    name: 'should rewrite a string-length comparison to != / = with --fix',
+    flag: '--fix',
+    before: 'string-length-compared-to-zero.xsl',
+    after: 'string-length-compared-to-zero.fixed.xsl',
+  },
+  {
+    name: 'should rewrite a name comparison to a node test with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'name-compared-to-string.xsl',
+    after: 'name-compared-to-string.fixed.xsl',
+  },
+  {
+    name: 'should rewrite a translate case fold to lower/upper-case with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'translate-for-case.xsl',
+    after: 'translate-for-case.fixed.xsl',
+  },
+  {
+    name: 'should exclude a leaking prefix with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'leaking-result-namespace.xsl',
+    after: 'leaking-result-namespace.fixed.xsl',
+  },
+  {
+    name: 'should append to an existing exclude-result-prefixes with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'leaking-result-namespace-appended.xsl',
+    after: 'leaking-result-namespace-appended.fixed.xsl',
+  },
+  {
+    name: 'should rewrite a boolean-constant test to true()/false() with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'incorrect-use-of-boolean-constants.xsl',
+    after: 'incorrect-use-of-boolean-constants.fixed.xsl',
+  },
+  {
+    name: 'should anchor a leading // select as .// with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'select-starts-with-double-slash.xsl',
+    after: 'select-starts-with-double-slash.fixed.xsl',
+  },
+  {
+    name: 'should prepend $ to a bare variable name with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'confusing-variable-and-node.xsl',
+    after: 'confusing-variable-and-node.fixed.xsl',
+  },
+  {
+    name: 'should wrap loose text in xsl:text with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'text-outside-xsl-text.xsl',
+    after: 'text-outside-xsl-text.fixed.xsl',
+  },
+  {
+    name: 'should apply a suggestion with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'using-disable-output-escaping.xsl',
+    after: 'using-disable-output-escaping.fixed.xsl',
+  },
+  {
+    name: 'should switch an xml output method to html with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'output-method-xml.xsl',
+    after: 'output-method-xml.fixed.xsl',
+  },
+  {
+    name: 'should declare a missing version with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'missing-version-in-stylesheet.xsl',
+    after: 'missing-version-in-stylesheet.fixed.xsl',
+  },
+  {
+    name: 'should drop an orphan mode with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'mode-or-priority-without-match.xsl',
+    after: 'mode-or-priority-without-match.fixed.xsl',
+  },
+]
+
+/**
+ * Cases where a flag leaves the `sheet` fixture untouched — a dry run, or a
+ * plain `--fix` declining a suggestion.
+ * @type {Array.<{name: string, flag: string, sheet: string}>}
+ */
+const UNCHANGED = [
+  {
+    name: 'cannot touch the file with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'redundant-whitespace.xsl',
+  },
+  {
+    name: 'cannot drop the leading slashes with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'starts-with-double-slash.xsl',
+  },
+  {
+    name: 'cannot delete a redundant import with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'redundant-import.xsl',
+  },
+  {
+    name: 'cannot rewrite a count comparison with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'count-compared-to-zero.xsl',
+  },
+  {
+    name: 'cannot rewrite a string-length comparison with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'string-length-compared-to-zero.xsl',
+  },
+  {
+    name: 'cannot rewrite a name comparison with plain --fix',
+    flag: '--fix',
+    sheet: 'name-compared-to-string.xsl',
+  },
+  {
+    name: 'cannot rewrite a translate case fold with plain --fix',
+    flag: '--fix',
+    sheet: 'translate-for-case.xsl',
+  },
+  {
+    name: 'cannot exclude a leaking prefix with plain --fix',
+    flag: '--fix',
+    sheet: 'leaking-result-namespace.xsl',
+  },
+  {
+    name: 'cannot rewrite a boolean-constant test with plain --fix',
+    flag: '--fix',
+    sheet: 'incorrect-use-of-boolean-constants.xsl',
+  },
+  {
+    name: 'cannot anchor a leading // select with plain --fix',
+    flag: '--fix',
+    sheet: 'select-starts-with-double-slash.xsl',
+  },
+  {
+    name: 'cannot prepend $ to a bare variable name with plain --fix',
+    flag: '--fix',
+    sheet: 'confusing-variable-and-node.xsl',
+  },
+  {
+    name: 'cannot wrap loose text in xsl:text with plain --fix',
+    flag: '--fix',
+    sheet: 'text-outside-xsl-text.xsl',
+  },
+  {
+    name: 'cannot apply a suggestion with plain --fix',
+    flag: '--fix',
+    sheet: 'using-disable-output-escaping.xsl',
+  },
+]
+
+/**
+ * Cases where a flag fixes a defect, so its check name leaves the report.
+ * @type {Array.<{name: string, flag: string, sheet: string, check: string}>}
+ */
+const DROPPED = [
+  {
+    name: 'should drop the fixed defect from the report',
+    flag: '--fix',
+    sheet: 'redundant-whitespace.xsl',
+    check: 'redundant-whitespace',
+  },
+  {
+    name: 'should drop the fixed starts-with-double-slash defect from the ' +
+      'report',
+    flag: '--fix',
+    sheet: 'starts-with-double-slash.xsl',
+    check: 'starts-with-double-slash',
+  },
+  {
+    name: 'should drop the fixed redundant-import defect from the report',
+    flag: '--fix',
+    sheet: 'redundant-import.xsl',
+    check: 'redundant-import',
+  },
+  {
+    name: 'should drop the fixed count defect from the report',
+    flag: '--fix',
+    sheet: 'count-compared-to-zero.xsl',
+    check: 'count-compared-to-zero',
+  },
+  {
+    name: 'should drop the fixed string-length defect from the report',
+    flag: '--fix',
+    sheet: 'string-length-compared-to-zero.xsl',
+    check: 'string-length-compared-to-zero',
+  },
+  {
+    name: 'should drop the fixed name defect with --fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'name-compared-to-string.xsl',
+    check: 'name-compared-to-string',
+  },
+  {
+    name: 'should drop the fixed translate defect with --fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'translate-for-case.xsl',
+    check: 'translate-for-case',
+  },
+  {
+    name: 'should drop the fixed leaking-result-namespace defect with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'leaking-result-namespace.xsl',
+    check: 'leaking-result-namespace',
+  },
+  {
+    name: 'should drop the fixed boolean-constant defect with --fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'incorrect-use-of-boolean-constants.xsl',
+    check: 'incorrect-use-of-boolean-constants',
+  },
+  {
+    name: 'should drop the fixed select-starts-with-double-slash defect with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'select-starts-with-double-slash.xsl',
+    check: 'select-starts-with-double-slash',
+  },
+  {
+    name: 'should drop the fixed confusing-variable-and-node defect with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'confusing-variable-and-node.xsl',
+    check: 'confusing-variable-and-node',
+  },
+  {
+    name: 'should drop the fixed text-outside-xsl-text defect with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
+    sheet: 'text-outside-xsl-text.xsl',
+    check: 'text-outside-xsl-text',
+  },
+]
+
 describe('fixer', function() {
-  it('should collapse redundant whitespace in place with --fix', function() {
-    const file = scratch(dirty)
-    runXslint(['--fix', file])
-    assert.equal(fs.readFileSync(file, 'utf-8'), clean)
+  APPLIED.forEach(({name, flag, before, after}) => {
+    it(name, function() {
+      const file = scratch(fixture(before))
+      runXslint([flag, file])
+      assert.equal(fs.readFileSync(file, 'utf-8'), fixture(after))
+    })
   })
-  it('cannot touch the file with --fix-dry-run', function() {
-    const file = scratch(dirty)
-    runXslint(['--fix-dry-run', file])
-    assert.equal(fs.readFileSync(file, 'utf-8'), dirty)
+  UNCHANGED.forEach(({name, flag, sheet}) => {
+    it(name, function() {
+      const file = scratch(fixture(sheet))
+      runXslint([flag, file])
+      assert.equal(fs.readFileSync(file, 'utf-8'), fixture(sheet))
+    })
   })
-  it('should drop the fixed defect from the report', function() {
-    const file = scratch(dirty)
-    assert.ok(!xslintStreams(['--fix', file]).stdout.includes('redundant-whitespace'))
-  })
-  it('should abbreviate verbose axes in place with --fix', function() {
-    const file = scratch(fixture('unabbreviated-axis.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('unabbreviated-axis.fixed.xsl'),
-    )
+  DROPPED.forEach(({name, flag, sheet, check}) => {
+    it(name, function() {
+      const file = scratch(fixture(sheet))
+      assert.ok(!xslintStreams([flag, file]).stdout.includes(check))
+    })
   })
   it('cannot abbreviate a parent axis that has no short form', function() {
     const file = scratch(fixture('unabbreviated-axis.xsl'))
     runXslint(['--fix', file])
     assert.ok(fs.readFileSync(file, 'utf-8').includes('parent::n'))
   })
-  it('should delete a redundant namespace declaration with --fix', function() {
-    const file = scratch(fixture('redundant-namespace-declarations.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('redundant-namespace-declarations.fixed.xsl'),
-    )
-  })
-  it('should drop the redundant leading slashes of a match with --fix',
-    function() {
-      const file = scratch(fixture('starts-with-double-slash.xsl'))
-      runXslint(['--fix', file])
-      assert.equal(
-        fs.readFileSync(file, 'utf-8'),
-        fixture('starts-with-double-slash.fixed.xsl'),
-      )
-    })
-  it('cannot drop the leading slashes with --fix-dry-run', function() {
-    const file = scratch(fixture('starts-with-double-slash.xsl'))
-    runXslint(['--fix-dry-run', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('starts-with-double-slash.xsl'),
-    )
-  })
-  it('should drop the fixed starts-with-double-slash defect from the report',
-    function() {
-      const file = scratch(fixture('starts-with-double-slash.xsl'))
-      assert.ok(
-        !xslintStreams(['--fix', file])
-          .stdout.includes('starts-with-double-slash'),
-      )
-    })
-  it('should delete a redundant import with --fix', function() {
-    const file = scratch(fixture('redundant-import.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('redundant-import.fixed.xsl'),
-    )
-  })
-  it('should delete four of five duplicate imports with --fix', function() {
-    const file = scratch(fixture('redundant-import-many.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('redundant-import-many.fixed.xsl'),
-    )
-  })
-  it('cannot delete a redundant import with --fix-dry-run', function() {
-    const file = scratch(fixture('redundant-import.xsl'))
-    runXslint(['--fix-dry-run', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('redundant-import.xsl'),
-    )
-  })
-  it('should drop the fixed redundant-import defect from the report',
-    function() {
-      const file = scratch(fixture('redundant-import.xsl'))
-      assert.ok(
-        !xslintStreams(['--fix', file]).stdout.includes('redundant-import'),
-      )
-    })
-  it('should unwrap the node-set extension with --fix', function() {
-    const file = scratch(fixture('use-node-set-extension.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('use-node-set-extension.fixed.xsl'),
-    )
-  })
-  it('should rewrite a count comparison to exists/empty with --fix', function() {
-    const file = scratch(fixture('count-compared-to-zero.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('count-compared-to-zero.fixed.xsl'),
-    )
-  })
-  it('cannot rewrite a count comparison with --fix-dry-run', function() {
-    const file = scratch(fixture('count-compared-to-zero.xsl'))
-    runXslint(['--fix-dry-run', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('count-compared-to-zero.xsl'),
-    )
-  })
-  it('should drop the fixed count defect from the report', function() {
-    const file = scratch(fixture('count-compared-to-zero.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix', file]).stdout.includes('count-compared-to-zero'),
-    )
-  })
-  it('should rewrite a string-length comparison to != / = with --fix',
-    function() {
-      const file = scratch(fixture('string-length-compared-to-zero.xsl'))
-      runXslint(['--fix', file])
-      assert.equal(
-        fs.readFileSync(file, 'utf-8'),
-        fixture('string-length-compared-to-zero.fixed.xsl'),
-      )
-    })
-  it('cannot rewrite a string-length comparison with --fix-dry-run', function() {
-    const file = scratch(fixture('string-length-compared-to-zero.xsl'))
-    runXslint(['--fix-dry-run', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('string-length-compared-to-zero.xsl'),
-    )
-  })
-  it('should drop the fixed string-length defect from the report', function() {
-    const file = scratch(fixture('string-length-compared-to-zero.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix', file])
-        .stdout.includes('string-length-compared-to-zero'),
-    )
-  })
-  it('cannot rewrite a name comparison with plain --fix', function() {
-    const file = scratch(fixture('name-compared-to-string.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('name-compared-to-string.xsl'),
-    )
-  })
-  it('should rewrite a name comparison to a node test with --fix-suggestions',
-    function() {
-      const file = scratch(fixture('name-compared-to-string.xsl'))
-      runXslint(['--fix-suggestions', file])
-      assert.equal(
-        fs.readFileSync(file, 'utf-8'),
-        fixture('name-compared-to-string.fixed.xsl'),
-      )
-    })
-  it('should drop the fixed name defect with --fix-suggestions', function() {
-    const file = scratch(fixture('name-compared-to-string.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix-suggestions', file])
-        .stdout.includes('name-compared-to-string'),
-    )
-  })
-  it('cannot rewrite a translate case fold with plain --fix', function() {
-    const file = scratch(fixture('translate-for-case.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('translate-for-case.xsl'),
-    )
-  })
-  it('should rewrite a translate case fold to lower/upper-case with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('translate-for-case.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('translate-for-case.fixed.xsl'),
-    )
-  })
-  it('should drop the fixed translate defect with --fix-suggestions', function() {
-    const file = scratch(fixture('translate-for-case.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix-suggestions', file])
-        .stdout.includes('translate-for-case'),
-    )
-  })
-  it('cannot exclude a leaking prefix with plain --fix', function() {
-    const file = scratch(fixture('leaking-result-namespace.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('leaking-result-namespace.xsl'),
-    )
-  })
-  it('should exclude a leaking prefix with --fix-suggestions', function() {
-    const file = scratch(fixture('leaking-result-namespace.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('leaking-result-namespace.fixed.xsl'),
-    )
-  })
-  it('should drop the fixed leaking-result-namespace defect with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('leaking-result-namespace.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix-suggestions', file])
-        .stdout.includes('leaking-result-namespace'),
-    )
-  })
-  it('should append to an existing exclude-result-prefixes with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('leaking-result-namespace-appended.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('leaking-result-namespace-appended.fixed.xsl'),
-    )
-  })
-  it('cannot rewrite a boolean-constant test with plain --fix', function() {
-    const file = scratch(fixture('incorrect-use-of-boolean-constants.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('incorrect-use-of-boolean-constants.xsl'),
-    )
-  })
-  it('should rewrite a boolean-constant test to true()/false() with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('incorrect-use-of-boolean-constants.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('incorrect-use-of-boolean-constants.fixed.xsl'),
-    )
-  })
-  it('should drop the fixed boolean-constant defect with --fix-suggestions',
-    function() {
-      const file = scratch(fixture('incorrect-use-of-boolean-constants.xsl'))
-      assert.ok(
-        !xslintStreams(['--fix-suggestions', file])
-          .stdout.includes('incorrect-use-of-boolean-constants'),
-      )
-    })
-  it('cannot anchor a leading // select with plain --fix', function() {
-    const file = scratch(fixture('select-starts-with-double-slash.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('select-starts-with-double-slash.xsl'),
-    )
-  })
-  it('should anchor a leading // select as .// with --fix-suggestions',
-    function() {
-      const file = scratch(fixture('select-starts-with-double-slash.xsl'))
-      runXslint(['--fix-suggestions', file])
-      assert.equal(
-        fs.readFileSync(file, 'utf-8'),
-        fixture('select-starts-with-double-slash.fixed.xsl'),
-      )
-    })
-  it('should drop the fixed select-starts-with-double-slash defect with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('select-starts-with-double-slash.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix-suggestions', file])
-        .stdout.includes('select-starts-with-double-slash'),
-    )
-  })
-  it('cannot prepend $ to a bare variable name with plain --fix', function() {
-    const file = scratch(fixture('confusing-variable-and-node.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('confusing-variable-and-node.xsl'),
-    )
-  })
-  it('should prepend $ to a bare variable name with --fix-suggestions',
-    function() {
-      const file = scratch(fixture('confusing-variable-and-node.xsl'))
-      runXslint(['--fix-suggestions', file])
-      assert.equal(
-        fs.readFileSync(file, 'utf-8'),
-        fixture('confusing-variable-and-node.fixed.xsl'),
-      )
-    })
-  it('should drop the fixed confusing-variable-and-node defect with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('confusing-variable-and-node.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix-suggestions', file])
-        .stdout.includes('confusing-variable-and-node'),
-    )
-  })
-  it('cannot wrap loose text in xsl:text with plain --fix', function() {
-    const file = scratch(fixture('text-outside-xsl-text.xsl'))
-    runXslint(['--fix', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('text-outside-xsl-text.xsl'),
-    )
-  })
-  it('should wrap loose text in xsl:text with --fix-suggestions', function() {
-    const file = scratch(fixture('text-outside-xsl-text.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('text-outside-xsl-text.fixed.xsl'),
-    )
-  })
-  it('should drop the fixed text-outside-xsl-text defect with ' +
-    '--fix-suggestions', function() {
-    const file = scratch(fixture('text-outside-xsl-text.xsl'))
-    assert.ok(
-      !xslintStreams(['--fix-suggestions', file])
-        .stdout.includes('text-outside-xsl-text'),
-    )
-  })
-  it('cannot apply a suggestion with plain --fix', function() {
-    const file = scratch(fixture('using-disable-output-escaping.xsl'))
-    runXslint(['--fix', file])
-    assert.ok(fs.readFileSync(file, 'utf-8').includes('disable-output-escaping'))
-  })
-  it('should apply a suggestion with --fix-suggestions', function() {
-    const file = scratch(fixture('using-disable-output-escaping.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('using-disable-output-escaping.fixed.xsl'),
-    )
-  })
-  it('should switch an xml output method to html with --fix-suggestions',
-    function() {
-      const file = scratch(fixture('output-method-xml.xsl'))
-      runXslint(['--fix-suggestions', file])
-      assert.equal(
-        fs.readFileSync(file, 'utf-8'),
-        fixture('output-method-xml.fixed.xsl'),
-      )
-    })
-  it('should declare a missing version with --fix-suggestions', function() {
-    const file = scratch(fixture('missing-version-in-stylesheet.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('missing-version-in-stylesheet.fixed.xsl'),
-    )
-  })
-  it('should drop an orphan mode with --fix-suggestions', function() {
-    const file = scratch(fixture('mode-or-priority-without-match.xsl'))
-    runXslint(['--fix-suggestions', file])
-    assert.equal(
-      fs.readFileSync(file, 'utf-8'),
-      fixture('mode-or-priority-without-match.fixed.xsl'),
-    )
-  })
   it('should announce how many defects --fix would fix', function() {
-    const file = scratch(dirty)
+    const file = scratch(fixture('redundant-whitespace.xsl'))
     assert.ok(xslintStreams([file]).stderr.includes('fixable with --fix'))
   })
   it('should announce a suggestion under --fix-suggestions', function() {
     const file = scratch(fixture('using-disable-output-escaping.xsl'))
-    assert.ok(xslintStreams([file]).stderr.includes('fixable with --fix-suggestions'))
+    assert.ok(
+      xslintStreams([file]).stderr.includes('fixable with --fix-suggestions'),
+    )
   })
   it('should collapse a run whose span it can verify', function() {
     assert.equal(
