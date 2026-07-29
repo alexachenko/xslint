@@ -16,6 +16,7 @@ const {lintByAxis, names: axisChecks} = require('./xpath-axis-linter')
 const {lintByNamespace, names: namespaceChecks} = require('./namespace-linter')
 const {lintByResultNamespace, names: resultNamespaceChecks} =
   require('./result-namespace-linter')
+const {lintByImports, names: importChecks} = require('./import-linter')
 const {lintByNodeSet, names: nodeSetChecks} = require('./node-set-linter')
 const {lintByCount, names: countChecks} = require('./count-linter')
 const {lintByStringLength, names: stringLengthChecks} =
@@ -41,6 +42,7 @@ const LINTERS = [
   lintByAxis,
   lintByNamespace,
   lintByResultNamespace,
+  lintByImports,
   lintByNodeSet,
   lintByCount,
   lintByStringLength,
@@ -66,7 +68,7 @@ const EXPRESSION_LINTERS = [
 const CHECKS = [
   ...xslChecks, ...xpathValidatorChecks,
   ...xpathChecks, ...corpusChecks, ...axisChecks, ...namespaceChecks,
-  ...resultNamespaceChecks,
+  ...resultNamespaceChecks, ...importChecks,
   ...nodeSetChecks, ...countChecks, ...stringLengthChecks, ...nameChecks,
   ...translateChecks,
   ...formatChecks,

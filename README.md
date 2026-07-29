@@ -361,8 +361,10 @@ Linters:
 - **Per-file** checks evaluate one stylesheet at a time (most checks).
 - **Cross-file** checks reason across all the stylesheets you lint together.
   For example, a named template defined in one file but invoked from another
-  (via `xsl:import`/`xsl:include`) is not reported as unused. Lint the whole
-  project at once so these checks can see every caller.
+  (via `xsl:import`/`xsl:include`) is not reported as unused, and an
+  `xsl:import`/`xsl:include` cycle across files is flagged (`circular-import`).
+  Lint the whole project at once so these checks can see every caller and every
+  imported module.
 - **Formatting** checks read each XPath expression as a stream of tokens and
   flag stylistic noise — currently redundant whitespace (a doubled space, or a
   space leading or trailing the expression). Only expressions that already

@@ -9,6 +9,15 @@ publication date only; detailed notes begin with the Unreleased section.
 
 ## Unreleased
 
+- Add the `circular-import` check and an import-graph foundation
+  (`src/import-graph.js`): resolve every `xsl:import`/`xsl:include` `@href`
+  against the importing file's directory, build the dependency graph over the
+  corpus, and flag each import that closes a cycle — a stylesheet that pulls in,
+  directly or through a chain, one that pulls it back, or imports itself. A
+  static XSLT error, reported as such. An href resolving outside the linted set
+  is external and never part of a cycle, so a partial corpus cannot raise a
+  false positive. First slice of the import-graph work (#210).
+
 - Make `text-outside-xsl-text` fixable: `--fix-suggestions` wraps loose literal
   text inside an instruction in `xsl:text` (`<xsl:if test="a">hello</xsl:if>`
   becomes `<xsl:if test="a"><xsl:text>hello</xsl:text></xsl:if>`). A suggestion,
