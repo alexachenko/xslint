@@ -110,6 +110,13 @@ const APPLIED = [
     after: 'count-compared-to-zero.fixed.xsl',
   },
   {
+    name: 'should rewrite a count comparison to boolean/not/bare on 1.0 ' +
+      'with --fix',
+    flag: '--fix',
+    before: 'count-in-xslt-1-0.xsl',
+    after: 'count-in-xslt-1-0.fixed.xsl',
+  },
+  {
     name: 'should rewrite an entity-encoded count comparison with --fix',
     flag: '--fix',
     before: 'count-entity-comparison.xsl',
@@ -244,6 +251,11 @@ const UNCHANGED = [
     sheet: 'count-compared-to-zero.xsl',
   },
   {
+    name: 'cannot rewrite a 1.0 count comparison with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'count-in-xslt-1-0.xsl',
+  },
+  {
     name: 'cannot rewrite an entity-encoded comparison with --fix-dry-run',
     flag: '--fix-dry-run',
     sheet: 'count-entity-comparison.xsl',
@@ -345,6 +357,12 @@ const DROPPED = [
     name: 'should drop the fixed count defect from the report',
     flag: '--fix',
     sheet: 'count-compared-to-zero.xsl',
+    check: 'count-compared-to-zero',
+  },
+  {
+    name: 'should drop a fixed 1.0 count defect from the report',
+    flag: '--fix',
+    sheet: 'count-in-xslt-1-0.xsl',
     check: 'count-compared-to-zero',
   },
   {

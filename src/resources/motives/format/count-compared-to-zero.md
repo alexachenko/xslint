@@ -1,10 +1,9 @@
 # Count compared to zero
 
 `count($x) &gt; 0` and `count($x) = 0` ask the processor to walk the whole
-sequence and tally it, only to find out whether it is empty. The question is
-existence, and XPath states it directly: the sequence itself in a boolean
-context, `exists($x)`, or `empty($x)` / `not($x)`. The direct form reads better
-and lets the engine stop at the first item instead of counting every one.
+sequence and tally it, only to find out whether it holds anything. The question
+is existence, and every version of XPath can state it directly — and let the
+engine stop at the first item instead of counting every one.
 
 Incorrect:
 
@@ -13,20 +12,31 @@ Incorrect:
 <xsl:if test="count($items) = 0">
 ```
 
-Correct:
+Correct, on XSLT 2.0 and later:
 
 ```xsl
 <xsl:if test="exists($items)">
 <xsl:if test="empty($items)">
 ```
 
+Correct, on XSLT 1.0 (where `exists()`/`empty()` do not exist):
+
+```xsl
+<xsl:if test="$items">
+<xsl:if test="not($items)">
+```
+
+A node-set in a boolean context is already true exactly when it is non-empty, so
+in an `xsl:if`/`xsl:when` `@test` the bare `$items` says it; in a `@select` (or
+any value context) write `boolean($items)`, and for the empty case `not($items)`
+either way.
+
+The `--fix` picks the form the stylesheet's version can run: `exists()`/`empty()`
+on 2.0/3.0, and `boolean()`/`not()` — or the bare node-set in a whole `@test` —
+on 1.0. The 1.0 forms are valid in every version, so an unversioned stylesheet
+gets them too.
+
 The operand order does not matter: `0 &lt; count($items)` and
 `0 = count($items)` are flagged the same way. A comparison that is not an
 existence test — `count($x) &gt; 1`, `count($x) = 5` — is a genuine count and is
 left alone.
-
-`exists()` and `empty()` are XPath 2.0 functions, so the `--fix` rewrite is
-offered only on an XSLT 2.0/3.0 stylesheet. On 1.0 the smell is still reported —
-the wasteful full walk is the same — but without a fix, since the direct 1.0
-form (the node-set in a boolean context, or `not()`) depends on where the test
-sits.
