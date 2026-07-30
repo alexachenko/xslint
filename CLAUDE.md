@@ -183,9 +183,10 @@ Fixes come in two tiers, set by the `suggestion` flag on the `fix`. A plain fix 
 
 ## Keeping Docs in Sync
 
-Any change to behavior — new logic, a new check or validator, a rename, a moved file, a changed flag or output — must update the documentation in the same change. Before finishing, check all three and fix whichever went stale:
+Any change to behavior — new logic, a new check or validator, a rename, a moved file, a changed flag or output — must update the documentation in the same change. Before finishing, check all four and fix whichever went stale:
 
-- **`README.md`** — user-facing: installation, usage, the validators/linters overview, the contribution notes.
+- **The changed check's motive** (`src/resources/motives/{xpath,corpus,validation,format}/<name>.md`) — the user's answer to "why does this check exist, what does it flag, and what does the fix do." **Whenever you touch a check's behavior — what it flags, its severity, its fix or fix tier, its version scope, the constructs it leaves alone — re-read its motive and update it if the change made it inaccurate or incomplete.** The motive is where the end user learns the check's purpose, so a motive still describing the old behavior misleads the very person the check is for. This is mandatory, not optional: a check-behavior change with an untouched motive is presumed a bug until you have confirmed the motive is still exactly right.
+- **`README.md`** — user-facing: installation, usage, the validators/linters overview, the `--fix`/suggestion lists, the contribution notes.
 - **`CLAUDE.md`** (this file) — architecture: the flow diagram, the `(corpus, suppressions) => defects` shapes, the check/validator formats, the test-pack layout, and the Key Files table.
 - **The docs site** — generated from `src/resources/checks/*` and `src/resources/motives/*`; regenerate with `npx grunt docs`. A new kind also needs wiring in `scripts/generate-docs.js`.
 
