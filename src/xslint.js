@@ -13,6 +13,8 @@ const {
 const {lintByXpath, names: xpathChecks} = require('./xpath-linter')
 const {lintByCorpus, names: corpusChecks} = require('./corpus-linter')
 const {lintByAxis, names: axisChecks} = require('./xpath-axis-linter')
+const {lintByNamespaceAxis, names: namespaceAxisChecks} =
+  require('./using-namespace-axis-linter')
 const {lintByNamespace, names: namespaceChecks} = require('./namespace-linter')
 const {lintByResultNamespace, names: resultNamespaceChecks} =
   require('./result-namespace-linter')
@@ -47,6 +49,7 @@ const LINTERS = [
   {run: lintByXpath, checks: xpathChecks},
   {run: lintByCorpus, checks: corpusChecks},
   {run: lintByAxis, checks: axisChecks},
+  {run: lintByNamespaceAxis, checks: namespaceAxisChecks},
   {run: lintByNamespace, checks: namespaceChecks},
   {run: lintByResultNamespace, checks: resultNamespaceChecks},
   {run: lintByImports, checks: importChecks},

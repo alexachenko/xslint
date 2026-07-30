@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: using-namespace-axis
+found:
+  amount: 5
+  positions: [ [ 4, 27 ], [ 5, 26 ], [ 5, 41 ], [ 5, 56 ], [ 6, 19 ] ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="style1">
+    <xsl:output encoding="UTF-8" method="xml"/>
+    <xsl:template match="/o[namespace::*]">
+      <xsl:copy-of select="namespace::a | namespace::b | namespace::c"/>
+      <xsl:if test="namespace::foo">
+        <xsl:value-of select="in-scope-prefixes(.)"/>
+        <xsl:value-of select="namespace-uri-for-prefix('p', .)"/>
+        <xsl:value-of select="'namespace::x'"/>
+      </xsl:if>
+    </xsl:template>
+  </xsl:stylesheet>
