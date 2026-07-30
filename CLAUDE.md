@@ -196,6 +196,33 @@ Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
   usage, the `--fix`/suggestion lists), this file (architecture), and the docs
   site (`npx grunt docs`).
 
+### Maturity (`mature: true`)
+
+A check that has passed a full maturity audit carries `mature: true` in its
+YAML. It is *frozen*: do not re-audit or churn it, and change its behavior only
+by first removing the flag — a "perfect" check that changes must re-earn the
+mark. A check is mature only when it meets every bar below; the last three are a
+human attestation the flag records, the rest are visible in the tree:
+
+- no false positive and no false negative (non-`xsl` prefixes, both roots, every
+  version, the construct buried / 3+ times / beside a lookalike negative);
+- the motive fully teaches it (see **Motive quality**);
+- if fixable, the fix is implemented, correctly tiered, and tested — otherwise it
+  is report-only *by nature* (no safe deterministic fix can exist) and says so, a
+  fix merely deferred to a future capability (#228, #486, #461, #460) does not
+  qualify;
+- the pack exercises the hard cases (see **Test packs**);
+- version-dependence handled wherever the construct or fix needs it;
+- the selector is optimal (no needless `//`, no `name()=`/`local-name()` where a
+  namespace-bound node test works);
+- it does not overlap another check.
+
+`test/conformance.test.js` enforces the machine-checkable floor for a `mature`
+check: its motive carries an `Incorrect:`/`Correct:` pair, and if it is fixable
+(a `src/fixers.js` entry or a `test/resources/fix/<name>.xsl` fixture) that
+fixture pair exists and `fixer.test.js` runs it. The opinionated checks tracked
+in #499 are not marked mature until that issue is settled.
+
 ## Test packs
 
 Each linter owns a `test/resources/<name>-packs/` directory, auto-discovered by
@@ -273,5 +300,5 @@ the harness asserts too.
 | `src/helpers.js` | XML parsing (expands internal-subset entities), YAML parsing, file recursion |
 | `src/logger.js` | 4-level logger |
 | `scripts/generate-docs.js` | Builds the `docs/` site from checks + motives |
-| `test/conformance.test.js` | Enforces naming, motives, and pack/test coverage across all kinds |
+| `test/conformance.test.js` | Enforces naming, motives, pack/test coverage, and the `mature` freeze across all kinds |
 | `test/xcop.test.js` | Runs xcop over the inline XSL of every `*-packs` directory |
