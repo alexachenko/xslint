@@ -264,6 +264,16 @@ const xslint = function(pths, options) {
     overrides: overrides,
   })
   if (options.fix || options.fixDryRun || options.fixSuggestions) {
+    /**
+     * @todo #571:60min Fix over several passes, until a pass changes nothing.
+     *  A fix that `fixer.js` skips for overlapping another is never applied
+     *  here, so `--fix` under-delivers and then reports a defect the winning
+     *  fix has already removed from the file. Re-lint the rewritten contents
+     *  and fix again, capped at ten passes, stopping early when a pass
+     *  reproduces the content of the pass before last, the way ESLint and
+     *  RuboCop both reach a fixpoint without looping forever over two checks
+     *  that undo each other.
+     */
     const {contents, applied} = fixed(sources, reported, options.fixSuggestions)
     for (const [file, content] of contents) {
       if (!options.fixDryRun) {
