@@ -63,24 +63,48 @@ const collapses = function(operator, zero) {
 
 /**
  * Classify a `count(...)`-versus-`0`/`1` comparison for `comparedToZero`: an
- * existence test collapses to `exists(argument)`/`empty(argument)`, anything
- * else is left alone.
+ * existence test carries its kind (`exists`/`empty`) and the argument, for the
+ * linter to turn into a version-appropriate rewrite; anything else is left
+ * alone.
  * @param {string} operator - The comparison operator
  * @param {string} zero - The compared digit, `0` or `1`
  * @param {string} argument - The call's argument
- * @return {?{replacement: string}} - The rewrite, or null when not existence
+ * @return {?{test: string, argument: string}} - The classification, or null
  */
 const decide = function(operator, zero, argument) {
   const test = collapses(operator, zero)
-  return test ? {replacement: `${test}(${argument})`} : null
+  return test ? {test: test, argument: argument} : null
+}
+
+/**
+ * The direct form a classified test rewrites to, version-appropriate and never
+ * one another check re-flags. On XSLT 2.0/3.0 it is `exists(x)`/`empty(x)`; on
+ * 1.0 — and unversioned, where `boolean`/`not` are valid too — an existence
+ * test is a bare `x` in a whole `@test` (which already coerces to a boolean),
+ * `boolean(x)` elsewhere, and an emptiness test is `not(x)`.
+ * @param {string} test - The classification, `exists` or `empty`
+ * @param {string} argument - The call's argument
+ * @param {boolean} modern - Whether the stylesheet is XSLT 2.0/3.0
+ * @param {boolean} whole - Whether the comparison is the entire `@test`
+ * @return {string} - The replacement expression
+ */
+const rewritten = function(test, argument, modern, whole) {
+  if (modern) {
+    return `${test}(${argument})`
+  }
+  if (test === 'exists') {
+    return whole ? argument : `boolean(${argument})`
+  }
+  return `not(${argument})`
 }
 
 /**
  * The `count(...)`-versus-zero existence tests in an expression, in either
- * operand order (`count(x) > 0` and `0 < count(x)` alike).
+ * operand order (`count(x) > 0` and `0 < count(x)` alike), each carrying its
+ * classification and argument.
  * @param {string} expression - The attribute value
- * @return {Array.<{offset: number, value: string, replacement: string}>} -
- *  The comparisons found
+ * @return {Array.<{offset: number, value: string, test: string,
+ *  argument: string}>} - The comparisons found
  */
 const comparisons = function(expression) {
   return comparedToZero(expression, 'count', decide)
@@ -88,9 +112,9 @@ const comparisons = function(expression) {
 
 /**
  * Lint the corpus for `count(...)` compared with zero to test existence,
- * reporting one defect per comparison. The `exists()`/`empty()` fix is attached
- * only on an XSLT 2.0/3.0 stylesheet, where those functions exist; on 1.0 the
- * smell is still reported, without a fix.
+ * reporting one defect per comparison with a safe fix — `exists()`/`empty()` on
+ * XSLT 2.0/3.0, and the 1.0-and-later `boolean(x)`/bare `x`/`not(x)` forms
+ * otherwise, so the fix is version-appropriate on every stylesheet.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
@@ -105,14 +129,16 @@ const lintByCount = function(corpus, suppressions = []) {
         xsl.documentElement.getAttribute('version'),
       )
       for (const attribute of nodes(xsl, SELECTOR)) {
-        for (const {offset, value, replacement} of comparisons(
+        for (const {offset, value, test, argument} of comparisons(
           attribute.nodeValue,
         )) {
+          const whole = attribute.nodeName === 'test' &&
+            attribute.nodeValue.trim() === value
           defects.push(
-            defect(
-              CHECK, META, file, attribute, offset,
-              modern ? {value, replacement} : undefined,
-            ),
+            defect(CHECK, META, file, attribute, offset, {
+              value: value,
+              replacement: rewritten(test, argument, modern, whole),
+            }),
           )
         }
       }

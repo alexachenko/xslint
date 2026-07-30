@@ -30,18 +30,19 @@ const FLIP = {
 /**
  * The `name(...)`-versus-`0`/`1` comparisons in an expression, in either
  * operand order (`f(x) > 0` and `0 < f(x)` alike). Each match is handed to a
- * `decide(operator, zero, argument, blanked)` classifier, which returns
- * `{replacement}` for a comparison worth reporting — `replacement` may be null
- * when it is reportable but not one-edit fixable — or null when the comparison
- * is a genuine count/length rather than an existence/emptiness test. A call
- * whose parentheses do not balance is skipped. String and comment spans are
- * blanked first, so a call-looking substring inside a literal is never seen.
+ * `decide(operator, zero, argument, blanked)` classifier, which returns an
+ * object of fields — merged into the found comparison — for a comparison worth
+ * reporting (a `{replacement}`, or a classification the linter later turns into
+ * one), or null when the comparison is a genuine count/length rather than an
+ * existence/emptiness test. A call whose parentheses do not balance is skipped.
+ * String and comment spans are blanked first, so a call-looking substring
+ * inside a literal is never seen.
  * @param {string} expression - The attribute value
  * @param {string} name - The unprefixed function name, e.g. `count`
- * @param {function(string, string, string, string): ?{replacement: ?string}}
- *  decide - The per-comparison classifier
- * @return {Array.<{offset: number, value: string, replacement: ?string}>} -
- *  The comparisons found
+ * @param {function(string, string, string, string): ?object} decide - The
+ *  per-comparison classifier
+ * @return {Array.<{offset: number, value: string}>} - The comparisons found,
+ *  each carrying the fields `decide` returned
  */
 const comparedToZero = function(expression, name, decide) {
   const call = new RegExp(`(^|[^\\w:.-])${name}\\s*\\(`, 'g')
@@ -62,7 +63,7 @@ const comparedToZero = function(expression, name, decide) {
       found.push({
         offset: start,
         value: expression.slice(start, close + 1 + tail[0].length),
-        replacement: forward.replacement,
+        ...forward,
       })
       continue
     }
@@ -73,7 +74,7 @@ const comparedToZero = function(expression, name, decide) {
       found.push({
         offset: from,
         value: expression.slice(from, close + 1),
-        replacement: back.replacement,
+        ...back,
       })
     }
   }

@@ -259,9 +259,10 @@ Today this covers nine checks:
 - `use-node-set-extension` — the redundant `node-set()` extension is unwrapped
   in XSLT 2.0 and later: `exsl:node-set($x)` becomes `$x`.
 - `count-compared-to-zero` — an existence test spelled as a count is
-  simplified: `count($x) > 0` becomes `exists($x)`, `count($x) = 0` becomes
-  `empty($x)` (on XSLT 2.0+, where those functions exist; on 1.0 the smell is
-  reported without a fix).
+  simplified version-appropriately: on XSLT 2.0+, `count($x) > 0` becomes
+  `exists($x)` and `count($x) = 0` becomes `empty($x)`; on 1.0 (where those
+  functions don't exist), `boolean($x)` — or a bare `$x` in a whole `@test` —
+  and `not($x)`.
 - `starts-with-double-slash` — the redundant leading `//` of a template's
   `@match` is dropped: `match="//para"` becomes `match="para"`, which selects
   the same nodes.
