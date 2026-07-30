@@ -27,5 +27,5 @@ module.exports = function(grunt) {
   grunt.registerTask('docs', 'Generate documentation site', function() {
     require('./scripts/generate-docs')
   })
-  grunt.registerTask('default', ['mochacli', 'eslint'])
+  grunt.registerTask('default', ['eslint', 'mochacli'])
 }
