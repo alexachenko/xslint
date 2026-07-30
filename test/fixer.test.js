@@ -110,6 +110,13 @@ const APPLIED = [
     after: 'count-compared-to-zero.fixed.xsl',
   },
   {
+    name: 'should rewrite entity-encoded count and string-length comparisons ' +
+      'with --fix',
+    flag: '--fix',
+    before: 'count-entity-comparison.xsl',
+    after: 'count-entity-comparison.fixed.xsl',
+  },
+  {
     name: 'should rewrite a string-length comparison to != / = with --fix',
     flag: '--fix',
     before: 'string-length-compared-to-zero.xsl',
@@ -230,6 +237,11 @@ const UNCHANGED = [
     sheet: 'count-compared-to-zero.xsl',
   },
   {
+    name: 'cannot rewrite an entity-encoded comparison with --fix-dry-run',
+    flag: '--fix-dry-run',
+    sheet: 'count-entity-comparison.xsl',
+  },
+  {
     name: 'cannot rewrite a double negation with --fix-dry-run',
     flag: '--fix-dry-run',
     sheet: 'redundant-double-negation.xsl',
@@ -321,6 +333,12 @@ const DROPPED = [
     name: 'should drop the fixed count defect from the report',
     flag: '--fix',
     sheet: 'count-compared-to-zero.xsl',
+    check: 'count-compared-to-zero',
+  },
+  {
+    name: 'should drop a fixed entity-encoded count defect from the report',
+    flag: '--fix',
+    sheet: 'count-entity-comparison.xsl',
     check: 'count-compared-to-zero',
   },
   {
