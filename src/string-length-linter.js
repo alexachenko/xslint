@@ -111,8 +111,12 @@ const comparisons = function(expression) {
 
 /**
  * Lint the corpus for `string-length(...)` compared with zero to test
- * emptiness, reporting one defect per comparison with the fix that rewrites it
- * to `X != ''` or `X = ''` when the argument is a simple operand.
+ * emptiness, reporting one defect per comparison with a *suggestion* fix that
+ * rewrites it to `X != ''` or `X = ''` when the argument is a simple operand.
+ * It is a suggestion, not a safe fix, because `X op ''` is not a general
+ * equivalent: they differ when `X` is an absent attribute or empty node-set
+ * (`string-length(@x) = 0` is true, `@x = ''` is false) and when `X` is a
+ * multi-node set (`string-length` reads the first node, `X != ''` any node).
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
@@ -130,7 +134,8 @@ const lintByStringLength = function(corpus, suppressions = []) {
           defects.push(
             defect(
               CHECK, META, file, attribute, offset,
-              replacement === null ? undefined : {value, replacement},
+              replacement === null ?
+                undefined : {value, replacement, suggestion: true},
             ),
           )
         }

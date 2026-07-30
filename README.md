@@ -262,9 +262,6 @@ Today this covers nine checks:
   simplified: `count($x) > 0` becomes `exists($x)`, `count($x) = 0` becomes
   `empty($x)` (on XSLT 2.0+, where those functions exist; on 1.0 the smell is
   reported without a fix).
-- `string-length-compared-to-zero` — an emptiness test spelled as a length is
-  simplified: `string-length(@x) > 0` becomes `@x != ''`, and `= 0` becomes
-  `@x = ''`.
 - `starts-with-double-slash` — the redundant leading `//` of a template's
   `@match` is dropped: `match="//para"` becomes `match="para"`, which selects
   the same nodes.
@@ -296,6 +293,11 @@ xslint --fix-suggestions path/to/dir
 
 Today this covers:
 
+- `string-length-compared-to-zero` — an emptiness test spelled as a length is
+  simplified: `string-length(@x) > 0` becomes `@x != ''`, `= 0` becomes
+  `@x = ''`. A suggestion because the two are not general equivalents: they
+  differ for an absent attribute (`string-length(@x) = 0` is true, `@x = ''`
+  is false) and for a multi-node set.
 - `incorrect-use-of-boolean-constants` — the string test `'true'`/`'false'`
   becomes `true()`/`false()`, which changes the truth value of a `'false'` test
   (a non-empty string is always true).

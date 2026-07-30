@@ -110,8 +110,7 @@ const APPLIED = [
     after: 'count-compared-to-zero.fixed.xsl',
   },
   {
-    name: 'should rewrite entity-encoded count and string-length comparisons ' +
-      'with --fix',
+    name: 'should rewrite an entity-encoded count comparison with --fix',
     flag: '--fix',
     before: 'count-entity-comparison.xsl',
     after: 'count-entity-comparison.fixed.xsl',
@@ -124,8 +123,9 @@ const APPLIED = [
     after: 'count-shifted-comparison.fixed.xsl',
   },
   {
-    name: 'should rewrite a string-length comparison to != / = with --fix',
-    flag: '--fix',
+    name: 'should rewrite a string-length comparison to != / = with ' +
+      '--fix-suggestions',
+    flag: '--fix-suggestions',
     before: 'string-length-compared-to-zero.xsl',
     after: 'string-length-compared-to-zero.fixed.xsl',
   },
@@ -259,6 +259,11 @@ const UNCHANGED = [
     sheet: 'string-length-compared-to-zero.xsl',
   },
   {
+    name: 'cannot rewrite a string-length comparison with plain --fix',
+    flag: '--fix',
+    sheet: 'string-length-compared-to-zero.xsl',
+  },
+  {
     name: 'cannot rewrite a name comparison with plain --fix',
     flag: '--fix',
     sheet: 'name-compared-to-string.xsl',
@@ -361,8 +366,8 @@ const DROPPED = [
     check: 'redundant-double-negation',
   },
   {
-    name: 'should drop the fixed string-length defect from the report',
-    flag: '--fix',
+    name: 'should drop the fixed string-length defect with --fix-suggestions',
+    flag: '--fix-suggestions',
     sheet: 'string-length-compared-to-zero.xsl',
     check: 'string-length-compared-to-zero',
   },

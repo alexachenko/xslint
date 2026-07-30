@@ -23,6 +23,14 @@ Correct:
 The operand order does not matter (`0 &lt; string-length(@name)` is flagged the
 same way). When the argument is not a single operand — a union such as
 `string-length($a | $b)`, where `X != ''` would not mean the same thing — the
-comparison is still reported but left for a human to rewrite. Use
-`normalize-space($x)` instead when whitespace-only should read as empty; that is
-a different test, so it is not applied automatically.
+comparison is still reported but carries no fix.
+
+The rewrite is offered as a **suggestion**, not a safe fix, because `X op ''` is
+not a general equivalent of `string-length(X) op 0`. They part ways in two
+cases: an **absent** node — `string-length(@x) = 0` is true when `@x` is
+missing (the empty string has length zero), but `@x = ''` is false, since an
+empty node-set matches nothing; and a **multi-node** `X` — `string-length` reads
+the first node's value while `X != ''` is true if *any* node is non-empty. For
+the common single, present node the two agree, so `--fix-suggestions` applies
+it; plain `--fix` leaves it. Use `normalize-space($x)` instead when
+whitespace-only should read as empty — a different test again.

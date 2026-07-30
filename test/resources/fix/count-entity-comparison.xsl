@@ -6,7 +6,7 @@
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:template match="/">
     <xsl:if test="count(item) &gt; 0">
-      <xsl:value-of select="string-length(@name) &lt;= 0"/>
+      <hit/>
     </xsl:if>
   </xsl:template>
 </xsl:stylesheet>
