@@ -177,6 +177,17 @@ Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
   `APPLIED`/`UNCHANGED`/`DROPPED` tables. A check whose only correct fix is
   structural stays report-only until the full-fidelity parser (#228) — say so in
   its motive.
+- **Motive quality.** A motive must teach, not assert. Lead with the concrete
+  harm — why the flagged construct is wrong (correctness, portability,
+  performance, or readability), not just that it is — then show an
+  `Incorrect:`/`Correct:` pair of *valid* XSLT that resolves it, and name the
+  fix tier when the check is fixable (safe `--fix`, `--fix-suggestions`, or
+  report-only-until-#228, and why). Keep the prose true to the selector: do not
+  write "such as" for a closed list, call any `/`-prefixed match the "root
+  template", or claim a fix is loss-less when it shifts template priority or a
+  value's type. Only motive existence is machine-checked today; turning the
+  example pair and fix-tier line into a `conformance.test.js` gate is pending
+  the motive cleanup (#551, #552).
 - **Motive sync.** When you touch what a check flags — its severity, its fix or
   fix tier, its version scope, the constructs it leaves alone — re-read its motive
   and update it. The motive is where the end user learns the check's purpose; a
