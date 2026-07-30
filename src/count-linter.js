@@ -28,6 +28,13 @@ const META = metaOf(CHECK)
 const names = [CHECK]
 
 /**
+ * Stylesheet versions where `exists()`/`empty()` exist, so the rewrite is
+ * available. The smell is worth reporting on any version, but the fix is not.
+ * @type {Array.<string>}
+ */
+const MODERN = ['2.0', '3.0']
+
+/**
  * The existence function a comparison collapses to, or null when it is a
  * genuine count rather than an existence test (`> 1`, `>= 0`, and the like).
  * @param {string} operator - The comparison operator
@@ -81,8 +88,9 @@ const comparisons = function(expression) {
 
 /**
  * Lint the corpus for `count(...)` compared with zero to test existence,
- * reporting one defect per comparison with the fix that rewrites it to
- * `exists()` or `empty()`.
+ * reporting one defect per comparison. The `exists()`/`empty()` fix is attached
+ * only on an XSLT 2.0/3.0 stylesheet, where those functions exist; on 1.0 the
+ * smell is still reported, without a fix.
  * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
  * @return {{name: string, severity: string, message: string, file: string,
@@ -93,12 +101,18 @@ const lintByCount = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
+      const modern = MODERN.includes(
+        xsl.documentElement.getAttribute('version'),
+      )
       for (const attribute of nodes(xsl, SELECTOR)) {
         for (const {offset, value, replacement} of comparisons(
           attribute.nodeValue,
         )) {
           defects.push(
-            defect(CHECK, META, file, attribute, offset, {value, replacement}),
+            defect(
+              CHECK, META, file, attribute, offset,
+              modern ? {value, replacement} : undefined,
+            ),
           )
         }
       }

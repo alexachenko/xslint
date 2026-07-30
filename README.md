@@ -260,7 +260,8 @@ Today this covers nine checks:
   in XSLT 2.0 and later: `exsl:node-set($x)` becomes `$x`.
 - `count-compared-to-zero` — an existence test spelled as a count is
   simplified: `count($x) > 0` becomes `exists($x)`, `count($x) = 0` becomes
-  `empty($x)`.
+  `empty($x)` (on XSLT 2.0+, where those functions exist; on 1.0 the smell is
+  reported without a fix).
 - `string-length-compared-to-zero` — an emptiness test spelled as a length is
   simplified: `string-length(@x) > 0` becomes `@x != ''`, and `= 0` becomes
   `@x = ''`.

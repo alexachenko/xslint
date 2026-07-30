@@ -24,3 +24,9 @@ The operand order does not matter: `0 &lt; count($items)` and
 `0 = count($items)` are flagged the same way. A comparison that is not an
 existence test — `count($x) &gt; 1`, `count($x) = 5` — is a genuine count and is
 left alone.
+
+`exists()` and `empty()` are XPath 2.0 functions, so the `--fix` rewrite is
+offered only on an XSLT 2.0/3.0 stylesheet. On 1.0 the smell is still reported —
+the wasteful full walk is the same — but without a fix, since the direct 1.0
+form (the node-set in a boolean context, or `not()`) depends on where the test
+sits.
