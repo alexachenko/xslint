@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-xpath: //xsl:variable[not(@select) and not(node()) and not(@as)]
+xpath: //xsl:variable[not(@select) and not(node()) and not(@as and (/*/@version = '2.0' or /*/@version = '3.0'))]
 severity: warning
 message: An empty xsl:variable binds the empty string for no reason. Give it a @select or some content, or remove it.
