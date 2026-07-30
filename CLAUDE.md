@@ -272,7 +272,12 @@ the harness asserts too.
   applied only by `--fix-suggestions`. `--fix-dry-run` writes nothing.
   `src/fixer.js` locates each fix by decode-walking the raw source, so a `>`
   written `&gt;` (#518) or a span shifted by an earlier entity (#525) still fixes,
-  and an already-edited span is skipped rather than corrupted.
+  and an already-edited span is skipped rather than corrupted. Two fixes whose
+  spans overlap cannot both be applied in one run (#571): the left-most wins,
+  the wider of two that start together wins, and the loser is announced and left
+  in the report for a later run — so a `.fixed.xsl` fixture may still hold a
+  defect, and every one of them is parsed back by `test/fixer.test.js` to prove
+  no run left broken XML behind.
 
 ## Key files
 

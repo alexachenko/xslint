@@ -89,6 +89,39 @@ const decodes = function(content, from, value) {
 }
 
 /**
+ * The edits that overlap none already accepted, in source order. Two fixes
+ * whose spans intersect cannot both be applied: the second would splice the
+ * text with offsets the first has already shifted, swallowing whatever now sits
+ * at the tail of its stale span. The left-most span wins, and where two start
+ * together the wider one does — an outer fix replaces the very text its inner
+ * neighbour would have edited, so the neighbour is moot rather than merely
+ * postponed. A dropped edit is announced and its defect stays in the report,
+ * for a later run to fix.
+ * @param {Array.<{defect: object, start: number, end: number}>} edits - Edits,
+ *  each already verified against the file as it was read
+ * @return {Array.<{defect: object, start: number, end: number}>} - The ones
+ *  that do not overlap
+ */
+const disjoint = function(edits) {
+  const kept = []
+  let border = 0
+  for (const edit of [...edits].sort(
+    (left, right) => left.start - right.start || right.end - left.end,
+  )) {
+    if (edit.start < border) {
+      logger.warn(
+        `Skipped fixing ${edit.defect.name} at ` +
+        `${edit.defect.file}:${edit.defect.fix.line}, it overlaps another fix`,
+      )
+    } else {
+      kept.push(edit)
+      border = edit.end
+    }
+  }
+  return kept
+}
+
+/**
  * Apply the fixes carried by defects to their sources, returning the rewritten
  * content of each changed file and the defects whose fix was applied. Each fix
  * names a source position, a decoded `value`, and its replacement. The fixer
@@ -96,8 +129,11 @@ const decodes = function(content, from, value) {
  * fix's decoded `offset`, so it lands on the match even when an entity ahead of
  * it shifts the column, then matches `value` decoding as it goes — a `>`
  * written `&gt;` matches alike. A fix whose source no longer decodes to `value`
- * (an already-edited file) is skipped rather than corrupting. Fixes for one
- * file are applied from the end backwards so earlier offsets stay valid.
+ * (an already-edited file) is skipped rather than corrupting, and so is one
+ * overlapping a fix already accepted in the same run — the spans are proved
+ * against the file as read, which says nothing about what an earlier edit has
+ * since moved. Fixes for one file are applied from the end backwards so earlier
+ * offsets stay valid.
  * @param {Array.<{file: string, content: string}>} sources - Original sources
  * @param {Array.<{file: string, fix: {line: number, col: number, offset:
  *  number, value: string, replacement: string, suggestion: boolean}}>}
@@ -115,31 +151,34 @@ const fixed = function(sources, defects, suggestions = false) {
   const contents = new Map()
   const applied = []
   for (const {file, content} of sources) {
-    const edits = fixable
-      .filter((defect) => defect.file === file)
-      .map((defect) => {
-        const offset = defect.fix.offset || 0
-        const base = offsetAt(content, defect.fix.line, defect.fix.col - offset)
-        const start = skip(content, base, offset)
-        return {
-          defect: defect,
-          start: start,
-          end: decodes(content, start, defect.fix.value),
-        }
-      })
-      .filter(({defect, end}) => {
-        if (end < 0) {
-          logger.warn(
-            `Skipped fixing ${defect.name} at ${file}:${defect.fix.line}, ` +
-            `the source no longer matches`,
+    const edits = disjoint(
+      fixable
+        .filter((defect) => defect.file === file)
+        .map((defect) => {
+          const offset = defect.fix.offset || 0
+          const base = offsetAt(
+            content, defect.fix.line, defect.fix.col - offset,
           )
-        }
-        return end >= 0
-      })
-      .sort((left, right) => right.start - left.start)
+          const start = skip(content, base, offset)
+          return {
+            defect: defect,
+            start: start,
+            end: decodes(content, start, defect.fix.value),
+          }
+        })
+        .filter(({defect, end}) => {
+          if (end < 0) {
+            logger.warn(
+              `Skipped fixing ${defect.name} at ${file}:${defect.fix.line}, ` +
+              `the source no longer matches`,
+            )
+          }
+          return end >= 0
+        }),
+    )
     if (edits.length > 0) {
       let text = content
-      for (const {defect, start, end} of edits) {
+      for (const {defect, start, end} of [...edits].reverse()) {
         text =
           text.slice(0, start) +
           defect.fix.replacement +
