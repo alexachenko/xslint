@@ -1,6 +1,7 @@
 # Missing id in stylesheet
 
-The `id` attribute on `xsl:stylesheet` is optional, and on a standalone
+The `id` attribute on the stylesheet root (`xsl:stylesheet` or `xsl:transform`)
+is optional, and on a standalone
 stylesheet it changes nothing about how the transform runs — it matters only
 for a stylesheet embedded in another document and referenced by fragment. So
 this is not a correctness rule; it is a consistency one. Declaring identity is

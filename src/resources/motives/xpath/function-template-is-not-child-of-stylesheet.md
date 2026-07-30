@@ -1,8 +1,8 @@
 # Function or template is not child of stylesheet
 
-`xsl:function` and `xsl:template` declaration can only appear as 
-top-level elements (a child element of an `xsl:stylesheet`). 
-Declaring them in other nodes is a syntax error.   
+`xsl:function` and `xsl:template` declaration can only appear as
+top-level elements (a child element of an `xsl:stylesheet` or `xsl:transform`).
+Declaring them in other nodes is a syntax error.
 
 Incorrect:
 

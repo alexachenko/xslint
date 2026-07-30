@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: too-many-templates
+found:
+  amount: 1
+  positions: [ [ 2, 1 ] ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" id="s">
+    <xsl:output encoding="UTF-8" method="xml"/>
+    <xsl:template match="/o[1]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[2]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[3]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[4]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[5]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[6]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[7]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[8]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[9]">
+      <a/>
+    </xsl:template>
+    <xsl:template match="/o[10]">
+      <a/>
+    </xsl:template>
+  </xsl:transform>

@@ -1,8 +1,9 @@
 # Missing version in stylesheet
 
-Every `xsl:stylesheet` element must declare a `version` attribute to identify
-the XSLT version the stylesheet conforms to. Omitting it produces an invalid
-stylesheet that a conformant XSLT processor is required to reject.
+Every stylesheet root — `xsl:stylesheet` or its synonym `xsl:transform` — must
+declare a `version` attribute to identify the XSLT version the stylesheet
+conforms to. Omitting it produces an invalid stylesheet that a conformant XSLT
+processor is required to reject.
 
 Incorrect:
 

@@ -1,8 +1,9 @@
 # Using not outermost stylesheet
 
-`xsl:stylesheet` must be the outermost element of an XSLT document. A
-nested `xsl:stylesheet` inside a template body is invalid and will be
-rejected by a conformant XSLT processor.
+The stylesheet root — `xsl:stylesheet` or its synonym `xsl:transform` — must be
+the outermost element of an XSLT document. A nested `xsl:stylesheet` or
+`xsl:transform` inside a template body is invalid and will be rejected by a
+conformant XSLT processor.
 
 Incorrect:
 

@@ -7,7 +7,7 @@ found:
   positions: [ [ 3, 3 ] ]
 input: |-
   <?xml version="1.0"?>
-  <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:my="urn:my" version="1.0">
+  <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:my="urn:my" version="1.0" id="fn">
     <xsl:function name="my:calc">
       <xsl:sequence select="1"/>
     </xsl:function>

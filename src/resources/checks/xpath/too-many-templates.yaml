@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-xpath: /xsl:stylesheet[count(//xsl:template) >= 10]
+xpath: (/xsl:stylesheet | /xsl:transform)[count(//xsl:template) >= 10]
 severity: warning
 message: The stylesheet declares 10 or more templates, too many to read in one file. Split it into imported modules.

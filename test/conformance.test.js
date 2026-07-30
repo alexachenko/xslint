@@ -112,6 +112,26 @@ describe('conformance', function() {
       assert.ok(suite.includes(name), `validation/${name} is tested nowhere`)
     }
   })
+  it('pairs every root xsl:stylesheet with an xsl:transform', function() {
+    const rooted = /(?<!\/)\/xsl:stylesheet/
+    const paired = /(?<!\/)\/xsl:transform/
+    const fields = {xpath: ['xpath'], corpus: ['declaration', 'usage']}
+    for (const [kind, keys] of Object.entries(fields)) {
+      for (const name of names(kind)) {
+        const check = yaml.parsedFromFile(
+          path.join(CHECKS, kind, `${name}.yaml`),
+        )
+        for (const key of keys) {
+          if (check[key] && rooted.test(check[key])) {
+            assert.ok(
+              paired.test(check[key]),
+              `${kind}/${name} anchors on /xsl:stylesheet but not /xsl:transform`,
+            )
+          }
+        }
+      }
+    }
+  })
   it('maps every motive and pack back to a real check', function() {
     for (const kind of KINDS) {
       const checks = new Set(names(kind))
