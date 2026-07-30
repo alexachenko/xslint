@@ -1,14 +1,12 @@
- # CLAUDE.md
+# CLAUDE.md
 
-<!-- markdownlint-disable MD013 -->
-<!-- This file is dense reference prose written one paragraph per line; the
-     100-char line length is not enforced here. -->
+Guidance for Claude Code (claude.ai/code) working in this repository. Keep it
+accurate: a change to behavior that leaves this file describing the old one is
+not done.
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Git workflow
 
-## Git Workflow
-
-Always start work from a clean master:
+Always start from a clean master:
 
 ```bash
 git checkout master
@@ -18,228 +16,251 @@ git pull origin master
 ## Commands
 
 ```bash
-npm test                      # Run all tests + ESLint (via Grunt)
-npx mocha test/xslint.test.js --timeout 10000   # Run a single test file
-npx mocha test/xslint.test.js --grep "sentence"  # Run tests matching a pattern
+npm test                                        # ESLint then all tests (Grunt)
+npx mocha test/xslint.test.js --timeout 10000   # one test file
+npx mocha test/xslint.test.js --grep sentence   # tests matching a pattern
+npx grunt docs                                  # regenerate the docs/ site
+npm run coverage                                # 100% branch gate (CI)
 ```
 
-Code style is enforced by ESLint (`eslint-config-google` plus `@stylistic`, in `eslint.config.mjs`, run once by the `grunt` workflow's `lint` job on every push and pull request, separate from the `build` test matrix): spaced operators (`@stylistic/space-infix-ops`), no single-letter names (`id-length` minimum 2), postfix-only increment/decrement (`no-restricted-syntax` bans prefix `++x`/`--x`; `x++` is fine), bare module names in `require` and `import` (`no-restricted-syntax` bans the `node:` prefix in both — write `require('path')`/`import ... from 'path'`, not the `node:`-prefixed form), and no redundant return variable (a project-local `local/no-redundant-return-variable` rule bans `const x = expr; return x` — return the expression directly; the rule lives in `eslint-local-rules.js` and is unit-tested with ESLint's `RuleTester` in `test/eslint-local-rules.test.js`).
+CI also runs, as separate jobs beyond `npm test`: `coverage`, `xcop`,
+`copyrights` (SPDX header on every source file), `markdown-lint`, `yamllint`,
+`typos`, `pdd`, and `fixtures`. A green local `npm test` does not mean CI is
+green — run `npm run coverage` and the xcop suite too.
 
-**Every code-style convention must be machine-enforced.** When a style or consistency issue is fixed, do not just fix the instances — add an automated check that fails when the style is violated again (an ESLint rule, preferably a new `no-restricted-syntax` selector so no dependency is added, or a CI job), in the same change, so the mistake cannot recur.
+## Code style
+
+ESLint (`eslint-config-google` + `@stylistic`, config in `eslint.config.mjs`,
+run by the `lint` job) enforces: spaced operators, no single-letter names
+(`id-length` >= 2), postfix `x++` only (prefix `++x` is banned), bare module
+names in `require`/`import` (no `node:` prefix), and no redundant return
+variable (`const x = expr; return x` is banned — return the expression). The
+last is a project-local rule in `eslint-local-rules.js`, unit-tested in
+`test/eslint-local-rules.test.js`.
+
+**Every style or consistency convention must be machine-enforced.** When you fix
+one, do not just fix the instances — in the same change add a check that fails on
+the next violation (prefer a new `no-restricted-syntax` selector so no dependency
+is added, else a CI job).
 
 ## Architecture
 
-**xslint** is a CLI linter for XSL stylesheets. It runs in two stages: **validators** first establish that the input is valid (each stylesheet is well-formed XML, and every XPath expression compiles), then **linters** run over what passed — the well-formed stylesheets, and the XPath expressions that parse — catching stylistic, semantic, and logical problems. Each validator *partitions* its input: it hands the valid part to the next stage and reports the rest, so one broken file (or one malformed expression) never hides the feedback on the rest.
+**xslint** is a CLI linter for XSL stylesheets. It runs in two stages.
+**Validators** first establish that the input is valid; **linters** then run only
+over what passed. Each validator *partitions* its input — it hands the valid part
+to the next stage and reports the rest — so one broken file, or one malformed
+expression, never hides the feedback on everything else.
 
-Flow:
 ```text
-src/index.mjs (CLI, commander.js — ESM entry so commander loads natively)
-  → src/xslint.js (file discovery, suppression, run order, output: defects to
-      stdout, logs to stderr)
-    VALIDATORS (is it valid?) — each partitions its input, reporting the bad
-    → src/xsl-validator.js (XML well-formedness) builds the corpus of
-        parseable files          → src/resources/checks/validation/malformed-stylesheet.yaml
-    → src/xpath-validator.js (XPath syntax, over the corpus) keeps the valid
-        expressions              → src/resources/checks/validation/invalid-xpath-expression.yaml
-    LINTERS (is it good?) — over the corpus
-    → src/xpath-linter.js (per-file rules)    → src/resources/checks/xpath/*.yaml
-    → src/corpus-linter.js (cross-file rules) → src/resources/checks/corpus/*.yaml
-    → src/xpath-axis-linter.js (verbose axes in every XPath/pattern attribute;
-        tokenizes via src/tokens.js) → src/resources/checks/format/unabbreviated-axis.yaml
-    → src/using-namespace-axis-linter.js (the deprecated namespace:: axis in
-        every XPath/pattern attribute on XSLT 2.0/3.0; tokenizes via
-        src/tokens.js) → src/resources/checks/format/using-namespace-axis.yaml
-    → src/namespace-linter.js (namespace prefixes declared but never used; pure
-        DOM) → src/resources/checks/format/redundant-namespace-declarations.yaml
-    → src/result-namespace-linter.js (stylesheet prefixes used only in logic,
-        leaked into output by literal result elements; pure DOM; suggestion fix
-        adds the prefix to exclude-result-prefixes) → src/resources/checks/format/leaking-result-namespace.yaml
-    → src/import-linter.js (xsl:import/xsl:include cycles and duplicate imports;
-        builds the dependency graph via src/import-graph.js) → src/resources/checks/format/{circular-import,redundant-import}.yaml
-    → src/node-set-linter.js (redundant node-set() in @select on XSLT 2.0/3.0;
-        masks literals via src/tokens.js) → src/resources/checks/format/use-node-set-extension.yaml
-    → src/count-linter.js (count() compared with 0 to test existence in every
-        XPath/pattern attribute; shares src/comparisons.js) → src/resources/checks/format/count-compared-to-zero.yaml
-    → src/string-length-linter.js (string-length() compared with 0 to test
-        emptiness in every XPath/pattern attribute) → src/resources/checks/format/string-length-compared-to-zero.yaml
-    → src/name-linter.js (name()/local-name() compared with a string in every
-        XPath/pattern attribute; suggestion fix to a node test) → src/resources/checks/format/name-compared-to-string.yaml
-    → src/translate-linter.js (alphabet translate() case fold in a 2.0/3.0
-        XPath/pattern attribute; suggestion fix to lower-case()/upper-case()) → src/resources/checks/format/translate-for-case.yaml
-    → src/redundant-double-negation-linter.js (not(not(x)) in every XPath/pattern
-        attribute; safe fix to x when it is a whole @test, else boolean(x)) → src/resources/checks/format/redundant-double-negation.yaml
-    → src/redundant-boolean-call-linter.js (a whole @test wrapped in boolean();
-        safe fix that strips the wrapper) → src/resources/checks/format/redundant-boolean-call.yaml
-    → src/predicate-position-linter.js ([position() = N]/[position() = last()]
-        in every XPath/pattern attribute; safe fix to [N]/[last()]) → src/resources/checks/format/predicate-position-literal.yaml
-    EXPRESSION LINTERS (is it good?) — over the valid expressions
-    → src/xpath-format-linter.js (XPath formatting; tokenizes via
-        src/tokens.js)           → src/resources/checks/format/*.yaml
-        xsl-validator, xpath-validator, xpath-linter, corpus-linter,
-        xpath-axis-linter, and using-namespace-axis-linter evaluate via
-        src/xpath.js (fontoxpath environment: prefixes, node/string evaluators,
-        expression validator); namespace-linter walks the DOM directly;
-        xpath-axis-linter, using-namespace-axis-linter, and xpath-format-linter
-        additionally tokenize via src/tokens.js — the axis linters over every
-        attribute's axes, the format linter over the validator's expressions
+src/index.mjs             CLI entry (commander.js, ESM)
+  src/xslint.js           discovery, config, run order, output; exports lint()
+    validators — partition the input, report the bad part:
+      src/xsl-validator.js       well-formed XML  -> builds the corpus
+      src/xpath-validator.js     XPath syntax     -> keeps the valid expressions
+    document linters — (corpus, suppressions) => defects:
+      src/xpath-linter.js        declarative checks/xpath/*.yaml (per file)
+      src/corpus-linter.js       declarative checks/corpus/*.yaml (cross file)
+      src/*-linter.js            code-based checks/format/*.yaml (one construct each)
+    expression linters — (expressions, suppressions) => defects:
+      src/xpath-format-linter.js checks/format/redundant-whitespace.yaml
 ```
 
-Validators run before linters so the linters reason only over valid input, and each validator *builds* the input the next stage consumes. `xsl-validator` takes `(sources, suppressions)` (raw `{file, content}`) and returns `{corpus, defects}` — the corpus of parseable `{file, xsl}` documents. `xpath-validator` takes that corpus and returns `{expressions, defects}` — the valid `{file, expression}` attribute nodes, with the malformed ones dropped and reported; an expression still carrying an unresolved entity reference (one declared in an external DTD `helpers` never read) is neither kept nor reported, since it cannot be parsed and reporting it would be a false positive over a resolution gap. `helpers` expands the general entities a source declares inline in its internal DTD subset into the parsed values (`@xmldom/xmldom` leaves them literal), with positions untouched, and forgives an unresolved entity when the source reaches for an external DTD it could not load — so a DocBook stylesheet built on `&lowercase;` or an external `entities.ent` lints instead of being dropped whole. The document linters share the shape `(corpus, suppressions) => defects`: `xpath-linter` loops the corpus applying file-local rules; `corpus-linter` reasons across files (e.g. a named template defined in one file but invoked from another is *not* flagged as unused); `xpath-axis-linter` tokenizes every XPath/pattern attribute in the corpus and flags each verbose axis with a fix; `using-namespace-axis-linter` tokenizes those same attributes for the deprecated `namespace::` axis on an XSLT 2.0/3.0 stylesheet, reporting each occurrence (report-only — rewriting it to `in-scope-prefixes()`/`namespace-uri-for-prefix()` is a structural change); `namespace-linter` walks the DOM for prefixes declared on the stylesheet but used nowhere, flagging each with a fix that deletes the declaration; `result-namespace-linter` walks the DOM for prefixes declared on the stylesheet but used only in its logic (a sequence type, a helper call) that a literal result element then copies into the output, flagging each with a suggestion fix that adds it to `exclude-result-prefixes` (attached only when a single prefix leaks, since the one shared attribute cannot take a per-prefix edit each); `import-linter` resolves every `xsl:import`/`xsl:include` `@href` against the importing file's directory (`src/import-graph.js`), builds the dependency graph over the corpus, and flags each import that closes a cycle (`circular-import`, an error) — a cycle needs every edge in it to resolve within the corpus, so an href pointing outside the linted set is external and never a false cycle — and flags the same module imported twice in one stylesheet (`redundant-import`, a warning, over the external-inclusive `importsOf`, with a safe `--fix` that deletes the duplicate line); `node-set-linter` finds the redundant `node-set()` extension in a `@select` of an XSLT 2.0/3.0 stylesheet, flagging each with a fix that unwraps it. The expression linters share the shape `(expressions, suppressions) => defects`: `xpath-format-linter` tokenizes each valid expression (`src/tokens.js`) and flags redundant whitespace — it never re-checks validity, since the validator already filtered. No module imports another linter or validator: `xpath-linter`, `corpus-linter`, `xpath-axis-linter`, `using-namespace-axis-linter`, `node-set-linter`, and `xpath-validator` depend on `src/xpath.js`, `xpath-axis-linter`, `using-namespace-axis-linter`, `node-set-linter`, and `xpath-format-linter` also on `src/tokens.js`, `namespace-linter` and `result-namespace-linter` on neither (pure DOM), `import-linter` on `src/import-graph.js` (which resolves hrefs against file paths, not XPath), all on `src/helpers.js`; the staging is wired only in `src/xslint.js`, where each linter is one `{run, checks}` entry in `LINTERS`/`EXPRESSION_LINTERS` and the `CHECKS` name list (what `--suppress` and config globs match against) is *derived* by flat-mapping those entries' `checks` plus the validators' — so a linter and its suppression names cannot drift apart.
+`src/xslint.js` exposes the whole staging as a pure function,
+`lint(sources, {suppress, overrides}) => defects`: no file I/O, prints nothing,
+never exits. The command-line `xslint(paths, options)` in the same module wraps
+it — resolves config, reads the `.xsl` files, calls `lint`, applies `--fix`,
+reports, and sets the exit code. The package `main` re-exports `lint` and
+`fixed` so an embedder (the planned LSP server, #336) can lint a buffer without
+shelling out; the bin stays `src/index.mjs`.
 
-`src/xslint.js` exposes that staging as a pure function, `lint(sources, {suppress, overrides}) => defects`, which does no file I/O, prints nothing, and never exits — it validates, runs every linter, applies severity overrides, and drops defects silenced by inline directives. The command-line `xslint(pths, options)` in the same module wraps it: it resolves configuration, discovers and reads the `.xsl` files into `sources`, calls `lint`, then applies `--fix` (writing files via `fixed`), reports, and sets the exit code. The package `main` is `src/xslint.js` and it re-exports `lint` and `fixed`, so an embedder — the planned LSP server (#336) — can lint an in-memory buffer and apply fixes without shelling out; the CLI bin stays `src/index.mjs`.
+A check is one entry with **four kinds**, each a YAML file plus a motive plus a
+test pack:
 
-**Per-file rule format** (`src/resources/checks/xpath/<name>.yaml`):
+| Kind | YAML | Detection | Reported node |
+| --- | --- | --- | --- |
+| `xpath` | `xpath` + `severity` + `message` | the XPath selects violations | selected node |
+| `corpus` | `declaration`/`usage` (+ `reference`/`scoped`/`reachable`) | cross-file, declarative | the declaration |
+| `validation` | `severity` + `message` | code (well-formedness, XPath syntax) | in code |
+| `format` | `severity` + `message` | code (a `src/*-linter.js`) | in code |
+
+No linter imports another. The declarative loaders (`xpath-linter`,
+`corpus-linter`) and the token/DOM linters all share `src/xpath.js` (the
+fontoxpath environment: prefixes, evaluators, `isValid`), `src/tokens.js` (the
+positioned XPath lexer), and `src/helpers.js` (XML/YAML parsing, file
+recursion). The staging is wired only in `src/xslint.js`: each linter is one
+`{run, checks}` entry in `LINTERS`/`EXPRESSION_LINTERS`, and the `CHECKS` name
+list that `--suppress` and config globs match is *derived* from those entries, so
+a linter and its suppression names cannot drift apart.
+
+XPath binds prefix `xsl:` to the XSLT namespace; `xslint:` is reserved in
+`src/xpath.js` for custom functions (none are registered now).
+
+## Check formats
+
+Per-file rule — `src/resources/checks/xpath/<name>.yaml`:
+
 ```yaml
-xpath: <XPath expression that selects violation nodes>
+xpath: <XPath selecting the violation nodes>
 severity: warning|error
-message: <human-readable explanation>
+message: <one sentence, no trailing period>
 ```
 
-**Cross-file (corpus) rule format** (`src/resources/checks/corpus/<name>.yaml`):
+Cross-file rule — `src/resources/checks/corpus/<name>.yaml`:
+
 ```yaml
 declaration: <XPath selecting declared nodes that carry an @name>
-usage: <XPath selecting the names used, collected across the whole corpus>
-reference: "<optional substring template, with {name} standing for the @name>"
+usage: <XPath selecting the used names, across the whole corpus>
+reference: "<optional substring template; {name} stands for the @name>"
 scoped: <optional true>
 reachable: <optional true>
 severity: warning|error
-message: <human-readable explanation>
+message: <one sentence>
 ```
-By default a `declaration` node is a defect only when its `@name` appears — by exact identity — in no `usage` value anywhere in the corpus (e.g. `unused-named-template`, whose usage `//xsl:call-template/@name` yields called names). When a `reference` is given, the match is by substring instead: the `@name` is substituted into the template and a usage *references* the declaration when that string occurs in its value. Three variants read that reference differently. A plain reference check (`unused-function`, `reference: "{name}("` over `//@*`) is a defect when the string occurs in no usage at all — counting the declaration's own body, so a function that only calls itself *is* referenced and is left to the next check rather than reported here. A `reachable: true` check (`unreachable-function`, same `reference`/`usage`) instead follows the call graph: a declaration is reached when a reference to it sits outside every declaration's body (a call from a template) or inside another declaration that is itself reached, and it is a defect when it is referenced somewhere yet never reached — so a function called solely from within a recursion cycle nothing enters (a self-loop, or a `my:even`/`my:odd` pair) is flagged, disjoint from `unused-function`. A `scoped: true` check (`unused-variable`, `reference: "${name}"`) counts a usage only within the declaration's parent subtree, or — for a top-level declaration — in any other file that imports it, and excludes the declaration's own subtree; an unscoped one is global. Because usage is followed across the corpus, a function or variable defined in one file (a `_funcs.xsl` / `_specials.xsl` library) but used from another is not flagged.
 
-**Validator check format** (`src/resources/checks/validation/<name>.yaml`):
-```yaml
-severity: warning|error
-message: <human-readable explanation>
-```
-A validator carries no XPath rule — its detection logic lives in code, and the YAML supplies only the defect's `severity` and `message`. Two validators live here: `malformed-stylesheet` (`src/xsl-validator.js`, XML well-formedness) and `invalid-xpath-expression` (`src/xpath-validator.js`, XPath syntax). The latter parses every bare-XPath-expression attribute (`select`, `test`, `use`, `value`, `group-by`, `group-adjacent`, plus the XSLT 3.0 `key`, `initial-value`, `xpath`, `context-item`, `with-params`, `namespace-context` — the `EXPRESSIONS` selector in `src/xpath-validator.js`) via `isValid` (`src/xpath.js`), which compiles with fontoxpath (the same engine that runs the rules) under a resolver where every prefix resolves, so only genuine syntax errors fail — unknown prefixes, custom functions, and the implicit string-to-number coercion an XPath 1.0 stylesheet leans on (`substring-before(…) - 1`, a static-type mismatch the 3.1 engine rejects but not a parse error) do not. `isValid` tells the two apart by the shape of the engine's complaint: a syntax error is reported as `<position>: <source>`, a static or type error as a W3C code like `XPTY0004`, and only the former marks the expression malformed. The `namespace::` axis (dropped by XPath 3.0, defined by 1.0/2.0) is the one construct the engine cannot parse at all, so `isValid` retries with it rewritten to a supported axis and accepts the expression when only that rewrite makes it parse. Pattern attributes (`match`, `count`, `from`, `group-starting-with`, `group-ending-with`), attribute value templates, and sequence types (`as`) are deliberately not validated as expressions. Each validator reads its own YAML by name (it does not scan the directory), so adding one validator's YAML never feeds another's logic.
+Without `reference`, a `declaration` is a defect when its `@name` matches no
+`usage` value by exact identity. With `reference`, the match is by substring:
+plain (defect when the string occurs nowhere, counting the declaration's own
+body), `reachable: true` (follows the call graph — a defect when referenced yet
+never reached from outside every declaration body), or `scoped: true` (counts
+usage only within the declaration's subtree, or an importing file). Because usage
+is followed across files, a symbol defined in a `_funcs.xsl` library and used
+elsewhere is never flagged.
 
-**Formatting check format** (`src/resources/checks/format/<name>.yaml`):
-```yaml
-severity: warning|error
-message: <human-readable explanation>
-```
-Like a validator, a formatting check carries no XPath rule — its detection logic lives in code, and the YAML supplies only `severity` and `message`. Fifteen checks live here (one, `circular-import`, an error rather than a warning), each code-driven but reading different input: `redundant-whitespace` (`src/xpath-format-linter.js`, an *expression* linter over the valid expressions the XPath validator kept — a doubled space, or a space leading or trailing the expression; whitespace inside string literals and comments is left alone), `unabbreviated-axis` (`src/xpath-axis-linter.js`, a *document* linter over the corpus — a verbose `child::`, `attribute::`, or `parent::node()` in any XPath or pattern attribute, reported once per occurrence with a fix that abbreviates it; it reads the corpus, not the expression stream, so an axis in a template `match` pattern is caught too, and the lexer keeps string literals whole so an axis-looking substring inside one is never touched), and `using-namespace-axis` (`src/using-namespace-axis-linter.js`, a *document* linter over the corpus — the deprecated `namespace::` axis in any XPath or pattern attribute of an XSLT 2.0 or 3.0 stylesheet, reported once per occurrence; it is report-only, since rewriting the axis to `in-scope-prefixes()`/`namespace-uri-for-prefix()` is a structural change. In XSLT 1.0 the axis is the standard way to read namespace nodes, so it is not flagged. Because it tokenizes, a `namespace::` inside a string literal is left alone and the lookalike functions `in-scope-prefixes()`/`namespace-uri-for-prefix()` are never mistaken for the axis), and `redundant-namespace-declarations` (`src/namespace-linter.js`, a *document* linter over the corpus — a namespace prefix declared on the stylesheet but used by no element name, attribute name, or qualified name in an attribute value; reported once per dead declaration with a fix that deletes it, walking the DOM directly rather than tokenizing), and `leaking-result-namespace` (`src/result-namespace-linter.js`, a *document* linter over the corpus — a prefix declared on the stylesheet, used only in its logic (a sequence type in `as`, a helper call in `select`) and by no result element, which a literal result element then copies into the serialized output; reported once per leaking prefix, with a `--fix-suggestions` that adds the prefix to `exclude-result-prefixes` (inserting the attribute or appending to it) — a suggestion since it changes the serialized output, and offered only when a single prefix leaks; skipping a text-output stylesheet, an `#all`/already-excluded or extension prefix, and any prefix a result element or `xsl:element`/`xsl:attribute` name genuinely uses), and `use-node-set-extension` (`src/node-set-linter.js`, a *document* linter over the corpus — the `exsl:node-set(…)` extension in a `@select` of an XSLT 2.0 or 3.0 stylesheet, where a variable is already a node sequence; reported once per call with a fix that unwraps it. It masks string and comment spans with the lexer, then finds the call and balances its parentheses on the blanked text, so a `node-set(` inside a literal is never flagged), and `count-compared-to-zero` (`src/count-linter.js`, a *document* linter over the corpus — `count(…)` compared with `0`/`1` to test existence in any XPath or pattern attribute; reported once per comparison, with a **version-appropriate** safe fix — `exists(…)`/`empty(…)` on an XSLT 2.0/3.0 stylesheet, and on 1.0 (and unversioned, where they are valid too) a bare node-set in a whole `@test`, `boolean(…)` elsewhere, or `not(…)` for the empty case — masking literals and balancing parentheses on the blanked text like the node-set check, so a genuine `count(…) > 1` is left alone), and `string-length-compared-to-zero` (`src/string-length-linter.js`, the same shape as the count check but for `string-length(…)` compared with `0`/`1` to test emptiness; it rewrites to `X != ''`/`X = ''` when the argument is a simple operand and reports without a fix when it is not, e.g. a union — the rewrite is a *suggestion*, since `X op ''` is not a general equivalent of `string-length(X) op 0`: they differ for an absent attribute (`= 0` is true, `= ''` false) and for a multi-node set), and `name-compared-to-string` (`src/name-linter.js`, `name()`/`local-name()` compared with a string literal in any XPath or pattern attribute and in either operand order; a `--fix-suggestions` turns it into a node test — `self::x`, `not(self::x)` for `!=`, or the 2.0/3.0 wildcard `self::*:x` for `local-name()` — over the current node with a valid name, and reports without a fix otherwise), and `translate-for-case` (`src/translate-linter.js`, in an XSLT 2.0/3.0 stylesheet a `translate(x, 'A..Z', 'a..z')` that folds case over the ASCII alphabet; a `--fix-suggestions` rewrites it to `lower-case(x)`/`upper-case(x)`, splitting the call's arguments on the depth-zero commas of the blanked text), and `circular-import` (`src/import-linter.js`, a *cross-file* check — an `xsl:import`/`xsl:include` cycle among the corpus stylesheets, built from the dependency graph in `src/import-graph.js`; reported at each import that closes a cycle, severity error, no fix, and false-positive-proof on a partial corpus since a cycle needs every edge resolved within it), and `redundant-import` (`src/import-linter.js` too, over `src/import-graph.js`'s `importsOf` — the second and later `xsl:import`/`xsl:include` of the same resolved target within one stylesheet's own list, a warning with a safe `--fix` that deletes the duplicate's whole line, reconstructed from the element; the target need not be a corpus file, since importing the same external library twice is redundant, and a self-import or cross-file cycle is left to `circular-import`), and `redundant-double-negation` (`src/redundant-double-negation-linter.js`, a *document* linter over the corpus — `not(not(x))` in any XPath or pattern attribute, an outer `not(...)` whose only content is an inner `not(...)`; reported once per occurrence with a safe `--fix` that rewrites it to `x` when the double negation is a whole `@test` — which already coerces to a boolean — and to `boolean(x)` everywhere else, so the fix never leaves a `boolean(x)` that `redundant-boolean-call` would then re-flag), and `redundant-boolean-call` (`src/redundant-boolean-call-linter.js`, a *document* linter over the corpus — a whole `@test` that is a single `boolean(...)` call, where the test already coerces its value to a boolean so the wrapper adds nothing; reported once per test with a safe `--fix` that strips the wrapper and trims the argument, leaving a `boolean(...)` embedded in a larger expression like `a = boolean(b)` alone), and `predicate-position-literal` (`src/predicate-position-linter.js`, a *document* linter over the corpus — a positional predicate written the long way in any XPath or pattern attribute, i.e. a predicate whose sole content is `position() = N`/`position() = last()` in either operand order; reported once per occurrence with a safe `--fix` that shortens it to `[N]`/`[last()]`. It tokenizes, matches brackets through a stack so a nested predicate is judged on its own contents and a `[` inside a string is never seen, and reduces the predicate's significant tokens to a short signature — so `[position() = 1 and @x]`, `[position() > 1]`, and a value comparison `[position() eq 1]` all fail to match and are left alone). The node-set, double-negation, and boolean-call linters share the `masked`/`closes` lexer helpers extracted to `src/expressions.js`; the count and string-length linters, which both detect a function call compared with `0`/`1` in either operand order, share that entire scan through `src/comparisons.js`'s `comparedToZero(expression, name, decide)` — each passing only a small per-check classifier (`count`→`exists`/`empty`, `string-length`→`X = ''`/`X != ''`); the axis and predicate-position linters instead tokenize via `src/tokens.js`. The two axis linters (`unabbreviated-axis`, `using-namespace-axis`), predicate-position, count, string-length, name, translate, and double-negation linters all scan the shared XPath/pattern attribute set from `src/attributes.js` (`SELECTOR` over `ATTRIBUTES`), so a construct in a `@use`, `@group-by`, `@value`, or a `match` pattern is caught, not only in `@test`/`@select`; `node-set` (`@select` only) and `redundant-boolean-call` (a whole `@test`) keep a deliberately narrower, documented scope. Every code-based format linter builds its defects through `src/checks.js` — `metaOf(check)` loads the check YAML, `suppressed(check, suppressions)` is the shared suppression guard, and `defect(check, meta, file, node, offset, fix)` assembles the standard defect object and anchors any fix at the reported line/column — so a new linter reuses these three rather than re-deriving the metadata load, the guard, or the defect literal (`namespace`/`result-namespace` position their defect off the DOM directly, and `import-linter` off the element, but both still share `metaOf`/`suppressed`). `src/tokens.js` is the lexer the format checks lean on — a positioned token stream (string, comment, whitespace, axis, operator, and the rest) that preserves whitespace; it is the foundation a future full-fidelity parser grows on to reach structural checks (redundant parentheses).
+Validator and format checks — `checks/{validation,format}/<name>.yaml` — carry
+only `severity` and `message`; their logic lives in code and the YAML just tunes
+those two.
 
-XPath uses namespace prefix `xsl:` → `http://www.w3.org/1999/XSL/Transform`; the `xslint:` prefix is reserved in `src/xpath.js` for custom functions, though none are registered now (the one that existed, `in-scope-prefixes`, went away when `redundant-namespace-declarations` moved to `src/namespace-linter.js`).
+## Adding a rule
 
-**Per-file test pack** (`test/resources/xpath-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/xpath-linter.test.js`.
+Names are kebab-case with no `template-match-` (or other noise) prefix. Every
+rule needs a motive (`src/resources/motives/<kind>/<name>.md`) and at least one
+test. `test/conformance.test.js` enforces the naming, the motive, and the
+pack/test coverage for all four kinds — a rule that misnames itself, drops its
+motive, or ships untested fails the build.
 
-**Corpus test pack** (`test/resources/corpus-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[fileIndex, line, col], ...]`, multiple `inputs: [ ... ]`. Auto-discovered by `test/corpus-linter.test.js`.
+- **xpath rule**: add `checks/xpath/<name>.yaml` and
+  `test/resources/xpath-packs/<name>.yaml`.
+- **corpus rule**: add `checks/corpus/<name>.yaml` and
+  `test/resources/corpus-packs/<name>.yaml`.
+- **validation/format check**: the logic is code (a validator, or a
+  `src/*-linter.js` wired into `LINTERS`); the YAML only tunes `severity` and
+  `message`. A code-based format linter builds its defects through `src/checks.js`
+  (`metaOf`, `suppressed`, `defect`) and scans `src/attributes.js`'s `SELECTOR`
+  (every XPath/pattern attribute) unless it has a documented reason to narrow.
 
-**XPath validator test pack** (`test/resources/xpath-validator-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/xpath-validator.test.js`. The XSL validator is tested separately in `test/xsl-validator.test.js` with inline `{file, content}` sources (well-formed and malformed), and the end-to-end gating (parseable files linted, malformed ones reported and skipped) in `test/xslint.test.js` over a temp directory.
+Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
 
-**XPath format test pack** (`test/resources/xpath-format-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/xpath-format-linter.test.js`. The lexer is unit-tested separately in `test/tokens.test.js`.
+### Mandatory rules
 
-**Axis test pack** (`test/resources/axis-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/xpath-axis-linter.test.js`.
+- **Version-dependence.** If a check's detection or fix is valid only for certain
+  XSLT versions, the version test is part of the check. Read the version from
+  `documentElement.getAttribute('version')` against `MODERN = ['2.0', '3.0']`
+  (code), or from `/*/@version` (a declarative rule — any root). Never emit a fix
+  the declared version cannot run; emit the version-appropriate form instead
+  (`count(x) > 0` -> `exists(x)` on 2.0+, `boolean(x)`/`x` on 1.0). A
+  version-sensitive check with no version guard is a bug. Verify a version-based
+  *exclusion* fires on the versions where its premise does not hold — an inert 2.0
+  attribute in a 1.0 sheet is still a defect.
+- **Root-robustness.** A declarative rule that anchors on the stylesheet root must
+  match both spellings: `(/xsl:stylesheet | /xsl:transform)[...]`, never
+  `/xsl:stylesheet[...]` — they are exact synonyms in every version. Broaden a
+  descendant root test too (`//(xsl:stylesheet | xsl:transform)`). A whole-rule
+  root/version guard belongs at the root step (`/*[guard]//x`), not nested in a
+  per-node predicate; nest it only when it gates a sub-clause. This is
+  machine-enforced by `test/conformance.test.js`.
+- **Fix in the same change.** If a check is fixable, land the fix with the
+  detection — never defer it. A declarative rule gets a `node => fix` builder in
+  `src/fixers.js`; a code-based linter attaches the `fix` to its defect. Mark it
+  `suggestion: true` unless the edit is deterministic and semantics-preserving.
+  Cover it with a committed `test/resources/fix/<name>.{xsl,fixed.xsl}` pair
+  (generate the `.fixed` by running `--fix`) plus rows in `test/fixer.test.js`'s
+  `APPLIED`/`UNCHANGED`/`DROPPED` tables. A check whose only correct fix is
+  structural stays report-only until the full-fidelity parser (#228) — say so in
+  its motive.
+- **Motive sync.** When you touch what a check flags — its severity, its fix or
+  fix tier, its version scope, the constructs it leaves alone — re-read its motive
+  and update it. The motive is where the end user learns the check's purpose; a
+  behavior change with an untouched motive is presumed a bug.
+- **Docs sync.** A behavior change must also update `README.md` (user-facing:
+  usage, the `--fix`/suggestion lists), this file (architecture), and the docs
+  site (`npx grunt docs`).
 
-**Using-namespace-axis test pack** (`test/resources/using-namespace-axis-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/using-namespace-axis-linter.test.js`. The check is report-only, so a pack carries no `found.fixes`.
+## Test packs
 
-**Namespace test pack** (`test/resources/namespace-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/namespace-linter.test.js`.
+Each linter owns a `test/resources/<name>-packs/` directory, auto-discovered by
+its harness — no registration. A pack is `pack` (the check name), `found`, and
+`input` (or `inputs` for corpus/import packs, which reference each other as
+`file<index>.xsl`). `found` carries `amount` and `positions` — `[line, col]`, or
+`[fileIndex, line, col]` for cross-file packs, or `[line, col, other-check]` for
+a co-firing check. A code-based linter's pack also carries `found.fixes` aligned
+with `positions` (the expected `fix.replacement`, `null` for report-only), which
+the harness asserts too.
 
-**Result-namespace test pack** (`test/resources/result-namespace-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/result-namespace-linter.test.js`.
+- **Test the hard cases.** A pack must exercise more than one clean, top-level
+  occurrence: the construct **buried** in a larger expression (a predicate, an
+  `and`/`or` operand, a nested call), **three or more** occurrences in one
+  expression (to catch a first-match bug), and the **negative neighbours** that
+  look similar but must not fire. Positions pin every occurrence.
+- **Fixtures live in files.** Every test stylesheet is a committed `.xsl` under
+  `test/resources/` (never inline in a `.test.js` — the `fixtures` CI job bans
+  inline `<?xml`/`<xsl:`); YAML is only for the multi-field packs. Malformed
+  fixtures go in `test/resources/malformed/` (excluded from the xcop workflow,
+  since malformed XML cannot pass a formatting check).
+- **xcop.** `test/xcop.test.js` re-serializes the inline XSL of every `*-packs`
+  directory and runs [xcop](https://github.com/yegor256/xcop) over it; the CI
+  `xcop` job runs it too. The `redundant-namespace-declarations` pack is listed in
+  `UNFORMATTED` because its fixture must carry the unused namespace the check
+  flags, which xcop would canonicalize away.
+- **Table-driven.** Where several `it` blocks differ only in data, express them as
+  a data array plus one generator, not repeated blocks. When adding a test, add a
+  row to the matching table (`test/fixer.test.js`, the pack harnesses,
+  `test/config.test.js`, ...) before writing a new block.
 
-**Import test pack** (`test/resources/import-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[fileIndex, line, col], ...]`, multiple `inputs` (files reference each other by their `file<index>.xsl` harness names so hrefs resolve). Auto-discovered by `test/import-linter.test.js`.
+## User configuration
 
-**Node-set test pack** (`test/resources/node-set-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/node-set-linter.test.js`.
+- **Suppress**: `xslint --suppress=<rule-substring>` matches names across every
+  validator and linter.
+- **Config**: `.xslint.yml` (found by walking up, or `--config <path>`) can turn
+  rules `off`, re-grade severity, `exclude:` file globs, and default
+  `max-warnings`/`log-level`/`quiet`. Flags override the file overrides the
+  defaults (`src/config.js`). Unknown keys and no-match patterns are reported.
+- **Inline directives**: XML comments `xslint-disable-next-line`,
+  `xslint-disable-line`, `xslint-disable-file`, each with optional space-separated
+  rule names (`src/directives.js`); an unused directive is reported.
+- **Fix tiers**: a defect is fixable when it carries
+  `fix: {line, col, value, replacement, suggestion?}`. A *safe* fix
+  (deterministic, semantics-preserving) is applied by `--fix`; a
+  `suggestion: true` fix (changes behavior, or is one of several corrections) is
+  applied only by `--fix-suggestions`. `--fix-dry-run` writes nothing.
+  `src/fixer.js` locates each fix by decode-walking the raw source, so a `>`
+  written `&gt;` (#518) or a span shifted by an earlier entity (#525) still fixes,
+  and an already-edited span is skipped rather than corrupted.
 
-**Double-negation test pack** (`test/resources/redundant-double-negation-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/redundant-double-negation-linter.test.js`.
-
-**Boolean-call test pack** (`test/resources/redundant-boolean-call-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/redundant-boolean-call-linter.test.js`.
-
-**Predicate-position test pack** (`test/resources/predicate-position-packs/<name>.yaml`): `pack`, `found.amount`, `found.positions: [[line, col], ...]`, single `input`. Auto-discovered by `test/predicate-position-linter.test.js`.
-
-The `--fix` behavior of every fixable check is covered end-to-end in `test/fixer.test.js` over committed dirty/`.fixed` `.xsl` pairs under `test/resources/fix/`, copied into a temp file so the fixture is never mutated. Those dirty inputs are intentionally imperfect — the `redundant-namespace-declarations` one carries an unused namespace that xcop would canonicalize away — so `.github/workflows/xcop.yml` excludes `test/resources/fix/**` alongside the malformed fixtures.
-
-**xcop formatting** — `test/xcop.test.js` extracts the inline XSL from every pack directory holding *well-formed* fixtures — auto-discovered as every `test/resources/*-packs` directory, so a new pack directory is formatting-checked without being registered — re-serializes it, and runs [xcop](https://github.com/yegor256/xcop) over it to verify the fixtures are well-formatted XML. It skips locally when `xcop` is not installed, but `.github/workflows/xcop.yml` installs both Ruby/xcop and Node and runs this test (`npx mocha test/xcop.test.js`), so the inline pack XSL *is* formatting-checked in CI — not only the committed `.xsl` files the same workflow's `xcop` CLI covers. The XML validator's malformed fixtures are deliberately not xcop-checked (they live in `test/resources/malformed/`, not a `*-packs` directory), and the `redundant-namespace-declarations` pack is excluded via `UNFORMATTED` because its fixture must carry an unused namespace — the very thing the check flags — which xcop would canonicalize away.
-
-**Table-driven tests** — where several `it` blocks share a body and differ only in data, express them as a data array plus one `it` generator, not as repeated blocks. `test/fixer.test.js` does this with its `APPLIED`/`UNCHANGED`/`DROPPED` tables (each row is `{name, flag, before/after…}`), every pack harness does it with `PACKS.forEach`, and `test/config.test.js`, `test/directives.test.js`, `test/logger.test.js`, `test/xsl-validator.test.js`, and `test/tokens.test.js` group their cases the same way. When adding a test, first check whether it fits an existing table — another `--fix` fixture, another config field, another directive — and if so add a row rather than a new block; only a genuinely distinct test (a one-off assertion, a different shape) stands alone.
-
-**Test the hard cases, not just the textbook one** — a check's pack must exercise more than one clean, top-level occurrence. Include the construct **buried inside a larger expression** (a predicate, an `and`/`or` operand, a nested call — e.g. `foo[not(not(@x))]`, not only `not(not(@x))`), **three or more occurrences in one expression** so a single-match or first-match bug is caught (`not(not(a)) or not(not(b)) or not(not(c))`), and the **negative neighbours** that look similar but must not fire (`a = boolean(b)` for a whole-`@test` `boolean()` check). Pack `positions` pin every occurrence, so an off-by-one or a swallowed match fails loudly. Beyond positions, a code-based linter's pack carries a `found.fixes` array aligned with `positions` — the expected `fix.replacement` for each occurrence (`null` for a report-only defect) — which each pack harness asserts alongside the positions, so a fix producing the wrong *text* (not just the wrong span) fails too; whether that fix then applies to the raw source is covered by `test/fixer.test.js`, which decode-walks the source so a `>` written `&gt;` still fixes (#518) and a comparison shifted by an entity *earlier* in the same value fixes too (#525). A fix fixture, likewise, should carry a non-trivial argument (a predicate, a function call) so `--fix` is shown to rewrite the interesting shape, not just `@x` — while avoiding constructs another check would co-fix in the same run, which would make the `.fixed` file drift.
-
-**Stylesheet fixtures in tests** — every test stylesheet lives in a committed `.xsl` file under `test/resources/`, never inline in the test source; YAML is only for the multi-field packs (`pack`/`found`/`input`). Well-formed fixtures are linted by path and validated by the xcop workflow. Malformed fixtures live in `test/resources/malformed/` and are `.xsl` too, but the xcop workflow excludes that directory (it runs a pinned `xcop` with `--exclude`) because malformed XML cannot pass a formatting check. The `fixtures` CI job fails the build when any `.test.js` file contains an inline `<?xml` or `<xsl:`. The `should test default directory` test asserts only that the default scan announces `.` and processes a positive number of files, not an exact total, so adding a committed `.xsl` no longer breaks it.
-
-## Adding a New Rule
-
-Rule names are kebab-case with no `template-match-` (or other noise) prefix. Every rule needs a motive and at least one test. `test/conformance.test.js` enforces naming and motives across all four kinds, and pack/test coverage for each: an `xpath`/`corpus` check needs a pack in its own `*-packs` dir; a `format` check needs a pack whose `pack:` field matches its name *somewhere* under `test/resources` (its packs are scattered across the per-linter dirs); and a `validation` check needs its name to appear in some `*.test.js` (it is tested by a bespoke harness, not a name-matching pack). So a rule that misnames itself, drops its motive, or ships with no test fails the build.
-
-Per-file rule:
-1. Create `src/resources/checks/xpath/<rule-name>.yaml` with `xpath`, `severity`, `message`.
-2. Create `test/resources/xpath-packs/<rule-name>.yaml` with matching `pack`, `found`, `input`.
-
-Cross-file rule:
-1. Create `src/resources/checks/corpus/<rule-name>.yaml` with `declaration`, `usage`, `severity`, `message`.
-2. Create `test/resources/corpus-packs/<rule-name>.yaml` with matching `pack`, `found`, `inputs`.
-
-Validators and formatting checks are not extended this way: their logic is fixed in `src/xsl-validator.js`, `src/xpath-validator.js`, `src/xpath-format-linter.js`, `src/xpath-axis-linter.js`, `src/using-namespace-axis-linter.js`, `src/namespace-linter.js`, `src/result-namespace-linter.js`, `src/node-set-linter.js`, `src/count-linter.js`, `src/string-length-linter.js`, `src/name-linter.js`, and `src/translate-linter.js`, and their YAML (`checks/validation/<name>.yaml` and `checks/format/<name>.yaml`) only tunes `severity` and `message`.
-
-Then: add a rationale (required) at `src/resources/motives/{xpath,corpus,validation,format}/<rule-name>.md`, run `npm test`, and regenerate the doc site with `npx grunt docs`. A brand-new pack directory of well-formed fixtures is picked up automatically by `test/xcop.test.js` (it discovers every `*-packs` directory), so its inline XSL is formatting-checked without any registration.
-
-**When you add or modify a check, decide whether it is XSLT-version-dependent, and if so make the version test part of the check.** A check is version-dependent when its detection or its fix is valid only for certain versions — a 2.0+ construct (`exists()`/`empty()`, `lower-case()`, `xsl:function`, sequence types, the `node()` model that makes `exsl:node-set()` redundant), or the `namespace::` axis deprecated in 2.0/3.0. Gate the version-specific part on the root's version — read `documentElement.getAttribute('version')` against `MODERN = ['2.0', '3.0']` as `count`/`node-set`/`translate`/`name` do, which also handles the `xsl:transform` root and unversioned sheets; a declarative rule keys on `/*/@version` (any root), not `/xsl:stylesheet[@version="1.0"]`. Never emit a fix a stylesheet's version cannot run: on the versions where the direct form does not exist, either withhold the fix or emit the version-appropriate one (e.g. `count(x) > 0` → `exists(x)` on 2.0+, `boolean(x)`/`x` on 1.0). A version-sensitive check with no version guard is a bug.
-
-**A declarative rule that anchors on the stylesheet root must match both root spellings — `xsl:stylesheet` *and* its synonym `xsl:transform`.** Write `(/xsl:stylesheet | /xsl:transform)[…]`, not `/xsl:stylesheet[…]`, so a `xsl:transform`-rooted stylesheet is not silently skipped (#498); when the descendant node test also names a root — e.g. a nested-stylesheet check — broaden that too (`//(xsl:stylesheet | xsl:transform)`). This is machine-enforced: `test/conformance.test.js`'s "pairs every root xsl:stylesheet with an xsl:transform" fails a check whose `xpath`/`declaration`/`usage` anchors on a root `/xsl:stylesheet` without the paired `/xsl:transform`. A code-based linter reads the root via `documentElement`, which is already root-name-agnostic, so this applies only to the declarative rules.
-
-**If the check is fixable, implement and test the fix in the same change — never land the detection and defer the fix.** Attach a `fix` (a `node => fix` builder in `src/fixers.js` for a declarative xpath rule, or on the defect for a code-based linter), mark it `suggestion: true` unless the edit is deterministic and semantics-preserving, and cover it with a committed `test/resources/fix/<name>.{xsl,fixed.xsl}` pair — generate the `.fixed` by actually running `--fix`/`--fix-suggestions` — plus rows in `test/fixer.test.js`'s `APPLIED`/`UNCHANGED`/`DROPPED` tables: the fix rewrites in place, a suggestion is left untouched by plain `--fix`, `--fix-dry-run` leaves the file, and the fixed defect drops from the report. A check whose only correct fix is structural (a reorder, an element move, an unwrap) stays report-only until the full-fidelity parser (#228) lands — say so in its motive.
-
-Suppression by users: `xslint --suppress=<rule-substring>` (matches names from all validators and linters).
-
-Configuration by users: a `.xslint.yml` file (discovered by walking up from the working directory, or passed with `--config <path>`) can disable rules (`rules: {<name-or-glob>: off}`), re-grade severity (`warning`/`error`), skip files (`exclude:` globs, resolved relative to the config file's own directory), and set defaults for `max-warnings`, `log-level`, and `quiet`. Unknown top-level keys and rule patterns that match no check are reported. Inline suppression by users: XML-comment directives — `<!-- xslint-disable-next-line [rules] -->` (line after the comment), `<!-- xslint-disable-line [rules] -->` (the comment's line), `<!-- xslint-disable-file [rules] -->` (the whole file); rule names are optional and space-separated, and none means all. `src/directives.js` scans the raw text for them and `src/xslint.js` drops matching defects after collecting them (so it covers every kind, warns on an unknown rule name, and reports a directive that suppressed nothing as unused).
-
-Command-line flags override the file; the file overrides the built-in defaults. Resolution lives in `src/config.js` (which also exposes the config's `base` directory); `src/xslint.js` expands each rule pattern against the check names, folds `off` rules into the suppression list, filters excluded files against `base`, applies severity overrides to the collected defects, and resolves the effective `max-warnings`/`log-level`/`quiet`.
-
-Fixing by users: `xslint --fix` rewrites the mechanically-fixable defects in place (`--fix-dry-run` reports the same result without writing any file). A defect is fixable when it carries a `fix: {line, col, value, replacement, suggestion?}` — `xpath-format-linter` attaches one to each `redundant-whitespace` defect, `xpath-axis-linter` to each `unabbreviated-axis` defect, `namespace-linter` to each `redundant-namespace-declarations` defect (its `value` is the reconstructed ` xmlns:prefix="uri"` text, so the verify step skips a single-quoted or oddly spaced declaration rather than deleting the wrong span), `node-set-linter` to each `use-node-set-extension` defect (a single span from `prefix:node-set(` through its matching `)`, replaced by the inner argument), `count-linter` to each `count-compared-to-zero` defect (the `count(…) op 0` span, replaced version-appropriately: `exists(…)`/`empty(…)` on 2.0/3.0, else a bare node-set in a whole `@test`, `boolean(…)` elsewhere, or `not(…)`), `string-length-linter` to each `string-length-compared-to-zero` defect whose argument is a simple operand (the comparison span, replaced by `X != ''`/`X = ''`, a suggestion since it changes behavior for an absent or multi-node argument), `name-linter` to each `name-compared-to-string` defect over the current node with a valid name (the comparison span, replaced by the node test, marked a suggestion since it shifts lexical to expanded-name matching), `translate-linter` to each `translate-for-case` defect (the `translate(…)` span, replaced by `lower-case(…)`/`upper-case(…)`, a suggestion since it folds more than ASCII), `result-namespace-linter` to each `leaking-result-namespace` defect when a single prefix leaks (an `exclude-result-prefixes="…"` attribute inserted after the element name, or the prefix appended to an existing one, a suggestion since it changes the serialized output), `import-linter` to each `redundant-import` defect (the duplicate import's whole line, reconstructed from the element as indentation, self-closing tag, and newline, and deleted — safe, since the module stays imported once), `redundant-double-negation-linter` to each `redundant-double-negation` defect (the `not(not(x))` span, replaced by `x` for a whole `@test` and `boolean(x)` elsewhere — safe either way, since both equal the double negation), `redundant-boolean-call-linter` to each `redundant-boolean-call` defect (the whole-`@test` `boolean(x)` span, replaced by the trimmed `x` — safe, since a test already coerces), and `predicate-position-linter` to each `predicate-position-literal` defect (the predicate's inner span, replaced by the short `N`/`last()` — safe, since `[N]` is by definition `[position() = N]`). A *declarative* xpath rule can carry a fix too, without becoming a code-based linter: `src/fixers.js` maps a check name to a `node => fix` builder, and `xpath-linter` attaches the fix that builder returns to each defect it finds for that check (a builder returns null when it cannot resolve the defect with one edit, and the linter then leaves the defect fix-less). The registry drives eight suggestions — `using-disable-output-escaping` and `mode-or-priority-without-match` (delete an attribute), `output-method-xml` (`method="xml"`→`"html"`), `missing-version-in-stylesheet` (insert `version="1.0"` after the element name), `incorrect-use-of-boolean-constants` (the string test `'true'`/`'false'`→`true()`/`false()`), `select-starts-with-double-slash` (anchor the leading `//` of a `@select` as `.//`), `confusing-variable-and-node` (prepend `$` to a bare variable name in an `xsl:apply-templates` `@select`), and `text-outside-xsl-text` (wrap the loose text in `xsl:text`, only when the instruction holds a single non-whitespace text node) — and one safe fix, `starts-with-double-slash` (drop the redundant leading `//` of a template's `@match`, which selects the same nodes). Attribute-deleting fixes (the namespace declaration, the `disable-output-escaping` and orphan `mode`/`priority` attributes) share `deletion(attribute)` in `src/fixes.js`. `src/fixer.js` locates each fix by *decode-walking* the raw source: the `value` is sliced from the decoded attribute text, but the source is XML, where `&`/`<`/`>` may be written literally or as an entity (a raw `>` is legal in an attribute, but so is `&gt;`). From the node's raw start (`col - offset`) it skips the fix's decoded `offset` characters — reading each entity as one character, so a position an entity *earlier* in the value shifts is still found (#525) — then matches `value` decoding as it goes, so a `count(x) > 0` fixes whether the source wrote `>` or `&gt;` (#518). A span that no longer decodes to `value` (an already-edited file) is skipped, never corrupting the source. It applies a file's fixes from the end backwards so earlier offsets stay valid, and returns the rewritten content per changed file plus the defects it applied. `src/xslint.js` writes the changed files (unless `--fix-dry-run`) and drops the applied defects from the report, so the exit code reflects only what remains.
-
-Fixes come in two tiers, set by the `suggestion` flag on the `fix`. A plain fix is *safe* — deterministic and semantics-preserving — and `--fix` applies it. A fix with `suggestion: true` is *opinionated* — it changes behavior, removes code, or is one of several valid corrections — so `--fix` leaves it and only `--fix-suggestions` applies it (`fixer.js` takes a `suggestions` flag and gates on it). Most fixes in `src/fixers.js` are suggestions — deleting `disable-output-escaping` changes escaping, switching the output method changes serialization, the declared version is a guess, dropping `mode`/`priority` is one of two corrections, the boolean-constant and node-test rewrites shift semantics, the `.//` anchor changes scope, the `$` and `xsl:text` insertions change meaning — but `starts-with-double-slash` is a safe fix, since dropping a match pattern's redundant leading `//` selects the same nodes. When neither flag is passed, `xslint.js` counts the fixable defects and logs how many `--fix` would fix and how many more `--fix-suggestions` would. The fix engine is check-agnostic — the `fix` shape is the whole contract — so a new fixer attaches a `fix` (marking it a suggestion when it should be opt-in) and needs no engine change; the structural fixes (removing an unused variable, merging nested `xsl:if`) wait on the full-fidelity parser (#228) for exact per-node source spans.
-
-## Keeping Docs in Sync
-
-Any change to behavior — new logic, a new check or validator, a rename, a moved file, a changed flag or output — must update the documentation in the same change. Before finishing, check all four and fix whichever went stale:
-
-- **The changed check's motive** (`src/resources/motives/{xpath,corpus,validation,format}/<name>.md`) — the user's answer to "why does this check exist, what does it flag, and what does the fix do." **Whenever you touch a check's behavior — what it flags, its severity, its fix or fix tier, its version scope, the constructs it leaves alone — re-read its motive and update it if the change made it inaccurate or incomplete.** The motive is where the end user learns the check's purpose, so a motive still describing the old behavior misleads the very person the check is for. This is mandatory, not optional: a check-behavior change with an untouched motive is presumed a bug until you have confirmed the motive is still exactly right.
-- **`README.md`** — user-facing: installation, usage, the validators/linters overview, the `--fix`/suggestion lists, the contribution notes.
-- **`CLAUDE.md`** (this file) — architecture: the flow diagram, the `(corpus, suppressions) => defects` shapes, the check/validator formats, the test-pack layout, and the Key Files table.
-- **The docs site** — generated from `src/resources/checks/*` and `src/resources/motives/*`; regenerate with `npx grunt docs`. A new kind also needs wiring in `scripts/generate-docs.js`.
-
-A change that leaves any of these describing the old behavior is not done.
-
-## Key Files
+## Key files
 
 | File | Role |
-|------|------|
-| `src/xslint.js` | Orchestrates file discovery, configuration, and suppression, runs validators then linters, formats output; exports the pure `lint(sources, options)` core (package `main`) plus `fixed` for embedders |
-| `src/config.js` | Resolves `.xslint.yml` (rule severities/`off`, exclude globs, `max-warnings`), found by walking up from the cwd or via `--config` |
-| `src/directives.js` | Parses inline `xslint-disable-*` comment directives and tests whether one suppresses a defect |
-| `src/reporters.js` | Formats the collected defects for output — `text` (default), `json`, `sarif`, or `github` (GitHub Actions workflow-command annotations) — behind a uniform `reporterOf(format)` that `src/xslint.js` calls without knowing the format |
-| `src/xsl-validator.js` | Builds the corpus from raw sources; reports each stylesheet that is not well-formed XML and leaves it out |
-| `src/xpath-validator.js` | Splits each corpus expression into the valid ones (kept for the expression linters) and the malformed ones (reported) |
-| `src/xpath-linter.js` | Loads `checks/xpath/*.yaml`, applies per-file XPath rules, and attaches any `src/fixers.js` fix to the defect |
-| `src/fixers.js` | Maps a declarative check name to a `node => fix` builder, so an xpath rule can carry a fix — the suggestions for `using-disable-output-escaping`, `output-method-xml`, `missing-version-in-stylesheet`, `mode-or-priority-without-match` |
-| `src/fixes.js` | Shared fix builders — `deletion(attribute)` reconstructs an attribute's ` name="value"` span for removal |
-| `src/checks.js` | Shared building blocks for the code-based format linters — `metaOf(check)` loads the check YAML, `suppressed(check, suppressions)` guards suppression, and `defect(check, meta, file, node, offset, fix)` assembles the standard defect and anchors its fix |
-| `src/corpus-linter.js` | Loads `checks/corpus/*.yaml`, applies cross-file rules over the corpus |
-| `src/xpath-axis-linter.js` | Tokenizes every XPath/pattern attribute in the corpus and flags each verbose axis (`unabbreviated-axis`) with a fix |
-| `src/using-namespace-axis-linter.js` | Tokenizes every XPath/pattern attribute for the deprecated `namespace::` axis on XSLT 2.0/3.0 (`using-namespace-axis`); report-only, since the rewrite to `in-scope-prefixes()` is structural |
-| `src/namespace-linter.js` | Walks the DOM for namespace prefixes declared but never used (`redundant-namespace-declarations`) and flags each with a delete fix |
-| `src/result-namespace-linter.js` | Walks the DOM for namespace prefixes declared but used only in stylesheet logic, which a literal result element leaks into output (`leaking-result-namespace`); attaches a suggestion fix that adds the prefix to `exclude-result-prefixes` |
-| `src/import-graph.js` | Resolves `xsl:import`/`xsl:include` hrefs against each file's directory: `importsOf` lists every import (target need not be in the corpus), `graphOf` keeps the in-corpus ones as dependency edges |
-| `src/import-linter.js` | Walks the import graph for `xsl:import`/`xsl:include` cycles (`circular-import`, an error) and the same module imported twice in one stylesheet (`redundant-import`, a warning with a safe delete `--fix`) |
-| `src/node-set-linter.js` | Finds the redundant `node-set()` extension in a `@select` on XSLT 2.0/3.0 (`use-node-set-extension`) and flags each with an unwrap fix |
-| `src/count-linter.js` | Finds `count(...)` compared with 0 to test existence (`count-compared-to-zero`) and flags each with a fix that rewrites it to `exists()`/`empty()` |
-| `src/redundant-double-negation-linter.js` | Finds `not(not(x))` (`redundant-double-negation`) and flags each with a safe fix that rewrites it to `x` in a whole `@test`, else `boolean(x)` |
-| `src/redundant-boolean-call-linter.js` | Finds a whole `@test` wrapped in `boolean()` (`redundant-boolean-call`) and flags each with a safe fix that strips the wrapper |
-| `src/predicate-position-linter.js` | Finds a positional predicate written the long way, `[position() = N]`/`[position() = last()]` (`predicate-position-literal`), and flags each with a safe fix to `[N]`/`[last()]` |
-| `src/string-length-linter.js` | Finds `string-length(...)` compared with 0 to test emptiness (`string-length-compared-to-zero`) and flags each with a fix (`X != ''`/`X = ''`) when the argument is a simple operand |
-| `src/name-linter.js` | Finds `name()`/`local-name()` compared with a string (`name-compared-to-string`) and flags each with a suggestion fix that turns it into a node test (`self::x` / `self::*:x`) |
-| `src/translate-linter.js` | Finds an alphabet `translate()` case fold in 2.0/3.0 (`translate-for-case`) and flags each with a suggestion fix to `lower-case()`/`upper-case()` |
-| `src/expressions.js` | Lexer helpers shared by the node-set, double-negation, and boolean-call linters and by `src/comparisons.js`: `masked` blanks string/comment spans, `closes` balances parentheses |
-| `src/comparisons.js` | `comparedToZero(expression, name, decide)` — the shared scan for a function call compared with `0`/`1` in either operand order, used by the count and string-length linters via a per-check classifier |
-| `src/attributes.js` | The single source for `ATTRIBUTES`/`SELECTOR` — every attribute that can hold an XPath expression or a pattern; the axis, predicate-position, count, string-length, name, translate, and double-negation linters scan it |
-| `src/xpath-format-linter.js` | Tokenizes the validator's valid expressions and flags formatting noise (`redundant-whitespace`) with a fix |
-| `src/tokens.js` | XPath lexer: positioned token stream (`TOKENS`: string, comment, whitespace, other) preserving whitespace |
-| `src/fixer.js` | Applies the `fix` a defect carries to its source text (verify-before-apply, end-to-start) for `--fix`/`--fix-suggestions`/`--fix-dry-run` |
-| `src/xpath.js` | Shared fontoxpath environment: prefixes, node/string evaluators, expression validator (`isValid`) |
-| `src/helpers.js` | XML parsing (`@xmldom/xmldom`) — expands declared internal-subset entities into parsed values and tolerates external ones — YAML parsing, file recursion |
-| `src/logger.js` | 4-level logger (debug/info/warning/error) |
-| `scripts/generate-docs.js` | Builds the `docs/` site from checks + motives (`npx grunt docs`) |
-| `test/helpers.js` | `runXslint` / `runXcop` test utilities |
-| `test/xcop.test.js` | Runs xcop over the inline XSL of every pack directory, auto-discovering every `test/resources/*-packs` dir (no registration) |
+| --- | --- |
+| `src/xslint.js` | Orchestrates discovery, config, staging, output; exports the pure `lint` (package `main`) and `fixed` |
+| `src/config.js` | Resolves `.xslint.yml` (severities/`off`, excludes, `max-warnings`) |
+| `src/directives.js` | Parses inline `xslint-disable-*` comment directives |
+| `src/reporters.js` | `reporterOf(format)` — `text`, `json`, `sarif`, or `github` output |
+| `src/xsl-validator.js` | Builds the corpus; reports each non-well-formed stylesheet |
+| `src/xpath-validator.js` | Splits corpus expressions into valid (kept) and malformed (reported) via `isValid` |
+| `src/xpath-linter.js` | Loads `checks/xpath/*.yaml`; attaches any `src/fixers.js` fix |
+| `src/corpus-linter.js` | Loads `checks/corpus/*.yaml`; cross-file rules |
+| `src/*-linter.js` | Code-based `checks/format/*.yaml`, one construct each (axis, namespace, count, name, ...); see the flow diagram |
+| `src/checks.js` | Shared for code-based linters: `metaOf`, `suppressed`, `defect(check, meta, file, node, offset, fix)` |
+| `src/attributes.js` | `ATTRIBUTES`/`SELECTOR` — every XPath/pattern attribute the scanners cover |
+| `src/comparisons.js` | `comparedToZero` — shared scan for a call compared with `0`/`1` (count, string-length) |
+| `src/expressions.js` | `masked`/`closes` lexer helpers (node-set, double-negation, boolean-call) |
+| `src/tokens.js` | Positioned XPath lexer (`tokenized`, `TOKENS`), preserving whitespace |
+| `src/import-graph.js` | Resolves `xsl:import`/`xsl:include` hrefs: `importsOf`, `graphOf` |
+| `src/fixers.js` | Maps a declarative check name to a `node => fix` builder |
+| `src/fixes.js` | Shared fix builders (`deletion(attribute)`) |
+| `src/fixer.js` | Applies a defect's `fix` to source (decode-walk, verify-before-apply, end-to-start) |
+| `src/xpath.js` | fontoxpath environment: prefixes, evaluators, `isValid` |
+| `src/helpers.js` | XML parsing (expands internal-subset entities), YAML parsing, file recursion |
+| `src/logger.js` | 4-level logger |
+| `scripts/generate-docs.js` | Builds the `docs/` site from checks + motives |
+| `test/conformance.test.js` | Enforces naming, motives, and pack/test coverage across all kinds |
+| `test/xcop.test.js` | Runs xcop over the inline XSL of every `*-packs` directory |
