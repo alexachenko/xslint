@@ -10,33 +10,19 @@ const fs = require('fs')
 const {runXcop, cmdAvailable} = require('./helpers')
 
 /**
- * Yaml packs holding inline XSL, from every linter.
+ * Directory holding every test pack.
+ * @type {string}
+ */
+const RESOURCES = path.resolve(__dirname, 'resources')
+
+/**
+ * Yaml packs holding inline XSL, auto-discovered from every `*-packs` directory
+ * so a new pack directory is formatting-checked without being registered here.
  * @type {Array<string>}
  */
-const PACKS = [
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'xpath-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'corpus-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'xpath-validator-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'xpath-format-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'axis-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'namespace-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'result-namespace-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'import-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'node-set-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'count-packs')),
-  ...allFilesFrom(
-    path.resolve(__dirname, 'resources', 'redundant-double-negation-packs'),
-  ),
-  ...allFilesFrom(
-    path.resolve(__dirname, 'resources', 'redundant-boolean-call-packs'),
-  ),
-  ...allFilesFrom(
-    path.resolve(__dirname, 'resources', 'predicate-position-packs'),
-  ),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'string-length-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'name-packs')),
-  ...allFilesFrom(path.resolve(__dirname, 'resources', 'translate-packs')),
-]
+const PACKS = fs.readdirSync(RESOURCES)
+  .filter((entry) => entry.endsWith('-packs'))
+  .flatMap((dir) => allFilesFrom(path.resolve(RESOURCES, dir)))
 
 /**
  * Whether xcop is installed.
