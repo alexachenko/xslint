@@ -333,6 +333,11 @@ Checks whose correction needs real judgment (a fresh name, a more specific
 path) stay report-only. A run without `--fix` reports how many defects each
 option would fix.
 
+Where two corrections cover the same piece of an expression — the redundant
+whitespace in `d[position()  =  1]` sits inside the predicate that becomes
+`d[1]` — only the wider one is applied, and the other is announced as skipped.
+Run `--fix` again to take care of whatever the first run left.
+
 Pass `--fix-dry-run` to see what would remain after fixing, without writing any
 file:
 

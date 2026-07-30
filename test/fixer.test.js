@@ -5,6 +5,7 @@
 
 const {runXslint, xslintStreams} = require('./helpers')
 const {fixed} = require('../src/fixer')
+const {xml} = require('../src/helpers')
 const assert = require('assert')
 const fs = require('fs')
 const os = require('os')
@@ -36,6 +37,45 @@ const scratch = function(content) {
   fs.writeFileSync(file, content)
   return file
 }
+
+/**
+ * Every rewritten stylesheet the fixer is expected to produce. A fix spliced
+ * with a stale offset eats whatever sits at the tail of its span — an
+ * attribute's closing quote, most often — so each of these is parsed back to
+ * prove the fixer left valid XML behind.
+ * @type {Array.<string>}
+ */
+const REWRITTEN = fs
+  .readdirSync(path.resolve(__dirname, 'resources', 'fix'))
+  .filter((name) => name.endsWith('.fixed.xsl'))
+
+/**
+ * Cases where two fixes contend for one span, with the text the winner leaves
+ * behind. The loser is listed first, so a run that merely keeps the order it
+ * was given fails.
+ * @type {Array.<{name: string, content: string, fixes: Array.<object>,
+ *  after: string}>}
+ */
+const CONTENDING = [
+  {
+    name: 'cannot apply a fix that overlaps an accepted one',
+    content: 'XYZ',
+    fixes: [
+      {name: 'inner', fix: {line: 1, col: 2, value: 'YZ', replacement: 'W'}},
+      {name: 'outer', fix: {line: 1, col: 1, value: 'XYZ', replacement: 'Q'}},
+    ],
+    after: 'Q',
+  },
+  {
+    name: 'should prefer the wider of two fixes that start together',
+    content: 'XYZ',
+    fixes: [
+      {name: 'narrow', fix: {line: 1, col: 1, value: 'X', replacement: 'Q'}},
+      {name: 'wider', fix: {line: 1, col: 1, value: 'XYZ', replacement: 'W'}},
+    ],
+    after: 'W',
+  },
+]
 
 /**
  * Cases where a flag rewrites the `before` fixture into the `after` one.
@@ -142,6 +182,19 @@ const APPLIED = [
     flag: '--fix',
     before: 'count-in-attribute-value-templates.xsl',
     after: 'count-in-attribute-value-templates.fixed.xsl',
+  },
+  {
+    name: 'should keep the widest of the fixes that overlap with --fix',
+    flag: '--fix',
+    before: 'overlapping-fixes.xsl',
+    after: 'overlapping-fixes.fixed.xsl',
+  },
+  {
+    name: 'should unwrap only the outer of two nested double negations with ' +
+      '--fix',
+    flag: '--fix',
+    before: 'nested-double-negation.xsl',
+    after: 'nested-double-negation.fixed.xsl',
   },
   {
     name: 'should rewrite a string-length comparison to != / = with ' +
@@ -524,5 +577,42 @@ describe('fixer', function() {
         [{file: 'a.xsl', fix: {line: 1, col: 1, value: 'XY', replacement: 'Z'}}],
       ).contents.has('a.xsl'),
     )
+  })
+  CONTENDING.forEach(({name, content, fixes, after}) => {
+    it(name, function() {
+      assert.equal(
+        fixed(
+          [{file: 'a.xsl', content: content}],
+          fixes.map((defect) => ({file: 'a.xsl', ...defect})),
+        ).contents.get('a.xsl'),
+        after,
+      )
+    })
+  })
+  it('cannot count a skipped overlapping fix as applied', function() {
+    assert.deepEqual(
+      fixed(
+        [{file: 'a.xsl', content: 'XYZ'}],
+        CONTENDING[0].fixes.map((defect) => ({file: 'a.xsl', ...defect})),
+      ).applied.map((defect) => defect.name),
+      ['outer'],
+    )
+  })
+  it('should announce a fix skipped for overlapping another', function() {
+    const file = scratch(fixture('overlapping-fixes.xsl'))
+    assert.ok(
+      xslintStreams(['--fix', file]).stderr.includes('overlaps another fix'),
+    )
+  })
+  it('cannot drop a skipped overlapping defect from the report', function() {
+    const file = scratch(fixture('overlapping-fixes.xsl'))
+    assert.ok(
+      xslintStreams(['--fix', file]).stdout.includes('redundant-whitespace'),
+    )
+  })
+  REWRITTEN.forEach((name) => {
+    it(`cannot leave ${name} malformed`, function() {
+      assert.doesNotThrow(() => xml.parsedFromString(fixture(name)))
+    })
   })
 })
