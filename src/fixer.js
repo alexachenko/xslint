@@ -32,7 +32,7 @@ const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
  * named XML entity (`&lt;`, `&gt;`, `&amp;`, …) as the single character it
  * stands for. Anything else an `&` opens (a numeric or unknown entity) yields
  * `undefined`, so a match over it fails and the fix is safely skipped rather
- * than mis-decoded.
+ * than decoded wrongly.
  * @param {string} content - Raw source text
  * @param {number} at - Zero-based offset to read from
  * @return {[(string|undefined), number]} - The decoded character (or undefined)
