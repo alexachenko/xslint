@@ -168,6 +168,11 @@ Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
   root/version guard belongs at the root step (`/*[guard]//x`), not nested in a
   per-node predicate; nest it only when it gates a sub-clause. This is
   machine-enforced by `test/conformance.test.js`.
+- **Selector hygiene.** A declarative selector must not test existence by
+  counting — write `x` and `not(x)`, never `count(x) > 0` or `count(x) = 0`,
+  the same anti-pattern `count-compared-to-zero` flags in a user's sheet.
+  A comparison that asks a real cardinality (`count(x) >= 2`) is fine. This is
+  machine-enforced by `test/conformance.test.js`.
 - **Fix in the same change.** If a check is fixable, land the fix with the
   detection — never defer it. A declarative rule gets a `node => fix` builder in
   `src/fixers.js`; a code-based linter attaches the `fix` to its defect. Mark it
@@ -305,5 +310,5 @@ the harness asserts too.
 | `src/helpers.js` | XML parsing (expands internal-subset entities), YAML parsing, file recursion |
 | `src/logger.js` | 4-level logger |
 | `scripts/generate-docs.js` | Builds the `docs/` site from checks + motives |
-| `test/conformance.test.js` | Enforces naming, motives, pack/test coverage, and the `mature` freeze across all kinds |
+| `test/conformance.test.js` | Enforces naming, motives, selector hygiene, pack/test coverage, and the `mature` freeze across all kinds |
 | `test/xcop.test.js` | Runs xcop over the inline XSL of every `*-packs` directory |

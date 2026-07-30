@@ -248,7 +248,7 @@ place:
 xslint --fix path/to/dir
 ```
 
-Today this covers nine checks:
+Today this covers ten checks:
 
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
@@ -328,6 +328,10 @@ Today this covers:
 - `leaking-result-namespace` — the leaking prefix is added to
   `exclude-result-prefixes`, which drops its declaration from the serialized
   output (offered only when a single prefix leaks).
+- `variable-or-param-with-select-and-content` — the `@select` is deleted,
+  leaving the body as the value, which binds a document node where the
+  expression bound its own type; dropping the body instead is the other
+  correction, and no single edit expresses it.
 
 Checks whose correction needs real judgment (a fresh name, a more specific
 path) stay report-only. A run without `--fix` reports how many defects each
