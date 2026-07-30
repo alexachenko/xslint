@@ -265,6 +265,13 @@ const APPLIED = [
     before: 'mode-or-priority-without-match.xsl',
     after: 'mode-or-priority-without-match.fixed.xsl',
   },
+  {
+    name: 'should delete the select of a variable, param and with-param that ' +
+      'also have a body with --fix-suggestions',
+    flag: '--fix-suggestions',
+    before: 'variable-or-param-with-select-and-content.xsl',
+    after: 'variable-or-param-with-select-and-content.fixed.xsl',
+  },
 ]
 
 /**
@@ -367,6 +374,11 @@ const UNCHANGED = [
     name: 'cannot apply a suggestion with plain --fix',
     flag: '--fix',
     sheet: 'using-disable-output-escaping.xsl',
+  },
+  {
+    name: 'cannot delete a select beside a body with plain --fix',
+    flag: '--fix',
+    sheet: 'variable-or-param-with-select-and-content.xsl',
   },
 ]
 
