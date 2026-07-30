@@ -4,6 +4,7 @@
  */
 
 const {allFilesFrom, yaml} = require('../src/helpers')
+const {FIXERS} = require('../src/fixers')
 const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
@@ -78,6 +79,40 @@ describe('conformance', function() {
           fs.existsSync(path.join(MOTIVES, kind, `${name}.md`)),
           `${kind}/${name} has no motive`,
         )
+      }
+    }
+  })
+  it('freezes every mature check behind a complete motive and working fix', function() {
+    const fixerSuite = fs.readFileSync(
+      path.join(__dirname, 'fixer.test.js'), 'utf-8',
+    )
+    for (const kind of KINDS) {
+      for (const name of names(kind)) {
+        const check = yaml.parsedFromFile(
+          path.join(CHECKS, kind, `${name}.yaml`),
+        )
+        if (check.mature !== true) {
+          continue
+        }
+        const motive = fs.readFileSync(
+          path.join(MOTIVES, kind, `${name}.md`), 'utf-8',
+        )
+        assert.ok(
+          /^Incorrect/im.test(motive) && /^Correct/im.test(motive),
+          `mature ${kind}/${name} has no Incorrect/Correct example in its motive`,
+        )
+        const before = path.join(RESOURCES, 'fix', `${name}.xsl`)
+        if (Object.hasOwn(FIXERS, name) || fs.existsSync(before)) {
+          assert.ok(
+            fs.existsSync(before) &&
+              fs.existsSync(path.join(RESOURCES, 'fix', `${name}.fixed.xsl`)),
+            `mature ${kind}/${name} is fixable but has no fix fixture pair`,
+          )
+          assert.ok(
+            fixerSuite.includes(name),
+            `mature ${kind}/${name} is fixable but fixer.test.js never runs it`,
+          )
+        }
       }
     }
   })
