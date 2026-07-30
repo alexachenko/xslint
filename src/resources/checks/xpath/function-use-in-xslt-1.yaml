@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-xpath: /xsl:stylesheet[@version="1.0"]//xsl:function
+xpath: "//xsl:function[not(/*/@version = '2.0' or /*/@version = '3.0')]"
 severity: error
-message: "'xsl:function' is declared in XSLT version 1.0. Use a named template or upgrade the stylesheet version to 2.0 instead."
+message: "'xsl:function' requires XSLT 2.0 or later, but this stylesheet is not version 2.0 or 3.0. Use a named template, or set the version to 2.0."
