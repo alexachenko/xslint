@@ -33,8 +33,11 @@ const RESOURCES = path.resolve(__dirname, 'resources')
 const KINDS = ['xpath', 'corpus', 'validation', 'format']
 
 /**
- * Kinds authored as rules, paired with the directory holding their packs. The
- * validation and format checks are code-driven and tested elsewhere.
+ * Rule kinds paired with the one directory holding their packs. The code-driven
+ * kinds are enforced separately: a format check's packs are scattered across
+ * the per-linter directories (so it is matched by `pack:` name across them),
+ * and a validation check is tested by a bespoke harness (so it is matched by
+ * its name appearing in a test file).
  * @type {{[kind: string]: string}}
  */
 const PACKED = {xpath: 'xpath-packs', corpus: 'corpus-packs'}
@@ -88,6 +91,25 @@ describe('conformance', function() {
       for (const name of names(kind)) {
         assert.ok(packed.has(name), `${kind}/${name} has no test pack`)
       }
+    }
+  })
+  it('gives every format check a test pack somewhere', function() {
+    const packed = new Set(
+      allFilesFrom(RESOURCES)
+        .filter((file) => file.endsWith('.yaml'))
+        .map((file) => yaml.parsedFromFile(file).pack),
+    )
+    for (const name of names('format')) {
+      assert.ok(packed.has(name), `format/${name} has no test pack`)
+    }
+  })
+  it('tests every validation check by name in a test file', function() {
+    const suite = allFilesFrom(path.resolve(__dirname))
+      .filter((file) => file.endsWith('.test.js'))
+      .map((file) => fs.readFileSync(file, 'utf-8'))
+      .join('\n')
+    for (const name of names('validation')) {
+      assert.ok(suite.includes(name), `validation/${name} is tested nowhere`)
     }
   })
   it('maps every motive and pack back to a real check', function() {

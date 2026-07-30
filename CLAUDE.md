@@ -155,7 +155,7 @@ The `--fix` behavior of every fixable check is covered end-to-end in `test/fixer
 
 ## Adding a New Rule
 
-Rule names are kebab-case with no `template-match-` (or other noise) prefix. Every rule needs a motive and at least one test pack. `test/conformance.test.js` enforces all three across `xpath` and `corpus` (naming and motives are enforced for `validation` and `format` too), so a rule that misnames itself, drops its motive, or ships without a pack fails the build.
+Rule names are kebab-case with no `template-match-` (or other noise) prefix. Every rule needs a motive and at least one test. `test/conformance.test.js` enforces naming and motives across all four kinds, and pack/test coverage for each: an `xpath`/`corpus` check needs a pack in its own `*-packs` dir; a `format` check needs a pack whose `pack:` field matches its name *somewhere* under `test/resources` (its packs are scattered across the per-linter dirs); and a `validation` check needs its name to appear in some `*.test.js` (it is tested by a bespoke harness, not a name-matching pack). So a rule that misnames itself, drops its motive, or ships with no test fails the build.
 
 Per-file rule:
 1. Create `src/resources/checks/xpath/<rule-name>.yaml` with `xpath`, `severity`, `message`.
