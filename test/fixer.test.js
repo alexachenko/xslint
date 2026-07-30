@@ -170,6 +170,20 @@ const APPLIED = [
     after: 'count-shifted-comparison.fixed.xsl',
   },
   {
+    name: 'should rewrite a count comparison inside an attribute value ' +
+      'template, leaving the output text of the same line alone, with --fix',
+    flag: '--fix',
+    before: 'count-in-result-attribute.xsl',
+    after: 'count-in-result-attribute.fixed.xsl',
+  },
+  {
+    name: 'should rewrite both count comparisons of one attribute value, the ' +
+      'second shifted by the entity in the first, with --fix',
+    flag: '--fix',
+    before: 'count-in-attribute-value-templates.xsl',
+    after: 'count-in-attribute-value-templates.fixed.xsl',
+  },
+  {
     name: 'should keep the widest of the fixes that overlap with --fix',
     flag: '--fix',
     before: 'overlapping-fixes.xsl',
