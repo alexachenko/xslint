@@ -389,6 +389,13 @@ Linters:
   parse are checked, so a malformed one is reported once by the validator and
   never nagged about its spacing.
 
+Every check that reads an expression reads it from an XPath or pattern attribute
+of an XSLT element (`select`, `test`, `match`, …) or from an attribute value
+template — `<div class="{count(item) = 0}"/>` is checked, and fixed, inside the
+braces. An attribute of your own output vocabulary that happens to share a name
+with an XSLT one, as in `<widget test="count(item) = 0"/>`, holds text destined
+for the result tree, so it is never read as XPath and never rewritten.
+
 ## Programmatic use
 
 `xslint` is embeddable — editors, build tools, and the

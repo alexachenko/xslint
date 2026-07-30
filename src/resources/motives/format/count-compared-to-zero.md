@@ -40,3 +40,10 @@ The operand order does not matter: `0 &lt; count($items)` and
 `0 = count($items)` are flagged the same way. A comparison that is not an
 existence test — `count($x) &gt; 1`, `count($x) = 5` — is a genuine count and is
 left alone.
+
+The comparison is caught in the XPath and pattern attributes of XSLT elements and
+inside an attribute value template, where `&lt;div empty="{count($items) = 0}"/&gt;`
+holds a real expression; both a comparison and its rewrite print `true`/`false`
+there, so the fix stays safe. An attribute of your output vocabulary that happens
+to be called `test` or `select` carries text for the result tree, not XPath, and
+is never touched.
