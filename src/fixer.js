@@ -22,65 +22,87 @@ const offsetAt = function(text, line, col) {
 }
 
 /**
- * The entity forms each XML-significant character can take in the source.
- * @type {{[char: string]: string}}
+ * The named XML entities the source may spell a character with.
+ * @type {{[name: string]: string}}
  */
-const ENTITIES = {
-  '&': '(?:&amp;|&)',
-  '<': '(?:&lt;|<)',
-  '>': '(?:&gt;|>)',
-}
+const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
 
 /**
- * A sticky regex matching a fix's `value` against the raw source. The value is
- * sliced from the decoded attribute text, but the source is XML, where `&`,
- * `<`, and `>` may be written either literally (a raw `>` is legal in an
- * attribute) or as an entity (`&gt;`) — so each of those characters matches
- * both forms. Every other character is matched literally, with regex
- * metacharacters escaped.
- * @param {string} value - The decoded fix value
- * @return {RegExp} - A sticky regex anchored wherever its `lastIndex` is set
- */
-const matcher = function(value) {
-  return new RegExp(
-    value
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/[&<>]/g, (char) => ENTITIES[char]),
-    'y',
-  )
-}
-
-/**
- * The length of the raw source span at `start` that a fix's `value` matches, or
- * `-1` when the source there does not match (an already-edited file, or a
- * position an entity earlier in the same value has shifted). The match is
- * entity-flexible, so a decoded `count(x) > 0` fixes both the raw-`>` and the
- * `&gt;`-encoded source; a non-match is skipped rather than corrupting.
+ * The decoded character at a raw offset and the offset just past it, reading a
+ * named XML entity (`&lt;`, `&gt;`, `&amp;`, …) as the single character it
+ * stands for. Anything else an `&` opens (a numeric or unknown entity) yields
+ * `undefined`, so a match over it fails and the fix is safely skipped rather
+ * than mis-decoded.
  * @param {string} content - Raw source text
- * @param {number} start - Zero-based offset to match at
- * @param {string} value - The decoded fix value
- * @return {number} - The raw span length, or -1 when it does not match
+ * @param {number} at - Zero-based offset to read from
+ * @return {[(string|undefined), number]} - The decoded character (or undefined)
+ *  and the next raw offset
  */
-const spanAt = function(content, start, value) {
-  const regex = matcher(value)
-  regex.lastIndex = start
-  const found = regex.exec(content)
-  return found === null ? -1 : found[0].length
+const character = function(content, at) {
+  if (content[at] !== '&') {
+    return [content[at], at + 1]
+  }
+  const end = content.indexOf(';', at)
+  return [NAMED[content.slice(at + 1, end)], end + 1]
+}
+
+/**
+ * The raw offset reached by decoding `count` characters forward from `at`, so a
+ * decoded offset into an attribute value maps to its true raw position even
+ * when an entity ahead of it spans several source characters.
+ * @param {string} content - Raw source text
+ * @param {number} at - Zero-based offset to start from
+ * @param {number} count - Number of decoded characters to skip
+ * @return {number} - The raw offset after `count` decoded characters
+ */
+const skip = function(content, at, count) {
+  let raw = at
+  for (let seen = 0; seen < count; seen++) {
+    raw = character(content, raw)[1]
+  }
+  return raw
+}
+
+/**
+ * The raw offset just past the source that decodes to `value` starting at
+ * `from`, or `-1` when the source there does not decode to `value` (an
+ * already-edited file). Decoding as it walks matches a `>` written `&gt;` or
+ * literally alike.
+ * @param {string} content - Raw source text
+ * @param {number} from - Zero-based offset to match from
+ * @param {string} value - The decoded fix value
+ * @return {number} - The raw offset after the match, or -1
+ */
+const decodes = function(content, from, value) {
+  let raw = from
+  for (const char of value) {
+    if (raw >= content.length) {
+      return -1
+    }
+    const [decoded, next] = character(content, raw)
+    if (decoded !== char) {
+      return -1
+    }
+    raw = next
+  }
+  return raw
 }
 
 /**
  * Apply the fixes carried by defects to their sources, returning the rewritten
  * content of each changed file and the defects whose fix was applied. Each fix
- * names a source span and its replacement; a fix is applied only when that span
- * still matches the text the fix expects — entity-flexibly, so a `>` written
- * `&gt;` still matches — otherwise it is skipped rather than corrupting the
- * source (an already-edited file, or a position an earlier entity has shifted).
- * Fixes for one file are applied from the end backwards so earlier offsets stay
- * valid.
+ * names a source position, a decoded `value`, and its replacement. The fixer
+ * decode-walks the raw source from the node's raw start (`col - offset`) by the
+ * fix's decoded `offset`, so it lands on the match even when an entity ahead of
+ * it shifts the column, then matches `value` decoding as it goes — a `>`
+ * written `&gt;` matches alike. A fix whose source no longer decodes to `value`
+ * (an already-edited file) is skipped rather than corrupting. Fixes for one
+ * file are applied from the end backwards so earlier offsets stay valid.
  * @param {Array.<{file: string, content: string}>} sources - Original sources
- * @param {Array.<{file: string, fix: {line: number, col: number, value: string,
- *  replacement: string, suggestion: boolean}}>} defects - Defects, only those
- *  carrying a `fix` fixed
+ * @param {Array.<{file: string, fix: {line: number, col: number, offset:
+ *  number, value: string, replacement: string, suggestion: boolean}}>}
+ *  defects - Defects; only those carrying a `fix` are fixed (`offset`
+ *  defaults to 0)
  * @param {boolean} suggestions - Whether to also apply the fixes marked as
  *  suggestions, not just the safe ones
  * @return {{contents: Map.<string, string>, applied: Array.<object>}} - The
@@ -96,30 +118,32 @@ const fixed = function(sources, defects, suggestions = false) {
     const edits = fixable
       .filter((defect) => defect.file === file)
       .map((defect) => {
-        const start = offsetAt(content, defect.fix.line, defect.fix.col)
+        const offset = defect.fix.offset || 0
+        const base = offsetAt(content, defect.fix.line, defect.fix.col - offset)
+        const start = skip(content, base, offset)
         return {
           defect: defect,
           start: start,
-          span: spanAt(content, start, defect.fix.value),
+          end: decodes(content, start, defect.fix.value),
         }
       })
-      .filter(({defect, span}) => {
-        if (span < 0) {
+      .filter(({defect, end}) => {
+        if (end < 0) {
           logger.warn(
             `Skipped fixing ${defect.name} at ${file}:${defect.fix.line}, ` +
             `the source no longer matches`,
           )
         }
-        return span >= 0
+        return end >= 0
       })
       .sort((left, right) => right.start - left.start)
     if (edits.length > 0) {
       let text = content
-      for (const {defect, start, span} of edits) {
+      for (const {defect, start, end} of edits) {
         text =
           text.slice(0, start) +
           defect.fix.replacement +
-          text.slice(start + span)
+          text.slice(end)
         applied.push(defect)
       }
       contents.set(file, text)

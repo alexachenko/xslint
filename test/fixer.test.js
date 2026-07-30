@@ -117,6 +117,13 @@ const APPLIED = [
     after: 'count-entity-comparison.fixed.xsl',
   },
   {
+    name: 'should rewrite a count comparison shifted by an earlier entity ' +
+      'with --fix',
+    flag: '--fix',
+    before: 'count-shifted-comparison.xsl',
+    after: 'count-shifted-comparison.fixed.xsl',
+  },
+  {
     name: 'should rewrite a string-length comparison to != / = with --fix',
     flag: '--fix',
     before: 'string-length-compared-to-zero.xsl',
@@ -342,6 +349,12 @@ const DROPPED = [
     check: 'count-compared-to-zero',
   },
   {
+    name: 'should drop a fixed entity-shifted count defect from the report',
+    flag: '--fix',
+    sheet: 'count-shifted-comparison.xsl',
+    check: 'count-compared-to-zero',
+  },
+  {
     name: 'should drop the fixed double-negation defect from the report',
     flag: '--fix',
     sheet: 'redundant-double-negation.xsl',
@@ -465,6 +478,14 @@ describe('fixer', function() {
         [{file: 'b.xsl', fix: {line: 1, col: 2, value: '  ', replacement: ' '}}],
       ).applied,
       [],
+    )
+  })
+  it('cannot fix a run that reaches past the end of the file', function() {
+    assert.ok(
+      !fixed(
+        [{file: 'a.xsl', content: 'X'}],
+        [{file: 'a.xsl', fix: {line: 1, col: 1, value: 'XY', replacement: 'Z'}}],
+      ).contents.has('a.xsl'),
     )
   })
 })
