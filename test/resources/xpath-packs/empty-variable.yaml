@@ -17,4 +17,8 @@ input: |-
       <xsl:variable name="qw"/>
       <xsl:copy-of select="$qw"/>
     </xsl:template>
+    <xsl:template match="/objects/o/o[1]/o[3]">
+      <xsl:variable name="acc" as="node()*"/>
+      <xsl:copy-of select="$acc"/>
+    </xsl:template>
   </xsl:stylesheet>
