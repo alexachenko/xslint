@@ -3,4 +3,3 @@
 ---
 severity: error
 message: The stylesheet is not well-formed XML and cannot be parsed. Fix its syntax.
-mature: true
