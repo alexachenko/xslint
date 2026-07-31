@@ -43,12 +43,13 @@ Correct:
 ```
 
 Rewriting the axis has no single form, because a namespace node carries two
-different values: its name is a prefix, its string value the namespace URI. So
-`namespace::foo` becomes `namespace-uri-for-prefix('foo', .)` where the URI is
-wanted but `in-scope-prefixes(.)` where the prefix is, `count(namespace::*)`
-folds into `count(in-scope-prefixes(.))`, and a `namespace::foo` handed to
-`xsl:copy-of` has no string replacement at all — it writes a namespace node into
-the result tree, which a URI string cannot do. Which rewrite is correct depends
-on how the surrounding expression consumes the node, so no single local edit,
-safe or suggested, can stand in for it. The check is report-only by nature, and
-a full-fidelity parser would not make it fixable.
+different values — its name is a prefix, its string value the namespace URI —
+and which one to reach for depends on how the surrounding expression consumes it.
+`namespace-uri-for-prefix('foo', .)` gives the URI a `namespace::foo` was read
+for; `in-scope-prefixes(.)` enumerates the prefixes a `namespace::*` walked;
+`count(namespace::*)` collapses toward `count(in-scope-prefixes(.))`; and a
+`namespace::foo` handed to `xsl:copy-of` has no string form at all, since it
+writes a namespace node into the result tree. No safe deterministic edit can
+pick among these from the axis alone — even the `count` case is not equivalent,
+raising a type error where the context node is not an element — so the check
+reports rather than rewrites, and a full-fidelity parser would not change that.
