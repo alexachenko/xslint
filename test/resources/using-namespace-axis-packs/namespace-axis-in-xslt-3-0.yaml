@@ -5,6 +5,7 @@ pack: using-namespace-axis
 found:
   amount: 1
   positions: [ [ 5, 26 ] ]
+  fixes: [ null ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0" id="style1">
