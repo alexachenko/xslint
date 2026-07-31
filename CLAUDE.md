@@ -277,7 +277,12 @@ the harness asserts too.
   occurrence: the construct **buried** in a larger expression (a predicate, an
   `and`/`or` operand, a nested call), **three or more** occurrences in one
   expression (to catch a first-match bug), and the **negative neighbours** that
-  look similar but must not fire. Positions pin every occurrence.
+  look similar but must not fire. Positions pin every occurrence. A scan over a
+  node *set* must exercise every node *kind* the selector yields — a `//text()`
+  scan needs a CDATA section beside a plain text node, a `//*/@*` scan the
+  literal-result versus XSLT-element split — because 100% branch coverage counts
+  a branch one kind reaches as covered for all: a `nodeType`-blind crash sits
+  green until a pack feeds it the other kind (#606).
 - **Fixtures live in files.** Every test stylesheet is a committed `.xsl` under
   `test/resources/` (never inline in a `.test.js` — the `fixtures` CI job bans
   inline `<?xml`/`<xsl:`); YAML is only for the multi-field packs. Malformed
