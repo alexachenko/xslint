@@ -82,6 +82,12 @@ export default defineConfig([
           selector: "Literal[value=/\\/\\/@/]",
           message:
             "Do not select attributes with a bare '//@name' XPath, which reads a literal result element as XPath; go through src/attributes.js (expressionsOf, selectorOf)"
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='getAttribute'][callee.object.property.name='documentElement'][arguments.0.value='version']",
+          message:
+            "Read the stylesheet version through versionOf in src/xsl-version.js, which handles a simplified stylesheet's xsl:version; do not read documentElement.getAttribute('version') directly"
         }
       ]
     }

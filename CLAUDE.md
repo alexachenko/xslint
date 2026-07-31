@@ -173,14 +173,20 @@ Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
 ### Mandatory rules
 
 - **Version-dependence.** If a check's detection or fix is valid only for certain
-  XSLT versions, the version test is part of the check. Read the version from
-  `documentElement.getAttribute('version')` against `MODERN = ['2.0', '3.0']`
-  (code), or from `/*/@version` (a declarative rule — any root). Never emit a fix
-  the declared version cannot run; emit the version-appropriate form instead
-  (`count(x) > 0` -> `exists(x)` on 2.0+, `boolean(x)`/`x` on 1.0). A
-  version-sensitive check with no version guard is a bug. Verify a version-based
-  *exclusion* fires on the versions where its premise does not hold — an inert 2.0
-  attribute in a 1.0 sheet is still a defect.
+  XSLT versions, the version test is part of the check. Read the version with
+  `versionOf(xsl)` from `src/xsl-version.js` against its `MODERN` (code) — never
+  `documentElement.getAttribute('version')`, which an ESLint rule bans because it
+  misses a simplified stylesheet's `xsl:version`. A declarative rule reads it
+  structurally — `(/xsl:stylesheet | /xsl:transform)/@version` on an XSLT root,
+  `@xsl:version` on any other root (a literal result element standing in as the
+  stylesheet) — never a bare `/*/@version` (blind to a simplified root) or a
+  presence fallback `(@version | @xsl:version)` (an SVG root's own `version`
+  defeats it); `test/conformance.test.js` fails a selector testing `@version`
+  without `@xsl:version`. Never emit a fix the declared version cannot run; emit
+  the version-appropriate form instead (`count(x) > 0` -> `exists(x)` on 2.0+,
+  `boolean(x)`/`x` on 1.0). A version-sensitive check with no version guard is a
+  bug. Verify a version-based *exclusion* fires on the versions where its premise
+  does not hold — an inert 2.0 attribute in a 1.0 sheet is still a defect.
 - **Root-robustness.** A declarative rule that anchors on the stylesheet root must
   match both spellings: `(/xsl:stylesheet | /xsl:transform)[...]`, never
   `/xsl:stylesheet[...]` — they are exact synonyms in every version. Broaden a
@@ -323,6 +329,7 @@ the harness asserts too.
 | `src/*-linter.js` | Code-based `checks/format/*.yaml`, one construct each (axis, namespace, count, name, ...); see the flow diagram |
 | `src/checks.js` | Shared for code-based linters: `metaOf`, `suppressed`, `defect(check, meta, file, node, offset, fix)` |
 | `src/attributes.js` | `expressionsOf(xsl)` — every expression the attributes carry, bare (`ATTRIBUTES` on an XSLT element) or enclosed in an AVT; `selectorOf(name)` for a linter that narrows |
+| `src/xsl-version.js` | `versionOf(xsl)` — the declared version, from `@version` on an XSLT root or `xsl:version` on a simplified one; shared `MODERN` |
 | `src/comparisons.js` | `comparedToZero` — shared scan for a call compared with `0`/`1` (count, string-length) |
 | `src/expressions.js` | `masked`/`closes` lexer helpers (node-set, double-negation, boolean-call); `enclosed` — the expressions an AVT holds in its braces |
 | `src/tokens.js` | Positioned XPath lexer (`tokenized`, `TOKENS`), preserving whitespace |

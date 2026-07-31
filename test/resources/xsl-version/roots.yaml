@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+- name: reads the version of an xsl:stylesheet root
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0"/>
+  version: "2.0"
+- name: reads the version of a transform root under a non-xsl prefix
+  input: |-
+    <t:transform xmlns:t="http://www.w3.org/1999/XSL/Transform" version="2.0"/>
+  version: "2.0"
+- name: reads version 1.0 of an xsl:stylesheet root
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"/>
+  version: "1.0"
+- name: reads the xsl:version of a simplified html root
+  input: |-
+    <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsl:version="2.0"/>
+  version: "2.0"
+- name: ignores the result vocabulary version on a simplified svg root
+  input: |-
+    <svg xmlns="http://www.w3.org/2000/svg"
+      xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.1" xsl:version="2.0"/>
+  version: "2.0"
+- name: is empty when the root declares no version
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"/>
+  version: ""
