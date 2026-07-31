@@ -168,32 +168,29 @@ const opensComment = function(xpath, at) {
 }
 
 /**
- * Whether an axis opens at given offset.
+ * The axis opening at the given offset, or null when none does. XPath allows
+ * whitespace between the axis name and its `::`, so `child ::` names the same
+ * axis as `child::`; the name and the colons are matched across that gap and
+ * the length spans it, while the two colons themselves stay adjacent.
  * @param {string} xpath - Xpath expression
  * @param {number} at - Offset to test
- * @return {string} - Axis
+ * @return {?{name: string, length: number}} - The axis name and matched length
  */
 const opensAxis = function(xpath, at) {
-  let axis = ''
-  if (at < xpath.length && xpath[at].match(/[a-zA-Z]/)) {
-    do {
-      axis += xpath[at]
-      at++
-      if (xpath[at] === ':') {
-        if (xpath[at + 1] === ':') {
-          axis += xpath.slice(at, at + 2)
-          at++
-        } else {
-          axis = ''
-        }
-        break
-      }
-    } while (at < xpath.length && xpath[at].match(/[a-zA-Z\-:]/))
+  let end = at
+  while (end < xpath.length && xpath[end].match(/[a-zA-Z-]/)) {
+    end += 1
   }
-  if (!AXES[axis]) {
-    axis = ''
+  let colons = end
+  while (colons < xpath.length && WHITESPACE.includes(xpath[colons])) {
+    colons += 1
   }
-  return axis
+  const name = `${xpath.slice(at, end)}::`
+  if (end === at || xpath[colons] !== ':' || xpath[colons + 1] !== ':' ||
+    !AXES[name]) {
+    return null
+  }
+  return {name: name, length: colons + 2 - at}
 }
 
 /**
@@ -405,7 +402,7 @@ const tokenized = function(xpath) {
       type = TOKENS.WHITESPACE
       at = afterWhitespace(xpath, at)
     } else if (axis) {
-      type = AXES[axis]
+      type = AXES[axis.name]
       at += axis.length
     } else if (opensNumber(xpath, at)) {
       type = TOKENS.NUMBER

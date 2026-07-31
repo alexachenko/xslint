@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: using-namespace-axis
+found:
+  amount: 3
+  positions: [ [ 3, 26 ], [ 4, 26 ], [ 4, 42 ] ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+    <xsl:template match="*[namespace ::foo]">
+      <xsl:copy-of select="namespace ::a | namespace::b"/>
+    </xsl:template>
+  </xsl:stylesheet>
