@@ -6,6 +6,7 @@
 const {comparedToZero} = require('./comparisons')
 const {metaOf, suppressed, defect} = require('./checks')
 const {expressionsOf} = require('./attributes')
+const {MODERN, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -25,13 +26,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * Stylesheet versions where `exists()`/`empty()` exist, so the rewrite is
- * available. The smell is worth reporting on any version, but the fix is not.
- * @type {Array.<string>}
- */
-const MODERN = ['2.0', '3.0']
 
 /**
  * The existence function a comparison collapses to, or null when it is a
@@ -124,9 +118,7 @@ const lintByCount = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      const modern = MODERN.includes(
-        xsl.documentElement.getAttribute('version'),
-      )
+      const modern = MODERN.includes(versionOf(xsl))
       for (const {node, start, expression} of expressionsOf(xsl)) {
         for (const {offset, value, test, argument} of comparisons(expression)) {
           const whole = node.nodeName === 'test' &&

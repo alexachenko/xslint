@@ -7,6 +7,7 @@ const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
 const {selectorOf} = require('./attributes')
+const {MODERN, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -26,12 +27,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * Stylesheet versions where the node-set() extension is redundant.
- * @type {Array.<string>}
- */
-const MODERN = ['2.0', '3.0']
 
 /**
  * Pattern of a `prefix:node-set(` call opener.
@@ -81,7 +76,7 @@ const lintByNodeSet = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(xsl.documentElement.getAttribute('version'))) {
+      if (MODERN.includes(versionOf(xsl))) {
         for (const attribute of nodes(xsl, selectorOf('select'))) {
           for (const {offset, value, replacement} of wrappers(
             attribute.nodeValue,

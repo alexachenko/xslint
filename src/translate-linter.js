@@ -6,6 +6,7 @@
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
 const {expressionsOf} = require('./attributes')
+const {MODERN, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -25,13 +26,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * Stylesheet versions where lower-case()/upper-case() exist, so a translate()
- * over the alphabet is an anachronism rather than the only option.
- * @type {Array.<string>}
- */
-const MODERN = ['2.0', '3.0']
 
 /**
  * A `translate(` call opener, unprefixed so a custom one is left alone.
@@ -152,7 +146,7 @@ const lintByTranslate = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(xsl.documentElement.getAttribute('version'))) {
+      if (MODERN.includes(versionOf(xsl))) {
         for (const {node, start, expression} of expressionsOf(xsl)) {
           for (const {offset, value, replacement} of folded(expression)) {
             defects.push(

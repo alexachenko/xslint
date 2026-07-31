@@ -198,6 +198,25 @@ describe('conformance', function() {
       }
     }
   })
+  it('reads @xsl:version too wherever a selector tests @version', function() {
+    const versioned = /@version\s*!?=/
+    for (const [kind, keys] of Object.entries(SELECTORS)) {
+      for (const name of names(kind)) {
+        const check = yaml.parsedFromFile(
+          path.join(CHECKS, kind, `${name}.yaml`),
+        )
+        for (const key of keys) {
+          if (check[key] && versioned.test(check[key])) {
+            assert.ok(
+              check[key].includes('@xsl:version'),
+              `${kind}/${name} tests @version but not @xsl:version, ` +
+                'so it misreads a simplified stylesheet',
+            )
+          }
+        }
+      }
+    }
+  })
   it('maps every motive and pack back to a real check', function() {
     for (const kind of KINDS) {
       const checks = new Set(names(kind))

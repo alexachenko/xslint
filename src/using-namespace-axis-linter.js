@@ -6,6 +6,7 @@
 const {tokenized, TOKENS} = require('./tokens')
 const {metaOf, suppressed, defect} = require('./checks')
 const {expressionsOf} = require('./attributes')
+const {MODERN, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -25,13 +26,6 @@ const META = metaOf(CHECK)
  * @type {Array.<string>}
  */
 const names = [CHECK]
-
-/**
- * Versions where the namespace:: axis is deprecated. In XSLT 1.0 it is the
- * standard way to inspect namespace nodes, so it is not flagged there.
- * @type {Array.<string>}
- */
-const MODERN = ['2.0', '3.0']
 
 /**
  * Offsets of every namespace:: axis in an expression. The lexer keeps string
@@ -61,7 +55,7 @@ const lintByNamespaceAxis = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(xsl.documentElement.getAttribute('version'))) {
+      if (MODERN.includes(versionOf(xsl))) {
         for (const {node, start, expression} of expressionsOf(xsl)) {
           for (const offset of axes(expression)) {
             defects.push(defect(CHECK, META, file, node, start + offset))
