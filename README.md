@@ -253,7 +253,8 @@ Today this covers ten checks:
 - `redundant-whitespace` — a doubled space is collapsed to one, and a space
   leading or trailing an XPath expression is removed.
 - `unabbreviated-axis` — a verbose axis specifier is shortened: `child::x`
-  becomes `x`, `attribute::x` becomes `@x`, and `parent::node()` becomes `..`.
+  becomes `x`, `attribute::x` becomes `@x`, `parent::node()` becomes `..`, and
+  `self::node()` becomes `.`.
 - `redundant-namespace-declarations` — a namespace prefix declared on the
   stylesheet but never used is deleted.
 - `use-node-set-extension` — the redundant `node-set()` extension is unwrapped

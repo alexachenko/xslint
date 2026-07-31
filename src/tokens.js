@@ -168,6 +168,14 @@ const opensComment = function(xpath, at) {
 }
 
 /**
+ * Characters a name is spelled with. An axis name only ever opens a step, so
+ * one of these just before it means the match landed inside a longer name —
+ * the `child::` that ends `grandchild::` — and no axis starts there.
+ * @type {RegExp}
+ */
+const NAMED = /[\w.:-]/
+
+/**
  * The axis opening at the given offset, or null when none does. XPath allows
  * whitespace between the axis name and its `::`, so `child ::` names the same
  * axis as `child::`; the name and the colons are matched across that gap and
@@ -187,7 +195,7 @@ const opensAxis = function(xpath, at) {
   }
   const name = `${xpath.slice(at, end)}::`
   if (end === at || xpath[colons] !== ':' || xpath[colons + 1] !== ':' ||
-    !AXES[name]) {
+    !AXES[name] || (at > 0 && NAMED.test(xpath[at - 1]))) {
     return null
   }
   return {name: name, length: colons + 2 - at}

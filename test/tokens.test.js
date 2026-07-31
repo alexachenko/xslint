@@ -82,6 +82,10 @@ const SCANS = [
       ['child:abc', TOKENS.CHILD],
       ['descendant-or-self', TOKENS.DESCENDANT_OR_SELF],
       ['child : :abc', TOKENS.CHILD],
+      ['grandchild::abc', TOKENS.CHILD],
+      ['a-child::abc', TOKENS.CHILD],
+      ['ns:child::abc', TOKENS.CHILD],
+      ['myself::abc', TOKENS.SELF],
     ],
   },
 ]
