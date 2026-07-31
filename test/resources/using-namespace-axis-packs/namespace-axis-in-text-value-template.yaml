@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: using-namespace-axis
+found:
+  amount: 4
+  positions: [ [ 4, 9 ], [ 4, 31 ], [ 4, 48 ], [ 6, 8 ] ]
+  fixes: [ null, null, null, null ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0" expand-text="yes">
+    <xsl:template match="/">
+      <a>{namespace::x}, {count(namespace::y)}, {namespace::z}</a>
+      <b>
+        {namespace::deep}
+      </b>
+    </xsl:template>
+  </xsl:stylesheet>
