@@ -39,11 +39,11 @@ const suppressed = function(check, suppressions) {
  * @param {string} file - File the node sits in
  * @param {Node} node - The attribute or expression node
  * @param {number} offset - Offset of the defect within the node value
- * @param {?{value: string, replacement: string, suggestion?: boolean}} fix -
+ * @param {?{value: string, replacement: string, suggestion?: boolean}} [fix] -
  *  The fix, or undefined for a report-only defect
  * @return {object} - Defect
  */
-const defect = function(check, meta, file, node, offset, fix) {
+const defect = function(check, meta, file, node, offset, fix = undefined) {
   const pos = node.columnNumber + 1 + offset
   const anchored = fix === undefined ?
     undefined :
