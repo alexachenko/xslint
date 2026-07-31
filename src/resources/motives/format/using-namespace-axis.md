@@ -42,8 +42,13 @@ Correct:
 </xsl:stylesheet>
 ```
 
-Rewriting the axis to those functions changes what the step selects — namespace
-nodes become prefix strings — and forces every expression that consumes the
-result to change with it. That is a semantic restructuring, not a span edit, so
-no safe deterministic `--fix` can exist for it: the check is report-only by
-nature, and a full-fidelity parser would not make it fixable.
+Rewriting the axis has no single form, because a namespace node carries two
+different values: its name is a prefix, its string value the namespace URI. So
+`namespace::foo` becomes `namespace-uri-for-prefix('foo', .)` where the URI is
+wanted but `in-scope-prefixes(.)` where the prefix is, `count(namespace::*)`
+folds into `count(in-scope-prefixes(.))`, and a `namespace::foo` handed to
+`xsl:copy-of` has no string replacement at all — it writes a namespace node into
+the result tree, which a URI string cannot do. Which rewrite is correct depends
+on how the surrounding expression consumes the node, so no single local edit,
+safe or suggested, can stand in for it. The check is report-only by nature, and
+a full-fidelity parser would not make it fixable.
