@@ -25,8 +25,9 @@ Correct:
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="html"/>
   <xsl:template match="*">
-    <xsl:for-each select="in-scope-prefixes(.)">
-      <xsl:value-of select="namespace-uri-for-prefix(., current())"/>
+    <xsl:variable name="element" select="."/>
+    <xsl:for-each select="in-scope-prefixes($element)">
+      <xsl:value-of select="namespace-uri-for-prefix(., $element)"/>
     </xsl:for-each>
   </xsl:template>
 </xsl:stylesheet>
@@ -39,5 +40,6 @@ URI becomes `namespace-uri-for-prefix('foo', .)`. Two cases need care:
 `count(namespace::*)` becomes `count(in-scope-prefixes(.))`, but that raises a
 type error on a context node that is not an element, where the axis merely
 yielded nothing; and a `namespace::foo` copied by `xsl:copy-of` writes a
-namespace node into the result tree, which no function returns — declare the
-namespace on the output element instead.
+namespace node into the result tree, which no function returns — recreate it with
+`xsl:namespace`, as
+`<xsl:namespace name="foo" select="namespace-uri-for-prefix('foo', .)"/>`.
