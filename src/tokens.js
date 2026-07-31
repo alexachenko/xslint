@@ -168,9 +168,7 @@ const opensComment = function(xpath, at) {
 }
 
 /**
- * Characters a name is spelled with. An axis name only ever opens a step, so
- * one of these just before it means the match landed inside a longer name —
- * the `child::` that ends `grandchild::` — and no axis starts there.
+ * Characters a name is spelled with.
  * @type {RegExp}
  */
 const NAMED = /[\w.:-]/
@@ -195,10 +193,25 @@ const opensAxis = function(xpath, at) {
   }
   const name = `${xpath.slice(at, end)}::`
   if (end === at || xpath[colons] !== ':' || xpath[colons + 1] !== ':' ||
-    !AXES[name] || (at > 0 && NAMED.test(xpath[at - 1]))) {
+    !AXES[name]) {
     return null
   }
   return {name: name, length: colons + 2 - at}
+}
+
+/**
+ * The axis opening a step part-way through a run of other characters, or null
+ * when none does. Reached with a name character just behind it, an axis name
+ * is the tail of a longer name — the `child::` that ends `grandchild::` — and
+ * starts nothing, so the run swallows it. Where the run has already ended the
+ * question does not arise, and `tokenized` asks `opensAxis` directly: after an
+ * operator, `count(a)-child::b` opens a genuine step.
+ * @param {string} xpath - Xpath expression
+ * @param {number} at - Offset to test
+ * @return {?{name: string, length: number}} - The axis name and matched length
+ */
+const opensStep = function(xpath, at) {
+  return at > 0 && NAMED.test(xpath[at - 1]) ? null : opensAxis(xpath, at)
 }
 
 /**
@@ -363,7 +376,7 @@ const afterOther = function(xpath, start) {
     !opensComment(xpath, at) &&
     !opensUserFunction(xpath, at) &&
     !opensNumber(xpath, at) &&
-    !opensAxis(xpath, at)
+    !opensStep(xpath, at)
   ) {
     at += 1
   }

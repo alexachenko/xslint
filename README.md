@@ -254,7 +254,8 @@ Today this covers ten checks:
   leading or trailing an XPath expression is removed.
 - `unabbreviated-axis` — a verbose axis specifier is shortened: `child::x`
   becomes `x`, `attribute::x` becomes `@x`, `parent::node()` becomes `..`, and
-  `self::node()` becomes `.`.
+  `self::node()` becomes `.`. On a 1.0 stylesheet a predicated step keeps its
+  longhand, since `.` and `..` took no predicate before XPath 2.0.
 - `redundant-namespace-declarations` — a namespace prefix declared on the
   stylesheet but never used is deleted.
 - `use-node-set-extension` — the redundant `node-set()` extension is unwrapped
