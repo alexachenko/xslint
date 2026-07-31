@@ -168,9 +168,9 @@ motive, or ships untested fails the build.
   (`metaOf`, `suppressed`, `defect`) and reads its expressions from
   `src/attributes.js`'s `expressionsOf` (every XPath/pattern attribute of an XSLT
   element, plus every expression an attribute value template, a 3.0 text value
-  template, or a shadow attribute carries) unless it
-  has a documented reason to narrow — then it narrows through `selectorOf`, never
-  a hand-written `//@name`, which an ESLint `no-restricted-syntax` selector bans.
+  template, or a shadow attribute carries) unless it has a documented reason to
+  narrow — then it narrows through `selectorOf`, never a hand-written `//@name`,
+  which an ESLint `no-restricted-syntax` selector bans.
 
 Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
 

@@ -39,6 +39,14 @@ const selectorOf = function(name) {
 const SELECTOR = ATTRIBUTES.map(selectorOf).join(' | ')
 
 /**
+ * The spellings that switch an XSLT boolean attribute on, whitespace trimmed —
+ * `expand-text="true"` and `="1"` turn text value templates on as surely as
+ * `="yes"` does.
+ * @type {Array.<string>}
+ */
+const ON = ['yes', 'true', '1']
+
+/**
  * Whether text value templates expand around the given text node — the nearest
  * ancestor to set `expand-text` (an XSLT element) or `xsl:expand-text` (a
  * literal result element) wins, and expansion is off until one does. In XSLT
@@ -54,7 +62,7 @@ const expands = function(text) {
       node.getAttribute('expand-text') :
       node.getAttributeNS(XSLT, 'expand-text')
     if (setting) {
-      return setting === 'yes'
+      return ON.includes(setting.trim())
     }
     node = node.parentNode
   }
@@ -79,16 +87,18 @@ const shadow = function(attribute) {
 /**
  * The expressions a node contributes: a whole value when it is a bare-XPath (or
  * shadow) attribute, otherwise each expression its braces enclose — an
- * attribute value template, or a text value template in the text node of a 3.0
- * stylesheet whose `expand-text` is on. Each names its node, the offset it
- * starts at inside that node's value, and its own text.
- * @param {Node} node - An attribute or text node
+ * attribute value template, or a text value template in a text node (a CDATA
+ * section is one too) of a 3.0 stylesheet whose `expand-text` is on. Only an
+ * attribute takes the attribute branch, so any other node the selector yields
+ * is read as text rather than dereferenced as one. Each names its node, the
+ * offset it starts at inside that node's value, and its own text.
+ * @param {Node} node - An attribute, text, or CDATA node
  * @param {Set.<Node>} bare - Attributes holding a bare XPath
  * @param {boolean} three - Whether the stylesheet declares version 3.0
  * @return {Array.<{node: Node, start: number, expression: string}>} - Found
  */
 const carried = function(node, bare, three) {
-  if (node.nodeType === 3) {
+  if (node.nodeType !== 2) {
     return three && expands(node) ? enclosed(node.nodeValue).map((found) => ({
       node: node, start: found.offset, expression: found.value,
     })) : []

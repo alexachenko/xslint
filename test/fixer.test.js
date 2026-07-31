@@ -184,6 +184,13 @@ const APPLIED = [
     after: 'count-in-attribute-value-templates.fixed.xsl',
   },
   {
+    name: 'should rewrite a count comparison inside a text value template ' +
+      'with --fix',
+    flag: '--fix',
+    before: 'count-in-text-value-template.xsl',
+    after: 'count-in-text-value-template.fixed.xsl',
+  },
+  {
     name: 'should keep the widest of the fixes that overlap with --fix',
     flag: '--fix',
     before: 'overlapping-fixes.xsl',
