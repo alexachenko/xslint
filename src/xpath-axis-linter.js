@@ -27,12 +27,14 @@ const META = metaOf(CHECK)
 const names = [CHECK]
 
 /**
- * The abbreviation of each single-token axis specifier.
- * @type {{[type: string]: {value: string, replacement: string}}}
+ * The abbreviation each single-token axis specifier collapses to. The verbatim
+ * text comes from the token, so a spaced `child ::` is stripped in full rather
+ * than leaving its whitespace behind.
+ * @type {{[type: string]: {replacement: string}}}
  */
 const SHORT = {
-  [TOKENS.CHILD]: {value: 'child::', replacement: ''},
-  [TOKENS.ATTRIBUTE]: {value: 'attribute::', replacement: '@'},
+  [TOKENS.CHILD]: {replacement: ''},
+  [TOKENS.ATTRIBUTE]: {replacement: '@'},
 }
 
 /**
@@ -49,7 +51,11 @@ const abbreviable = function(expression) {
   const found = []
   for (const token of tokenized(expression)) {
     if (SHORT[token.type]) {
-      found.push({offset: token.start, ...SHORT[token.type]})
+      found.push({
+        offset: token.start,
+        value: token.value,
+        replacement: SHORT[token.type].replacement,
+      })
     } else if (
       token.type === TOKENS.PARENT &&
       expression.slice(token.start, token.start + 14) === 'parent::node()'

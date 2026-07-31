@@ -66,11 +66,22 @@ const SCANS = [
     ],
   },
   {
+    name: 'finds an axis with whitespace before the colons',
+    count: 1,
+    pairs: [
+      ['child ::abc', TOKENS.CHILD],
+      ['namespace ::*', TOKENS.NAMESPACE],
+      ['attribute\t::ghi', TOKENS.ATTRIBUTE],
+      ['descendant-or-self\n::def', TOKENS.DESCENDANT_OR_SELF],
+    ],
+  },
+  {
     name: 'finds no axes',
     count: 0,
     pairs: [
       ['child:abc', TOKENS.CHILD],
       ['descendant-or-self', TOKENS.DESCENDANT_OR_SELF],
+      ['child : :abc', TOKENS.CHILD],
     ],
   },
 ]
@@ -110,6 +121,12 @@ describe('tokens', function() {
     assert.equal(
       tokenized('a  b').find((token) => token.type === TOKENS.WHITESPACE).start,
       1,
+    )
+  })
+  it('keeps the whitespace before the colons inside an axis token value', function() {
+    assert.equal(
+      tokenized('child ::x').find((token) => token.type === TOKENS.CHILD).value,
+      'child ::',
     )
   })
   it('keeps a string literal whole despite the spaces inside it', function() {
