@@ -200,23 +200,27 @@ Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
   Cover it with a committed `test/resources/fix/<name>.{xsl,fixed.xsl}` pair
   (generate the `.fixed` by running `--fix`) plus rows in `test/fixer.test.js`'s
   `APPLIED`/`UNCHANGED`/`DROPPED` tables. A check whose only correct fix is
-  structural stays report-only until the full-fidelity parser (#228) — say so in
-  its motive.
-- **Motive quality.** A motive must teach, not assert. Lead with the concrete
-  harm — why the flagged construct is wrong (correctness, portability,
-  performance, or readability), not just that it is — then show an
-  `Incorrect:`/`Correct:` pair of *valid* XSLT that resolves it, and name the
-  fix tier when the check is fixable (safe `--fix`, `--fix-suggestions`, or
-  report-only-until-#228, and why). Keep the prose true to the selector: do not
-  write "such as" for a closed list, call any `/`-prefixed match the "root
-  template", or claim a fix is loss-less when it shifts template priority or a
-  value's type. Only motive existence is machine-checked today; turning the
-  example pair and fix-tier line into a `conformance.test.js` gate is pending
-  the motive cleanup (#551, #552).
-- **Motive sync.** When you touch what a check flags — its severity, its fix or
-  fix tier, its version scope, the constructs it leaves alone — re-read its motive
-  and update it. The motive is where the end user learns the check's purpose; a
-  behavior change with an untouched motive is presumed a bug.
+  structural stays report-only until the full-fidelity parser (#228); the missing
+  fixer records that, and the motive stays silent about it (see **Motive
+  quality**).
+- **Motive quality.** A motive teaches the *construct*, not the tool. Lead with
+  the concrete harm — why the flagged construct is wrong (correctness,
+  portability, performance, or readability), not just that it is — then show an
+  `Incorrect:`/`Correct:` pair of *valid* XSLT that resolves it, and where it
+  helps, how to migrate by hand. It must not name a fix tier, mention
+  `--fix`/`--fix-suggestions`/report-only, or describe scanner or parser
+  internals: whether a check is fixable is data (the `src/fixers.js` wiring and
+  the `suggestion` flag) that `README.md` lists and the docs site renders, never
+  motive prose (#604). Keep the prose true to the selector: do not write "such as"
+  for a closed list, call any `/`-prefixed match the "root template", or claim a
+  hand-fix is loss-less when it shifts template priority or a value's type. Only
+  motive existence is machine-checked today; turning the example pair into a
+  `conformance.test.js` gate is pending the motive cleanup (#552).
+- **Motive sync.** When you touch what a check flags — its severity, its version
+  scope, the constructs it leaves alone — re-read its motive and update it. The
+  motive is where the end user learns the construct's harm and hand-fix; a
+  behavior change with an untouched motive is presumed a bug. A change to only the
+  fix tier touches the wiring, `README.md`, and docs — not the motive.
 - **Docs sync.** A behavior change must also update `README.md` (user-facing:
   usage, the `--fix`/suggestion lists), this file (architecture), and the docs
   site (`npx grunt docs`).
@@ -233,9 +237,9 @@ human attestation the flag records, the rest are visible in the tree:
   version, the construct buried / 3+ times / beside a lookalike negative);
 - the motive fully teaches it (see **Motive quality**);
 - if fixable, the fix is implemented, correctly tiered, and tested — otherwise it
-  is report-only *by nature* (no safe deterministic fix can exist) and says so, a
-  fix merely deferred to a future capability (#228, #486, #461, #460) does not
-  qualify;
+  is report-only *by nature* (no safe deterministic fix can exist); a fix merely
+  deferred to a future capability (#228, #486, #461, #460) does not qualify. The
+  report-only status shows in the wiring (no fixer), not the motive;
 - the pack exercises the hard cases (see **Test packs**);
 - version-dependence handled wherever the construct or fix needs it;
 - the selector is optimal (no needless `//`, no `name()=`/`local-name()` where a
