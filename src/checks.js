@@ -44,7 +44,7 @@ const suppressed = function(check, suppressions) {
  * @return {object} - Defect
  */
 const defect = function(check, meta, file, node, offset, fix = undefined) {
-  const pos = node.columnNumber + 1 + offset
+  const pos = node.columnNumber + (node.nodeType === 3 ? 0 : 1) + offset
   const anchored = fix === undefined ?
     undefined :
     {line: node.lineNumber, col: pos, offset: offset, ...fix}

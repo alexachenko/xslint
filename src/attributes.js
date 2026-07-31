@@ -5,6 +5,7 @@
 
 const {nodes} = require('./xpath')
 const {enclosed} = require('./expressions')
+const {XSLT, versionOf} = require('./xsl-version')
 
 /**
  * Attributes that hold an XPath expression or a pattern — every place a
@@ -38,26 +39,84 @@ const selectorOf = function(name) {
 const SELECTOR = ATTRIBUTES.map(selectorOf).join(' | ')
 
 /**
- * Every expression the attributes of a stylesheet carry, in document order. An
- * attribute holding a bare XPath contributes its whole value; any other
- * attribute contributes each expression its braces enclose, an attribute value
- * template being the only way an expression hides there. Each one names the
- * attribute node, the offset it starts at inside that node's value, and its own
- * text, so a defect in it is reported — and fixed — where it truly stands.
+ * Whether text value templates expand around the given text node — the nearest
+ * ancestor to set `expand-text` (an XSLT element) or `xsl:expand-text` (a
+ * literal result element) wins, and expansion is off until one does. In XSLT
+ * 3.0 an on setting turns the `{...}` of a text node into real expressions, the
+ * way a `select` carries one.
+ * @param {Node} text - The text node
+ * @return {boolean} - True when its braces expand
+ */
+const expands = function(text) {
+  let node = text.parentNode
+  while (node.nodeType === 1) {
+    const setting = node.namespaceURI === XSLT ?
+      node.getAttribute('expand-text') :
+      node.getAttributeNS(XSLT, 'expand-text')
+    if (setting) {
+      return setting === 'yes'
+    }
+    node = node.parentNode
+  }
+  return false
+}
+
+/**
+ * Whether the attribute is a shadow attribute standing in for a bare-XPath one
+ * — `_select` for `select` — on an XSLT element, with no braces, so its whole
+ * value is the static expression that becomes the real attribute (XSLT 3.0).
+ * A shadow attribute that does carry braces is a template, left to `enclosed`.
+ * @param {Node} attribute - The attribute node
+ * @return {boolean} - True when its whole value is an expression
+ */
+const shadow = function(attribute) {
+  return attribute.ownerElement.namespaceURI === XSLT &&
+    attribute.nodeName.startsWith('_') &&
+    ATTRIBUTES.includes(attribute.nodeName.slice(1)) &&
+    !attribute.nodeValue.includes('{')
+}
+
+/**
+ * The expressions a node contributes: a whole value when it is a bare-XPath (or
+ * shadow) attribute, otherwise each expression its braces enclose — an
+ * attribute value template, or a text value template in the text node of a 3.0
+ * stylesheet whose `expand-text` is on. Each names its node, the offset it
+ * starts at inside that node's value, and its own text.
+ * @param {Node} node - An attribute or text node
+ * @param {Set.<Node>} bare - Attributes holding a bare XPath
+ * @param {boolean} three - Whether the stylesheet declares version 3.0
+ * @return {Array.<{node: Node, start: number, expression: string}>} - Found
+ */
+const carried = function(node, bare, three) {
+  if (node.nodeType === 3) {
+    return three && expands(node) ? enclosed(node.nodeValue).map((found) => ({
+      node: node, start: found.offset, expression: found.value,
+    })) : []
+  }
+  if (bare.has(node) || (three && shadow(node))) {
+    return [{node: node, start: 0, expression: node.nodeValue}]
+  }
+  return enclosed(node.nodeValue).map((found) => ({
+    node: node, start: found.offset, expression: found.value,
+  }))
+}
+
+/**
+ * Every expression a stylesheet carries, in document order. An attribute
+ * holding a bare XPath contributes its whole value; another attribute, and a
+ * text node under an on `expand-text` in a 3.0 stylesheet, contribute each
+ * expression their braces enclose. Each one names the node, the offset it
+ * starts at inside that node's value, and its own text, so a defect in it is
+ * reported — and fixed — where it truly stands.
  * @param {Document} xsl - XSL document parsed as {@link Document}
  * @return {Array.<{node: Node, start: number, expression: string}>} - The
  *  expressions found
  */
 const expressionsOf = function(xsl) {
   const bare = new Set(nodes(xsl, SELECTOR))
-  return nodes(xsl, '//*/@*').flatMap((attribute) =>
-    bare.has(attribute) ?
-      [{node: attribute, start: 0, expression: attribute.nodeValue}] :
-      enclosed(attribute.nodeValue).map((found) => ({
-        node: attribute,
-        start: found.offset,
-        expression: found.value,
-      })),
+  const three = versionOf(xsl) === '3.0'
+  return nodes(xsl, '//*/@* | //text()').flatMap(
+    (node) => carried(node, bare, three),
   )
 }
 

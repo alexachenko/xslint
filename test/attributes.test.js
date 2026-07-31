@@ -23,6 +23,20 @@ const SHEET = xml.parsedFromString(
   ),
 )
 
+/**
+ * A 3.0 stylesheet whose text value templates and shadow attributes carry
+ * expressions alongside the ordinary attributes.
+ * @type {Document}
+ */
+const TEMPLATED = xml.parsedFromString(
+  fs.readFileSync(
+    path.resolve(
+      __dirname, 'resources', 'attributes', 'text-value-templates.xsl',
+    ),
+    'utf-8',
+  ),
+)
+
 describe('attributes', function() {
   it('reads every bare and enclosed expression in document order', function() {
     assert.deepEqual(
@@ -42,6 +56,20 @@ describe('attributes', function() {
     assert.ok(
       expressionsOf(SHEET).every((found) => found.node.nodeName !== 'test'),
       'reads output text on a literal result element as an expression',
+    )
+  })
+  it('reads a text value template and a shadow attribute too', function() {
+    assert.deepEqual(
+      expressionsOf(TEMPLATED).map(
+        (found) => [found.node.nodeName, found.start, found.expression],
+      ),
+      [
+        ['match', 0, 'section'],
+        ['#text', 1, 'count(item) = 0'],
+        ['_select', 0, 'name(.)'],
+        ['select', 0, '@x'],
+      ],
+      'cannot read a text value template or a shadow attribute',
     )
   })
 })
