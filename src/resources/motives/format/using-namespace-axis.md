@@ -42,6 +42,8 @@ Correct:
 </xsl:stylesheet>
 ```
 
-Rewriting the axis to those functions is a structural change, not a one-span
-edit, so this check reports without a `--fix` until the full-fidelity parser
-(#228) lands.
+Rewriting the axis to those functions changes what the step selects — namespace
+nodes become prefix strings — and forces every expression that consumes the
+result to change with it. That is a semantic restructuring, not a span edit, so
+no safe deterministic `--fix` can exist for it: the check is report-only by
+nature, and a full-fidelity parser would not make it fixable.
