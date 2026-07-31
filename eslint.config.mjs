@@ -41,6 +41,7 @@ export default defineConfig([
     plugins: { "@stylistic": stylistic, local },
     rules: {
       "local/no-redundant-return-variable": "error",
+      "local/no-missing-arguments": "error",
       "valid-jsdoc": "off",
       "require-jsdoc": "off",
       semi: ["error", "never"],

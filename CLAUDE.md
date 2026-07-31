@@ -33,10 +33,14 @@ green — run `npm run coverage` and the xcop suite too.
 ESLint (`eslint-config-google` + `@stylistic`, config in `eslint.config.mjs`,
 run by the `lint` job) enforces: spaced operators, no single-letter names
 (`id-length` >= 2), postfix `x++` only (prefix `++x` is banned), bare module
-names in `require`/`import` (no `node:` prefix), and no redundant return
-variable (`const x = expr; return x` is banned — return the expression). The
-last is a project-local rule in `eslint-local-rules.js`, unit-tested in
-`test/eslint-local-rules.test.js`.
+names in `require`/`import` (no `node:` prefix), no redundant return variable
+(`const x = expr; return x` is banned — return the expression), and no missing
+argument (a call must fill every parameter the callee declares without a
+default, so a report-only `defect(...)` spells its sixth argument `undefined`).
+The last two are project-local rules in `eslint-local-rules.js`, unit-tested in
+`test/eslint-local-rules.test.js`; the arity of the callee is read from its
+declaration in the same file, or by loading the module a relative `require`
+names.
 
 **Every style or consistency convention must be machine-enforced.** When you fix
 one, do not just fix the instances — in the same change add a check that fails on

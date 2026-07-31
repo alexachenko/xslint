@@ -64,7 +64,9 @@ const lintByNamespaceAxis = function(corpus, suppressions = []) {
       if (MODERN.includes(xsl.documentElement.getAttribute('version'))) {
         for (const {node, start, expression} of expressionsOf(xsl)) {
           for (const offset of axes(expression)) {
-            defects.push(defect(CHECK, META, file, node, start + offset))
+            defects.push(
+              defect(CHECK, META, file, node, start + offset, undefined),
+            )
           }
         }
       }
