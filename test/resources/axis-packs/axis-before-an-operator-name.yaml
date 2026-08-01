@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: unabbreviated-axis
+found:
+  amount: 4
+  positions: [ [ 4, 27 ], [ 5, 27 ], [ 6, 33 ], [ 7, 29 ] ]
+  fixes: [ "", "", "", "" ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+    <xsl:template match="/">
+      <xsl:value-of select="child::div"/>
+      <xsl:value-of select="child::or"/>
+      <xsl:value-of select="a and child::or"/>
+      <xsl:value-of select="a|child::and"/>
+    </xsl:template>
+  </xsl:stylesheet>

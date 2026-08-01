@@ -420,6 +420,12 @@ const DROPPED = [
     check: 'redundant-whitespace',
   },
   {
+    name: 'should drop the abbreviated axis from the report',
+    flag: '--fix',
+    sheet: 'unabbreviated-axis.xsl',
+    check: 'unabbreviated-axis',
+  },
+  {
     name: 'should drop the fixed starts-with-double-slash defect from the ' +
       'report',
     flag: '--fix',
