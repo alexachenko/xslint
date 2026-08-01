@@ -5,6 +5,7 @@
 
 const {allFilesFrom, yaml} = require('../src/helpers')
 const {FIXERS} = require('../src/fixers')
+const {DECIMAL} = require('../src/xsl-version')
 const path = require('path')
 const fs = require('fs')
 const assert = require('assert')
@@ -197,6 +198,16 @@ describe('conformance', function() {
         }
       }
     }
+  })
+  it('spells the decimal a version is in one place only', function() {
+    assert.ok(
+      yaml.parsedFromFile(
+        path.join(CHECKS, 'xpath', 'malformed-version-in-stylesheet.yaml'),
+      ).xpath.includes(DECIMAL.source),
+      'malformed-version-in-stylesheet writes its own xs:decimal pattern rather ' +
+        'than the DECIMAL of src/xsl-version.js, so the check and the reader ' +
+        'it reports for can disagree on what a version is',
+    )
   })
   it('reads @xsl:version too wherever a selector tests @version', function() {
     const versioned = /@version\s*!?=/

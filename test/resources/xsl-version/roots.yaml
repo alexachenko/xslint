@@ -27,3 +27,127 @@
   input: |-
     <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"/>
   version: ""
+- name: reads a version raised on a template inside a 1.0 stylesheet
+  at: //xsl:template
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+      <xsl:template match="/" version="2.0"/>
+    </xsl:stylesheet>
+  version: "2.0"
+- name: reads a version lowered on a template inside a 2.0 stylesheet
+  at: //xsl:template
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+      <xsl:template match="/" version="1.0"/>
+    </xsl:stylesheet>
+  version: "1.0"
+- name: reads the xsl:version a literal result element raises
+  at: //*[local-name() = 'html']
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+      <xsl:template match="/">
+        <html xsl:version="2.0"/>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "2.0"
+- name: reads the nearest ancestor version from a node buried under it
+  at: //*[local-name() = 'p']
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+      <xsl:template match="/" version="2.0">
+        <div><p/></div>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "2.0"
+- name: reads the version in force at an attribute
+  at: //xsl:value-of/@select
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+      <xsl:template match="/" version="2.0">
+        <xsl:value-of select="a"/>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "2.0"
+- name: reads the version in force at a text node
+  at: //*[local-name() = 'p']/text()
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+      <xsl:template match="/" version="3.0">
+        <p>text</p>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "3.0"
+- name: falls back to the root when nothing below declares a version
+  at: //xsl:value-of/@select
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+      <xsl:template match="/">
+        <xsl:value-of select="a"/>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "2.0"
+- name: reads a version spelled as a bare integer
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2"/>
+  version: "2.0"
+- name: reads a version spelled with a trailing zero
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.00"/>
+  version: "3.0"
+- name: reads a version padded with the whitespace a processor ignores
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version=" 2.0 "/>
+  version: "2.0"
+- name: leaves a version that is not a number as it stands
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2,0"/>
+  version: "2,0"
+- name: leaves a version it does not know as it stands
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="4.0"/>
+  version: "4.0"
+- name: passes over the output method version of an xsl:output
+  at: //xsl:output/@method
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+      <xsl:output method="html" version="4.0"/>
+    </xsl:stylesheet>
+  version: "3.0"
+- name: reads the language version an xsl:result-document lowers a subtree to
+  at: //xsl:copy-of/@select
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+      <xsl:template match="/">
+        <xsl:result-document href="o.xml" version="1.0">
+          <xsl:copy-of select="a"/>
+        </xsl:result-document>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "1.0"
+- name: passes over the serialization version an xsl:result-document spells apart
+  at: //xsl:copy-of/@select
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+      <xsl:template match="/">
+        <xsl:result-document href="o.xml" method="html" output-version="4.0">
+          <xsl:copy-of select="a"/>
+        </xsl:result-document>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "3.0"
+- name: reads a version signed the way its type allows
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="+2.0"/>
+  version: "2.0"
+- name: leaves a version spelled in a notation its type does not have
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2e0"/>
+  version: "2e0"
+- name: leaves a version spelled as hexadecimal
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="0x2"/>
+  version: "0x2"
+- name: reads a version released after the ones it knows
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="4.0"/>
+  version: "4.0"

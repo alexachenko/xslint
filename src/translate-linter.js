@@ -6,7 +6,7 @@
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
 const {expressionsOf} = require('./attributes')
-const {MODERN, versionOf} = require('./xsl-version')
+const {MODERN, since, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -141,8 +141,8 @@ const lintByTranslate = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(versionOf(xsl))) {
-        for (const {node, start, expression} of expressionsOf(xsl)) {
+      for (const {node, start, expression} of expressionsOf(xsl)) {
+        if (since(versionOf(node), MODERN)) {
           for (const {offset, value, replacement} of folded(expression)) {
             defects.push(
               defect(

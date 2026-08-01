@@ -1,10 +1,16 @@
 # Using namespace axis
 
-The `namespace::` axis is deprecated in XSLT 2.0 and remains so in 3.0, where
-some processors drop it entirely — a stylesheet that leans on it may not run at
-all. Inspect namespace bindings with the standard functions `in-scope-prefixes()`
-and `namespace-uri-for-prefix()` instead. In XSLT 1.0 the axis is standard, so
-the concern begins at 2.0.
+XPath 2.0 deprecated the `namespace::` axis, and support for it stopped being
+something a stylesheet may count on. A processor must offer the axis only while
+backwards compatible behaviour is enabled, which means an effective version of
+1.0; anywhere else support is optional, and a processor that does not offer it
+must reject the expression outright with a static error, `XPST0010`. So the same
+stylesheet runs on one processor and fails to compile on the next, and there is
+a system property, `xsl:supports-namespace-axis`, whose whole reason for
+existing is to let a stylesheet ask which kind it is running on. Inspect
+namespace bindings with the standard functions `in-scope-prefixes()` and
+`namespace-uri-for-prefix()` instead, which every 2.0 processor has. In XSLT 1.0
+the axis is guaranteed, so the concern begins at 2.0.
 
 Incorrect:
 

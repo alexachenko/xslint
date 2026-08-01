@@ -5,7 +5,7 @@
 
 const {nodes} = require('./xpath')
 const {enclosed} = require('./expressions')
-const {XSLT, versionOf} = require('./xsl-version')
+const {XSLT, since, versionOf} = require('./xsl-version')
 
 /**
  * Attributes that hold an XPath expression or a pattern — every place a
@@ -119,9 +119,8 @@ const carried = function(node, bare, three) {
  */
 const expressionsOf = function(xsl) {
   const bare = new Set(nodes(xsl, SELECTOR))
-  const three = versionOf(xsl) === '3.0'
   return nodes(xsl, '//*/@* | //text()').flatMap(
-    (node) => carried(node, bare, three),
+    (node) => carried(node, bare, since(versionOf(node), '3.0')),
   )
 }
 

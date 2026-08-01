@@ -11,29 +11,139 @@
 const XSLT = 'http://www.w3.org/1999/XSL/Transform'
 
 /**
- * Versions where an XSLT 2.0-or-later construct is available.
- * @type {Array.<string>}
+ * The version the 2.0 language begins at. Gates read it as a floor rather than
+ * a name, so every version after it is modern too: XSLT 3.0 §3.9 puts XSLT 1.0
+ * behaviour at an effective version of exactly 1.0, and anything from here up
+ * is outside it.
+ * @type {string}
  */
-const MODERN = ['2.0', '3.0']
+const MODERN = '2.0'
 
 /**
- * The version a stylesheet declares, read from wherever its root shape keeps
- * it: an unprefixed `version` on an `xsl:stylesheet`/`xsl:transform`, or the
- * XSLT-namespaced `version` on the literal result element of a simplified
- * stylesheet. The two are told apart by the root's namespace, not by which
- * attribute happens to be present, so a result vocabulary carrying its own
- * `version` — an SVG root does — never misleads it.
- * @param {Document} xsl - Parsed stylesheet
- * @return {string} - The declared version, or empty when none is declared
+ * The versions this tool knows, in the spelling every gate compares against.
+ * @type {Array.<string>}
  */
-const versionOf = function(xsl) {
-  const root = xsl.documentElement
-  return (root.namespaceURI === XSLT ?
-    root.getAttribute('version') : root.getAttributeNS(XSLT, 'version')) || ''
+const KNOWN = ['1.0', '2.0', '3.0']
+
+/**
+ * The lexical space of `xs:decimal`, which is the type `version` is declared
+ * with. It is narrower than what `Number` will swallow — `0x2` and `2e0` are
+ * numbers to JavaScript and versions to nobody — so the spelling is tested
+ * before the value is.
+ * @type {RegExp}
+ */
+const DECIMAL = /^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/
+
+/**
+ * The one element XSLT 3.0 §3.9 excludes when it names the effective version:
+ * `xsl:output`, whose `version` is a serialization parameter naming the version
+ * of the output method, so `4.0` there asks for HTML 4.0. The specification
+ * excludes nothing else, and nothing else needs it —`xsl:result-document`
+ * spells its serialization parameter `output-version`, renamed for exactly this
+ * collision, so its `version` governs the language of all it contains.
+ * @type {string}
+ */
+const SERIALIZING = 'output'
+
+/**
+ * The version a declared value names. `version` is an `xs:decimal`, so `2`,
+ * `2.0` and `2.00` are one number written three ways, and a processor drops
+ * the surrounding whitespace before reading it; all of them are answered with
+ * the canonical spelling. A value naming no version this tool knows — a typo
+ * like `2,0`, a spelling the type does not have like `2e0`, or a version
+ * released after it — is handed back untouched, so a gate refuses it and a
+ * check can report it rather than guess.
+ * @param {string} value - The attribute's value
+ * @return {string} - The canonical spelling, or the value as it stands
+ */
+const canonical = function(value) {
+  const declared = value.trim()
+  const known = DECIMAL.test(declared) &&
+    KNOWN.find((one) => Number(one) === Number(declared))
+  return known || declared
+}
+
+/**
+ * Whether the version in force is the given one or later. A version gate is a
+ * lower bound, not a list of spellings: a construct XSLT 2.0 introduced is in
+ * 3.0 and in whatever comes after, and a hazard that begins where XSLT 1.0
+ * behaviour ends only deepens past that point. A value that is no decimal names
+ * no version and so clears no bound.
+ * @param {string} version - The version in force, as `versionOf` answers it
+ * @param {string} floor - The earliest version the construct belongs to
+ * @return {boolean} - True when the version is the floor or later
+ */
+const since = function(version, floor) {
+  return DECIMAL.test(version) && Number(version) >= Number(floor)
+}
+
+/**
+ * The XSLT version the given element declares, or empty when it declares none.
+ * An XSLT element spells it `version` and anything else — a literal result
+ * element standing in as the stylesheet, or one raising a subtree — spells it
+ * `xsl:version`, so the two are told apart by namespace rather than by which
+ * attribute is present, and a result vocabulary carrying its own `version`
+ * never misleads it. The `version` of a serializing element is passed over for
+ * the same reason: it belongs to the output, not to the language.
+ * @param {Node} element - The element to read
+ * @return {string} - The declared version, or empty
+ */
+const declaring = function(element) {
+  const xslt = element.namespaceURI === XSLT
+  const own = xslt && element.localName !== SERIALIZING ?
+    element.getAttribute('version') : ''
+  return xslt ? own : element.getAttributeNS(XSLT, 'version')
+}
+
+/**
+ * Where each kind of node keeps the element a version is read from. A node kind
+ * not named here — a text node, a comment — hangs off its parent.
+ * @type {{[kind: number]: function(Node): ?Node}}
+ */
+const HELD = {
+  9: (node) => node.documentElement,
+  2: (node) => node.ownerElement,
+  1: (node) => node,
+}
+
+/**
+ * The element a version is read from for the given node: an attribute hangs
+ * off the element carrying it, a text node off its parent, and a document off
+ * its root.
+ * @param {Node} node - Any node of a stylesheet
+ * @return {?Node} - Where to begin looking, or null
+ */
+const holding = function(node) {
+  const held = HELD[node.nodeType]
+  return held === undefined ? node.parentNode : held(node)
+}
+
+/**
+ * The version in force at the given node, which XSLT 3.0 §3.9 names the
+ * effective version: the decimal value of the `version` attribute on the
+ * element itself or on the innermost ancestor carrying one, excluding the
+ * `version` of an `xsl:output`. `version` sits on an XSLT element and
+ * `xsl:version` on a literal result element, and either governs everything
+ * below it, so the root answers only when nothing nearer does. Handed a whole
+ * document, it answers for the root.
+ * @param {Node} node - Any node of a stylesheet, or the document itself
+ * @return {string} - The version in force, or empty when none is declared
+ */
+const versionOf = function(node) {
+  let element = holding(node)
+  let found = ''
+  while (found === '' && element !== null && element.nodeType === 1) {
+    found = declaring(element) || ''
+    element = element.parentNode
+  }
+  return canonical(found)
 }
 
 module.exports = {
   XSLT,
   MODERN,
+  KNOWN,
+  DECIMAL,
+  since,
   versionOf,
 }

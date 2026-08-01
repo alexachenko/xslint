@@ -7,7 +7,7 @@ const {nodes} = require('./xpath')
 const {masked, closes} = require('./expressions')
 const {metaOf, suppressed, defect} = require('./checks')
 const {selectorOf} = require('./attributes')
-const {MODERN, versionOf} = require('./xsl-version')
+const {MODERN, since, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -76,8 +76,8 @@ const lintByNodeSet = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(versionOf(xsl))) {
-        for (const attribute of nodes(xsl, selectorOf('select'))) {
+      for (const attribute of nodes(xsl, selectorOf('select'))) {
+        if (since(versionOf(attribute), MODERN)) {
           for (const {offset, value, replacement} of wrappers(
             attribute.nodeValue,
           )) {
