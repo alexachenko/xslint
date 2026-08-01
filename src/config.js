@@ -60,14 +60,12 @@ const located = function(from) {
  * @return {*} - The value when it fits, the fallback otherwise
  */
 const typed = function(raw, key, ok, expected, fallback) {
-  if (!raw || !Object.hasOwn(raw, key)) {
-    return fallback
+  const present = Boolean(raw) && Object.hasOwn(raw, key)
+  const fits = present && ok(raw[key])
+  if (present && !fits) {
+    logger.warn(`Value of '${key}' in ${NAME} must be ${expected}, ignoring it`)
   }
-  if (ok(raw[key])) {
-    return raw[key]
-  }
-  logger.warn(`Value of '${key}' in ${NAME} must be ${expected}, ignoring it`)
-  return fallback
+  return fits ? raw[key] : fallback
 }
 
 /**

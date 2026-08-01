@@ -101,19 +101,14 @@ const severityBadge = (severity) => {
 
 const escaped = (xpath) => xpath.replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-const expressions = (kind, lint) => {
-  if (kind === 'corpus') {
-    return `<code class="xpath">declaration: ${escaped(lint.declaration)}</code>
-    <code class="xpath">usage: ${escaped(lint.usage)}</code>`
-  }
-  if (kind === 'validation') {
-    return `<code class="xpath">verified by the parser, not an XPath rule</code>`
-  }
-  if (kind === 'format') {
-    return `<code class="xpath">checked over the tokens, not an XPath rule</code>`
-  }
-  return `<code class="xpath">${escaped(lint.xpath)}</code>`
-}
+const expressions = (kind, lint) => kind === 'corpus' ?
+  `<code class="xpath">declaration: ${escaped(lint.declaration)}</code>
+    <code class="xpath">usage: ${escaped(lint.usage)}</code>` :
+  kind === 'validation' ?
+    `<code class="xpath">verified by the parser, not an XPath rule</code>` :
+    kind === 'format' ?
+      `<code class="xpath">checked over the tokens, not an XPath rule</code>` :
+      `<code class="xpath">${escaped(lint.xpath)}</code>`
 
 const generate = function() {
   const checks = KINDS.flatMap((kind) => allFilesFrom(path.join(CHECKS, kind))

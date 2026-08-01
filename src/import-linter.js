@@ -61,19 +61,18 @@ const defect = function(check, file, node) {
 const reaches = function(adjacency, start, goal) {
   const stack = [start]
   const seen = new Set()
-  while (stack.length > 0) {
+  let reached = false
+  while (stack.length > 0 && !reached) {
     const current = stack.pop()
-    if (current === goal) {
-      return true
-    }
-    if (!seen.has(current)) {
+    reached = current === goal
+    if (!reached && !seen.has(current)) {
       seen.add(current)
       for (const edge of adjacency.get(current) || []) {
         stack.push(edge.to)
       }
     }
   }
-  return false
+  return reached
 }
 
 /**

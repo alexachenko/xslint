@@ -34,23 +34,14 @@ const names = [CHECK]
  * @return {?boolean} - Non-empty, empty, or null
  */
 const empty = function(operator, zero) {
-  if (zero === '0') {
-    if (operator === '>' || operator === '!=') {
-      return false
-    }
-    if (operator === '=' || operator === '<=') {
-      return true
-    }
-  }
-  if (zero === '1') {
-    if (operator === '>=') {
-      return false
-    }
-    if (operator === '<') {
-      return true
-    }
-  }
-  return null
+  return {
+    '0>': false,
+    '0!=': false,
+    '0=': true,
+    '0<=': true,
+    '1>=': false,
+    '1<': true,
+  }[`${zero}${operator}`] ?? null
 }
 
 /**
@@ -62,16 +53,17 @@ const empty = function(operator, zero) {
  */
 const simple = function(argument) {
   let depth = 0
+  let lone = true
   for (const char of argument) {
     if (char === '(' || char === '[') {
       depth++
     } else if (char === ')' || char === ']') {
       depth--
     } else if (depth === 0 && (char === '|' || char === ' ')) {
-      return false
+      lone = false
     }
   }
-  return true
+  return lone
 }
 
 /**
@@ -88,10 +80,7 @@ const simple = function(argument) {
  */
 const decide = function(operator, zero, argument, blanked) {
   const hollow = empty(operator, zero)
-  if (hollow === null) {
-    return null
-  }
-  return {
+  return hollow === null ? null : {
     replacement: simple(blanked) ?
       `${argument} ${hollow ? '=' : '!='} ''` : null,
   }

@@ -34,18 +34,27 @@ ESLint (`eslint-config-google` + `@stylistic`, config in `eslint.config.mjs`,
 run by the `lint` job) enforces: spaced operators, no single-letter names
 (`id-length` >= 2), postfix `x++` only (prefix `++x` is banned), bare module
 names in `require`/`import` (no `node:` prefix), no redundant return variable
-(`const x = expr; return x` is banned — return the expression), and no missing
+(`const x = expr; return x` is banned — return the expression), no missing
 argument (a call must fill every parameter the callee declares without a
-default). The last two are project-local rules in `eslint-local-rules.js`,
-unit-tested in `test/eslint-local-rules.test.js`; the arity of the callee is
-read from its declaration in the same file, or by loading the module a relative
-`require` names.
+default), and one `return` per function (a second exit is banned). The last
+three are project-local rules in `eslint-local-rules.js`, unit-tested in
+`test/eslint-local-rules.test.js`; the arity of the callee is read from its
+declaration in the same file, or by loading the module a relative `require`
+names.
 
 A parameter a caller may leave out therefore says so in the signature, with a
 default — `fix = undefined` on `defect` in `src/checks.js`. A JSDoc `[fix]`
 alone does not count: the rule weighs `Function.length`, so an optional
 parameter that the runtime signature calls required is a lint error at every
 call that omits it.
+
+A function likewise leaves through exactly one `return`, and the branching — not
+the exit — decides what it carries: a lookup keyed on the deciding values
+(`collapses` in `src/count-linter.js`), a ternary chain (`defectsOf` in
+`src/corpus-linter.js`), or a sentinel a scan assigns before its loop ends
+(`closes` in `src/expressions.js`). A `return` counts against the nearest
+enclosing function, so a `map`/`every` callback carrying its own single `return`
+is fine, and an arrow with an expression body has none at all.
 
 **Every style or consistency convention must be machine-enforced.** When you fix
 one, do not just fix the instances — in the same change add a check that fails on
