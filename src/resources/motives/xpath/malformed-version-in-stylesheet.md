@@ -1,20 +1,17 @@
-# Unknown version in stylesheet
+# Malformed version in stylesheet
 
 The `version` attribute is what a processor reads to decide which language it
-is running. XSLT compares it as a number, so `2`, `2.0` and `2.00` all name
-version 2.0 and all behave alike; what a processor cannot do is make sense of a
-value that is not a number at all. A stylesheet declaring `2,0` asks for a
-version that does not exist, and each processor is free to answer differently —
-Saxon reports an error, and a processor that guesses leniently may silently run
-the whole stylesheet in the backwards-compatible mode meant for 1.0, where
-`xsl:for-each-group`, sequence types and every other 2.0 construct in the file
-stops behaving as written.
+is running, and it is declared as an `xs:decimal`. That is why `2`, `2.0` and
+`2.00` all name version 2.0 and behave alike, and why a value that is not a
+decimal at all names nothing: `2,0` is a typo for a version, `2e0` is a spelling
+the type does not have, and an empty `version` says as much as no version would.
 
-A version above the ones the reader knows raises the same question from the
-other side. Declaring `4.0` tells a 3.0 processor that the stylesheet needs
-something it does not have; XSLT's forwards-compatible mode will run it, but
-silently, skipping instructions it does not recognise rather than reporting
-them.
+A processor is free to answer any of those differently, and the quiet answer is
+the dangerous one. Where the effective version cannot be read as 1.0, the
+stylesheet is not in XSLT 1.0 behaviour, so a processor that shrugs and carries
+on may run `xsl:for-each-group`, sequence types and every other construct in the
+file under rules the author never chose — or it may reject the stylesheet
+outright. Which of the two you get is not something the file decides.
 
 Incorrect:
 
@@ -38,6 +35,16 @@ Correct:
 
 The same applies wherever a version is declared, not only at the root: XSLT 2.0
 lets `version` sit on any XSLT element and `xsl:version` on any literal result
-element, each setting the version of everything beneath it. A stylesheet that
-raises one template to a version nobody recognises has left that subtree in the
-same doubt as a whole file would be.
+element, each setting the version of everything beneath it. A template raised to
+a value that names no version leaves that subtree in the same doubt a whole file
+would be in.
+
+A version that is a decimal is a different matter, even one no processor has
+shipped yet. `version="4.0"` is well formed and says plainly which language the
+author wants; a 3.0 processor runs it forwards-compatibly, and the only cost is
+that instructions from a later version go unrecognised. One exception is worth
+knowing about: `version` on `xsl:output` is not the language at all but the
+version of the output method, so `4.0` there asks for HTML 4.0 and is ordinary.
+On `xsl:result-document` the serialization parameter is spelled
+`output-version`, precisely so the two do not collide — writing `version` there
+declares the language for everything the instruction contains.
