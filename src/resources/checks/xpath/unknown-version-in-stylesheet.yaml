@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+xpath: "(//xsl:*/@version | //*[not(self::xsl:*)]/@xsl:version)[not(number(normalize-space(.)) = (1, 2, 3))]"
+severity: error
+message: A declared version names no XSLT version this tool knows, so every version-dependent check is skipped there. Declare 1.0, 2.0, or 3.0

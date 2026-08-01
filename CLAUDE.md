@@ -178,9 +178,18 @@ Then run `npm test`, `npm run coverage`, and `npx grunt docs`.
 
 - **Version-dependence.** If a check's detection or fix is valid only for certain
   XSLT versions, the version test is part of the check. Read the version with
-  `versionOf(xsl)` from `src/xsl-version.js` against its `MODERN` (code) — never
+  `versionOf(node)` from `src/xsl-version.js` against its `MODERN` (code) — never
   `documentElement.getAttribute('version')`, which an ESLint rule bans because it
-  misses a simplified stylesheet's `xsl:version`. A declarative rule reads it
+  misses a simplified stylesheet's `xsl:version`. Pass the **node under
+  judgement**, not the document: `version` may sit on any XSLT element and
+  `xsl:version` on any literal result element, each setting the version of its
+  own subtree, so a document-wide answer misjudges a template raised or lowered
+  against its root (#618). A code-based linter already holds that node from
+  `expressionsOf`, so the gate belongs inside its per-expression loop, not above
+  it. `versionOf` canonicalises the value too — `version` is an `xs:decimal`, so
+  `2`, `2.0` and `2.00` are one version and answer `2.0` — and hands back
+  anything it cannot place, which `unknown-version-in-stylesheet` reports rather
+  than let a gate guess (#614). A declarative rule reads it
   structurally — `(/xsl:stylesheet | /xsl:transform)/@version` on an XSLT root,
   `@xsl:version` on any other root (a literal result element standing in as the
   stylesheet) — never a bare `/*/@version` (blind to a simplified root) or a
@@ -338,7 +347,7 @@ the harness asserts too.
 | `src/*-linter.js` | Code-based `checks/format/*.yaml`, one construct each (axis, namespace, count, name, ...); see the flow diagram |
 | `src/checks.js` | Shared for code-based linters: `metaOf`, `suppressed`, `defect(check, meta, file, node, offset, fix)` |
 | `src/attributes.js` | `expressionsOf(xsl)` — every expression a stylesheet carries: a bare/AVT attribute, a 3.0 text value template, or a shadow attribute; `selectorOf(name)` for a linter that narrows |
-| `src/xsl-version.js` | `versionOf(xsl)` — the declared version, from `@version` on an XSLT root or `xsl:version` on a simplified one; shared `MODERN` |
+| `src/xsl-version.js` | `versionOf(node)` — the version in force at a node, from the nearest ancestor's `@version` (XSLT element) or `@xsl:version` (literal result element), canonicalised as a decimal; shared `MODERN`/`KNOWN` |
 | `src/comparisons.js` | `comparedToZero` — shared scan for a call compared with `0`/`1` (count, string-length) |
 | `src/expressions.js` | `masked`/`closes` lexer helpers (node-set, double-negation, boolean-call); `enclosed` — the expressions an AVT holds in its braces |
 | `src/tokens.js` | Positioned XPath lexer (`tokenized`, `TOKENS`), preserving whitespace |

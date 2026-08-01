@@ -55,8 +55,8 @@ const lintByNamespaceAxis = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(versionOf(xsl))) {
-        for (const {node, start, expression} of expressionsOf(xsl)) {
+      for (const {node, start, expression} of expressionsOf(xsl)) {
+        if (MODERN.includes(versionOf(node))) {
           for (const offset of axes(expression)) {
             defects.push(defect(CHECK, META, file, node, start + offset))
           }

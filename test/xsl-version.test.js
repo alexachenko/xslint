@@ -5,12 +5,14 @@
 
 const {versionOf} = require('../src/xsl-version')
 const {xml, yaml} = require('../src/helpers')
+const {nodes} = require('../src/xpath')
 const path = require('path')
 const assert = require('assert')
 
 /**
- * Root shapes paired with the version each declares.
- * @type {Array.<{name: string, input: string, version: string}>}
+ * Stylesheets paired with the version in force, at the root or at the node an
+ * `at` selector picks out.
+ * @type {Array.<{name: string, input: string, at: string, version: string}>}
  */
 const ROOTS = yaml.parsedFromFile(
   path.resolve(__dirname, 'resources', 'xsl-version', 'roots.yaml'),
@@ -19,7 +21,11 @@ const ROOTS = yaml.parsedFromFile(
 describe('xsl-version', function() {
   ROOTS.forEach((root) => {
     it(root.name, function() {
-      assert.equal(versionOf(xml.parsedFromString(root.input)), root.version)
+      const xsl = xml.parsedFromString(root.input)
+      assert.equal(
+        versionOf(root.at === undefined ? xsl : nodes(xsl, root.at)[0]),
+        root.version,
+      )
     })
   })
 })

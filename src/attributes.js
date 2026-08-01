@@ -124,9 +124,8 @@ const carried = function(node, bare, three) {
  */
 const expressionsOf = function(xsl) {
   const bare = new Set(nodes(xsl, SELECTOR))
-  const three = versionOf(xsl) === '3.0'
   return nodes(xsl, '//*/@* | //text()').flatMap(
-    (node) => carried(node, bare, three),
+    (node) => carried(node, bare, versionOf(node) === '3.0'),
   )
 }
 

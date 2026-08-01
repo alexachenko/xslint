@@ -134,8 +134,8 @@ const lintByName = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      const modern = MODERN.includes(versionOf(xsl))
       for (const {node, start, expression} of expressionsOf(xsl)) {
+        const modern = MODERN.includes(versionOf(node))
         for (const {offset, value, replacement} of comparisons(
           expression, modern,
         )) {

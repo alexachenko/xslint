@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: unknown-version-in-stylesheet
+found:
+  amount: 0
+  positions: [ ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2" id="style1">
+    <xsl:output encoding="UTF-8" method="xml"/>
+    <xsl:template match="a" version="3.00">
+      <xsl:copy-of select="."/>
+    </xsl:template>
+    <xsl:template match="b" version=" 2.0 ">
+      <xsl:copy-of select="."/>
+    </xsl:template>
+    <xsl:template match="c">
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xsl:version="1.0"/>
+    </xsl:template>
+  </xsl:stylesheet>

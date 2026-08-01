@@ -146,8 +146,8 @@ const lintByTranslate = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(versionOf(xsl))) {
-        for (const {node, start, expression} of expressionsOf(xsl)) {
+      for (const {node, start, expression} of expressionsOf(xsl)) {
+        if (MODERN.includes(versionOf(node))) {
           for (const {offset, value, replacement} of folded(expression)) {
             defects.push(
               defect(

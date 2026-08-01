@@ -76,8 +76,8 @@ const lintByNodeSet = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
-      if (MODERN.includes(versionOf(xsl))) {
-        for (const attribute of nodes(xsl, selectorOf('select'))) {
+      for (const attribute of nodes(xsl, selectorOf('select'))) {
+        if (MODERN.includes(versionOf(attribute))) {
           for (const {offset, value, replacement} of wrappers(
             attribute.nodeValue,
           )) {
