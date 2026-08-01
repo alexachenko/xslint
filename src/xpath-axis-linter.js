@@ -51,8 +51,9 @@ const STEP = {
 }
 
 /**
- * How many tokens a `node()` test and the bracket that may follow it span,
- * once the whitespace XPath allows between the pieces is counted in.
+ * How many significant tokens a `node()` test and the bracket that may follow
+ * it come to: the name, the two parentheses, and the bracket. A run of
+ * whitespace may precede each, so twice that bounds the slice they sit in.
  * @type {number}
  */
 const SPAN = 4
