@@ -89,11 +89,21 @@ const since = function(version, floor) {
  * @return {string} - The declared version, or empty
  */
 const declaring = function(element) {
-  if (element.namespaceURI !== XSLT) {
-    return element.getAttributeNS(XSLT, 'version')
-  }
-  return element.localName === SERIALIZING ?
-    '' : element.getAttribute('version')
+  const xslt = element.namespaceURI === XSLT
+  const own = xslt && element.localName !== SERIALIZING ?
+    element.getAttribute('version') : ''
+  return xslt ? own : element.getAttributeNS(XSLT, 'version')
+}
+
+/**
+ * Where each kind of node keeps the element a version is read from. A node kind
+ * not named here — a text node, a comment — hangs off its parent.
+ * @type {{[kind: number]: function(Node): ?Node}}
+ */
+const HELD = {
+  9: (node) => node.documentElement,
+  2: (node) => node.ownerElement,
+  1: (node) => node,
 }
 
 /**
@@ -104,13 +114,8 @@ const declaring = function(element) {
  * @return {?Node} - Where to begin looking, or null
  */
 const holding = function(node) {
-  if (node.nodeType === 9) {
-    return node.documentElement
-  }
-  if (node.nodeType === 2) {
-    return node.ownerElement
-  }
-  return node.nodeType === 1 ? node : node.parentNode
+  const held = HELD[node.nodeType]
+  return held === undefined ? node.parentNode : held(node)
 }
 
 /**
@@ -126,14 +131,12 @@ const holding = function(node) {
  */
 const versionOf = function(node) {
   let element = holding(node)
-  while (element !== null && element.nodeType === 1) {
-    const declared = declaring(element)
-    if (declared) {
-      return canonical(declared)
-    }
+  let found = ''
+  while (found === '' && element !== null && element.nodeType === 1) {
+    found = declaring(element) || ''
     element = element.parentNode
   }
-  return ''
+  return canonical(found)
 }
 
 module.exports = {
