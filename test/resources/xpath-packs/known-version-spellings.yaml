@@ -8,7 +8,7 @@ found:
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2" id="style1">
-    <xsl:output encoding="UTF-8" method="xml"/>
+    <xsl:output encoding="UTF-8" method="html" version="4.0"/>
     <xsl:template match="a" version="3.00">
       <xsl:copy-of select="."/>
     </xsl:template>
@@ -19,6 +19,6 @@ input: |-
       <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xsl:version="1.0"/>
     </xsl:template>
     <xsl:template match="d" version="+2.0">
-      <xsl:result-document href="o.xml" method="html" version="4.0"/>
+      <xsl:result-document href="o.xml" method="html" output-version="4.0"/>
     </xsl:template>
   </xsl:stylesheet>

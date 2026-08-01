@@ -32,13 +32,15 @@ const KNOWN = ['1.0', '2.0', '3.0']
 const DECIMAL = /^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/
 
 /**
- * XSLT elements whose `version` is a serialization parameter rather than a
- * declaration of the language. On `xsl:output` and `xsl:result-document` it
- * names the version of the output method — `1.1` asks for XML 1.1, `4.0` for
- * HTML 4.0 — and says nothing about which XSLT the element is written in.
- * @type {Array.<string>}
+ * The one XSLT element whose `version` is a serialization parameter rather than
+ * a declaration of the language: on `xsl:output` it names the version of the
+ * output method, so `4.0` asks for HTML 4.0. Nowhere else does the collision
+ * arise. `xsl:result-document` spells its serialization parameter
+ * `output-version`, renamed for exactly this reason, so its `version` is the
+ * standard attribute and governs the language of everything it contains.
+ * @type {string}
  */
-const SERIALIZED = ['output', 'result-document']
+const SERIALIZING = 'output'
 
 /**
  * The version a declared value names. `version` is an `xs:decimal`, so `2`,
@@ -55,7 +57,7 @@ const canonical = function(value) {
   const declared = value.trim()
   const known = DECIMAL.test(declared) &&
     KNOWN.find((one) => Number(one) === Number(declared))
-  return known === undefined || known === false ? declared : known
+  return known || declared
 }
 
 /**
@@ -73,7 +75,7 @@ const declaring = function(element) {
   if (element.namespaceURI !== XSLT) {
     return element.getAttributeNS(XSLT, 'version')
   }
-  return SERIALIZED.includes(element.localName) ?
+  return element.localName === SERIALIZING ?
     '' : element.getAttribute('version')
 }
 
@@ -119,5 +121,6 @@ module.exports = {
   XSLT,
   MODERN,
   KNOWN,
+  DECIMAL,
   versionOf,
 }

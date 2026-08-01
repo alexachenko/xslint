@@ -113,12 +113,23 @@
       <xsl:output method="html" version="4.0"/>
     </xsl:stylesheet>
   version: "3.0"
-- name: passes over the output version governing an xsl:result-document subtree
+- name: reads the language version an xsl:result-document lowers a subtree to
   at: //xsl:copy-of/@select
   input: |-
     <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
       <xsl:template match="/">
         <xsl:result-document href="o.xml" version="1.0">
+          <xsl:copy-of select="a"/>
+        </xsl:result-document>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "1.0"
+- name: passes over the serialization version an xsl:result-document spells apart
+  at: //xsl:copy-of/@select
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+      <xsl:template match="/">
+        <xsl:result-document href="o.xml" method="html" output-version="4.0">
           <xsl:copy-of select="a"/>
         </xsl:result-document>
       </xsl:template>

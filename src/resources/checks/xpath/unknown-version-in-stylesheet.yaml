@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-xpath: "(//xsl:*[not(self::xsl:output or self::xsl:result-document)]/@version | //*[not(self::xsl:*)]/@xsl:version)[not(matches(normalize-space(.), '^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$') and number(normalize-space(.)) = (1, 2, 3))]"
+xpath: "(//xsl:*[not(self::xsl:output)]/@version | //*[not(self::xsl:*)]/@xsl:version)[not(matches(normalize-space(.), '^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$') and number(normalize-space(.)) = (1, 2, 3))]"
 severity: error
 message: A declared version names no XSLT version this tool knows, so every version-dependent check falls back to XSLT 1.0 here, the fixes it writes included. Declare 1.0, 2.0, or 3.0
