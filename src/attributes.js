@@ -57,16 +57,14 @@ const ON = ['yes', 'true', '1']
  */
 const expands = function(text) {
   let node = text.parentNode
-  while (node.nodeType === 1) {
-    const setting = node.namespaceURI === XSLT ?
+  let setting = ''
+  while (node.nodeType === 1 && !setting) {
+    setting = node.namespaceURI === XSLT ?
       node.getAttribute('expand-text') :
       node.getAttributeNS(XSLT, 'expand-text')
-    if (setting) {
-      return ON.includes(setting.trim())
-    }
     node = node.parentNode
   }
-  return false
+  return Boolean(setting) && ON.includes(setting.trim())
 }
 
 /**
@@ -98,17 +96,14 @@ const shadow = function(attribute) {
  * @return {Array.<{node: Node, start: number, expression: string}>} - Found
  */
 const carried = function(node, bare, three) {
-  if (node.nodeType !== 2) {
-    return three && expands(node) ? enclosed(node.nodeValue).map((found) => ({
+  const whole = node.nodeType === 2 &&
+    (bare.has(node) || (three && shadow(node)))
+  const braced = node.nodeType === 2 || (three && expands(node))
+  return whole ?
+    [{node: node, start: 0, expression: node.nodeValue}] :
+    braced ? enclosed(node.nodeValue).map((found) => ({
       node: node, start: found.offset, expression: found.value,
     })) : []
-  }
-  if (bare.has(node) || (three && shadow(node))) {
-    return [{node: node, start: 0, expression: node.nodeValue}]
-  }
-  return enclosed(node.nodeValue).map((found) => ({
-    node: node, start: found.offset, expression: found.value,
-  }))
 }
 
 /**

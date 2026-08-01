@@ -33,17 +33,18 @@ const masked = function(expression) {
  */
 const closes = function(expression, open) {
   let depth = 0
-  for (let at = open; at < expression.length; at++) {
+  let shut = -1
+  for (let at = open; at < expression.length && shut < 0; at++) {
     if (expression[at] === '(') {
       depth++
     } else if (expression[at] === ')') {
       depth--
       if (depth === 0) {
-        return at
+        shut = at
       }
     }
   }
-  return -1
+  return shut
 }
 
 /**
@@ -59,17 +60,19 @@ const closes = function(expression, open) {
 const closing = function(template, from) {
   const blanked = masked(template.slice(from))
   let depth = 0
-  for (let at = 0; at < blanked.length; at++) {
+  let shut = -1
+  for (let at = 0; at < blanked.length && shut < 0; at++) {
     if (blanked[at] === '{') {
       depth++
     } else if (blanked[at] === '}') {
       if (depth === 0) {
-        return from + at
+        shut = from + at
+      } else {
+        depth--
       }
-      depth--
     }
   }
-  return -1
+  return shut
 }
 
 /**

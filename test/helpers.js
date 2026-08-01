@@ -89,13 +89,13 @@ const runXcop = function(arg, print = true) {
  * @return {boolean} - Result
  */
 const cmdAvailable = function(cmd, print = true) {
+  let available = true
   try {
-    const command = os.platform === 'win32' ? 'where' : 'which'
-    execCmd(command, [cmd], print)
-    return true
+    execCmd(os.platform === 'win32' ? 'where' : 'which', [cmd], print)
   } catch {
-    return false
+    available = false
   }
+  return available
 }
 
 module.exports = {

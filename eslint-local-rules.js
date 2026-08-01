@@ -112,11 +112,14 @@ const demanded = function (variable, from, key) {
 // A project-local ESLint plugin, kept out of eslint.config.mjs so it can be
 // unit-tested with ESLint's RuleTester (test/eslint-local-rules.test.js). One
 // rule flags a variable whose only purpose is to be returned by the very next
-// statement — that binding is redundant and should be inlined. The other flags
-// a call that leaves out an argument the callee declares. No plugin dependency
-// is needed; a single no-restricted-syntax selector can neither compare a
+// statement — that binding is redundant and should be inlined. Another flags
+// a call that leaves out an argument the callee declares. The third flags a
+// function that can be left through more than one return, where the branching,
+// not the exit, is what should carry the choice. No plugin dependency is
+// needed; a single no-restricted-syntax selector can neither compare a
 // declaration's name with the identifier the following return uses, nor weigh
-// a call's argument count against the parameter list of the callee.
+// a call's argument count against the parameter list of the callee, nor tell
+// which function a return belongs to.
 module.exports = {
   rules: {
     "no-redundant-return-variable": {
@@ -203,6 +206,46 @@ module.exports = {
                   given: node.arguments.length
                 }
               });
+            }
+          }
+        };
+      }
+    },
+    "no-multiple-returns": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description: "disallow more than one return statement in a function"
+        },
+        messages: {
+          multiple:
+            "Return once from a function; let the branching decide the " +
+            "value, not the exit"
+        }
+      },
+      create(context) {
+        const walked = [];
+        const entered = function () {
+          walked.push([]);
+        };
+        const exited = function () {
+          walked
+            .pop()
+            .slice(1)
+            .forEach(
+              (ret) => context.report({ node: ret, messageId: "multiple" })
+            );
+        };
+        return {
+          FunctionDeclaration: entered,
+          FunctionExpression: entered,
+          ArrowFunctionExpression: entered,
+          "FunctionDeclaration:exit": exited,
+          "FunctionExpression:exit": exited,
+          "ArrowFunctionExpression:exit": exited,
+          ReturnStatement(node) {
+            if (walked.length > 0) {
+              walked[walked.length - 1].push(node);
             }
           }
         };

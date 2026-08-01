@@ -223,11 +223,10 @@ const opensAxis = function(xpath, at) {
     colons += 1
   }
   const name = `${xpath.slice(at, end)}::`
-  if (end === at || xpath[colons] !== ':' || xpath[colons + 1] !== ':' ||
-    !AXES[name] || spelling(xpath, at)) {
-    return null
-  }
-  return {name: name, length: colons + 2 - at}
+  return end === at || xpath[colons] !== ':' || xpath[colons + 1] !== ':' ||
+    !AXES[name] || spelling(xpath, at) ?
+    null :
+    {name: name, length: colons + 2 - at}
 }
 
 /**

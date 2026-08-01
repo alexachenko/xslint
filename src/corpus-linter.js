@@ -38,13 +38,10 @@ const names = CHECKS.map((check) => check.name)
  */
 const within = function(declaration, attribute) {
   let node = attribute.ownerElement
-  while (node) {
-    if (node === declaration) {
-      return true
-    }
+  while (node && node !== declaration) {
     node = node.parentNode
   }
-  return false
+  return node === declaration
 }
 
 /**
@@ -101,13 +98,10 @@ const needle = function(check, declaration) {
  */
 const enclosing = function(declarations, usage) {
   let node = usage.ownerElement
-  while (node) {
-    if (declarations.has(node)) {
-      return node
-    }
+  while (node && !declarations.has(node)) {
     node = node.parentNode
   }
-  return null
+  return node
 }
 
 /**
@@ -215,16 +209,10 @@ const byReachability = function(corpus, check) {
  * @return {Array.<object>} - Defects found
  */
 const defectsOf = function(corpus, check) {
-  if (!check.reference) {
-    return byName(corpus, check)
-  }
-  if (check.reachable) {
-    return byReachability(corpus, check)
-  }
-  if (check.scoped) {
-    return byScope(corpus, check)
-  }
-  return byCall(corpus, check)
+  return !check.reference ? byName(corpus, check) :
+    check.reachable ? byReachability(corpus, check) :
+      check.scoped ? byScope(corpus, check) :
+        byCall(corpus, check)
 }
 
 /**

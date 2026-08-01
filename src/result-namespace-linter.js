@@ -144,22 +144,21 @@ const textual = function(elements) {
  */
 const exclusion = function(root, prefix) {
   const attribute = root.getAttributeNode('exclude-result-prefixes')
-  if (attribute) {
-    return {
+  return attribute ?
+    {
       line: attribute.lineNumber,
       col: attribute.columnNumber - attribute.name.length - 1,
       value: `${attribute.name}="${attribute.value}"`,
       replacement: `${attribute.name}="${attribute.value} ${prefix}"`,
       suggestion: true,
+    } :
+    {
+      line: root.lineNumber,
+      col: root.columnNumber + root.nodeName.length + 1,
+      value: '',
+      replacement: ` exclude-result-prefixes="${prefix}"`,
+      suggestion: true,
     }
-  }
-  return {
-    line: root.lineNumber,
-    col: root.columnNumber + root.nodeName.length + 1,
-    value: '',
-    replacement: ` exclude-result-prefixes="${prefix}"`,
-    suggestion: true,
-  }
 }
 
 /**

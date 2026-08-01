@@ -35,23 +35,14 @@ const names = [CHECK]
  * @return {?string} - `exists`, `empty`, or null
  */
 const collapses = function(operator, zero) {
-  if (zero === '0') {
-    if (operator === '>' || operator === '!=') {
-      return 'exists'
-    }
-    if (operator === '=' || operator === '<=') {
-      return 'empty'
-    }
-  }
-  if (zero === '1') {
-    if (operator === '>=') {
-      return 'exists'
-    }
-    if (operator === '<') {
-      return 'empty'
-    }
-  }
-  return null
+  return {
+    '0>': 'exists',
+    '0!=': 'exists',
+    '0=': 'empty',
+    '0<=': 'empty',
+    '1>=': 'exists',
+    '1<': 'empty',
+  }[`${zero}${operator}`] ?? null
 }
 
 /**
@@ -82,13 +73,10 @@ const decide = function(operator, zero, argument) {
  * @return {string} - The replacement expression
  */
 const rewritten = function(test, argument, modern, whole) {
-  if (modern) {
-    return `${test}(${argument})`
-  }
-  if (test === 'exists') {
-    return whole ? argument : `boolean(${argument})`
-  }
-  return `not(${argument})`
+  return modern ? `${test}(${argument})` :
+    test === 'exists' ?
+      (whole ? argument : `boolean(${argument})`) :
+      `not(${argument})`
 }
 
 /**

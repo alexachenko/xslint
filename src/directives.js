@@ -56,16 +56,13 @@ const directivesFrom = function(content) {
  * @return {boolean} - True when the directive covers the defect
  */
 const covers = function(directive, defect) {
-  if (directive.names.length > 0 && !directive.names.includes(defect.name)) {
-    return false
-  }
-  if (directive.type === TYPES.FILE) {
-    return true
-  }
-  if (directive.type === TYPES.NEXT_LINE) {
-    return defect.line === directive.line + 1
-  }
-  return defect.line === directive.line
+  const named = directive.names.length === 0 ||
+    directive.names.includes(defect.name)
+  const covered = directive.type === TYPES.NEXT_LINE ?
+    directive.line + 1 :
+    directive.line
+  return named &&
+    (directive.type === TYPES.FILE || defect.line === covered)
 }
 
 /**
