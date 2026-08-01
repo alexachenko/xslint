@@ -6,7 +6,7 @@
 const {tokenized, TOKENS} = require('./tokens')
 const {metaOf, suppressed, defect} = require('./checks')
 const {expressionsOf} = require('./attributes')
-const {MODERN, versionOf} = require('./xsl-version')
+const {MODERN, since, versionOf} = require('./xsl-version')
 const {logger} = require('./logger')
 
 /**
@@ -134,7 +134,7 @@ const lintByAxis = function(corpus, suppressions = []) {
   if (!suppressed(CHECK, suppressions)) {
     for (const {file, xsl} of corpus) {
       for (const {node, start, expression} of expressionsOf(xsl)) {
-        const modern = MODERN.includes(versionOf(node))
+        const modern = since(versionOf(node), MODERN)
         for (const {offset, fix} of abbreviable(expression, modern)) {
           defects.push(defect(CHECK, META, file, node, start + offset, fix))
         }

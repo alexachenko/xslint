@@ -202,9 +202,9 @@ describe('conformance', function() {
   it('spells the decimal a version is in one place only', function() {
     assert.ok(
       yaml.parsedFromFile(
-        path.join(CHECKS, 'xpath', 'unknown-version-in-stylesheet.yaml'),
+        path.join(CHECKS, 'xpath', 'malformed-version-in-stylesheet.yaml'),
       ).xpath.includes(DECIMAL.source),
-      'unknown-version-in-stylesheet writes its own xs:decimal pattern rather ' +
+      'malformed-version-in-stylesheet writes its own xs:decimal pattern rather ' +
         'than the DECIMAL of src/xsl-version.js, so the check and the reader ' +
         'it reports for can disagree on what a version is',
     )

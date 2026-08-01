@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-pack: unknown-version-in-stylesheet
+pack: malformed-version-in-stylesheet
 found:
   amount: 0
   positions: [ ]
@@ -20,5 +20,8 @@ input: |-
     </xsl:template>
     <xsl:template match="d" version="+2.0">
       <xsl:result-document href="o.xml" method="html" output-version="4.0"/>
+    </xsl:template>
+    <xsl:template match="e" version="4.0">
+      <xsl:copy-of select="."/>
     </xsl:template>
   </xsl:stylesheet>

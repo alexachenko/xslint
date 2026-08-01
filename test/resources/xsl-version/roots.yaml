@@ -147,3 +147,7 @@
   input: |-
     <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="0x2"/>
   version: "0x2"
+- name: reads a version released after the ones it knows
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="4.0"/>
+  version: "4.0"

@@ -11,10 +11,13 @@
 const XSLT = 'http://www.w3.org/1999/XSL/Transform'
 
 /**
- * Versions where an XSLT 2.0-or-later construct is available.
- * @type {Array.<string>}
+ * The version the 2.0 language begins at. Gates read it as a floor rather than
+ * a name, so every version after it is modern too: XSLT 3.0 §3.9 puts XSLT 1.0
+ * behaviour at an effective version of exactly 1.0, and anything from here up
+ * is outside it.
+ * @type {string}
  */
-const MODERN = ['2.0', '3.0']
+const MODERN = '2.0'
 
 /**
  * The versions this tool knows, in the spelling every gate compares against.
@@ -32,12 +35,12 @@ const KNOWN = ['1.0', '2.0', '3.0']
 const DECIMAL = /^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$/
 
 /**
- * The one XSLT element whose `version` is a serialization parameter rather than
- * a declaration of the language: on `xsl:output` it names the version of the
- * output method, so `4.0` asks for HTML 4.0. Nowhere else does the collision
- * arise. `xsl:result-document` spells its serialization parameter
- * `output-version`, renamed for exactly this reason, so its `version` is the
- * standard attribute and governs the language of everything it contains.
+ * The one element XSLT 3.0 §3.9 excludes when it names the effective version:
+ * `xsl:output`, whose `version` is a serialization parameter naming the version
+ * of the output method, so `4.0` there asks for HTML 4.0. The specification
+ * excludes nothing else, and nothing else needs it —`xsl:result-document`
+ * spells its serialization parameter `output-version`, renamed for exactly this
+ * collision, so its `version` governs the language of all it contains.
  * @type {string}
  */
 const SERIALIZING = 'output'
@@ -58,6 +61,20 @@ const canonical = function(value) {
   const known = DECIMAL.test(declared) &&
     KNOWN.find((one) => Number(one) === Number(declared))
   return known || declared
+}
+
+/**
+ * Whether the version in force is the given one or later. A version gate is a
+ * lower bound, not a list of spellings: a construct XSLT 2.0 introduced is in
+ * 3.0 and in whatever comes after, and a hazard that begins where XSLT 1.0
+ * behaviour ends only deepens past that point. A value that is no decimal names
+ * no version and so clears no bound.
+ * @param {string} version - The version in force, as `versionOf` answers it
+ * @param {string} floor - The earliest version the construct belongs to
+ * @return {boolean} - True when the version is the floor or later
+ */
+const since = function(version, floor) {
+  return DECIMAL.test(version) && Number(version) >= Number(floor)
 }
 
 /**
@@ -97,11 +114,13 @@ const holding = function(node) {
 }
 
 /**
- * The version in force at the given node. XSLT 2.0 lets `version` sit on any
- * XSLT element and `xsl:version` on any literal result element, each setting
- * the version of that element and everything under it, so the answer is the
- * nearest ancestor to declare one and the root only when none does. Handed a
- * whole document, it answers for the root.
+ * The version in force at the given node, which XSLT 3.0 §3.9 names the
+ * effective version: the decimal value of the `version` attribute on the
+ * element itself or on the innermost ancestor carrying one, excluding the
+ * `version` of an `xsl:output`. `version` sits on an XSLT element and
+ * `xsl:version` on a literal result element, and either governs everything
+ * below it, so the root answers only when nothing nearer does. Handed a whole
+ * document, it answers for the root.
  * @param {Node} node - Any node of a stylesheet, or the document itself
  * @return {string} - The version in force, or empty when none is declared
  */
@@ -122,5 +141,6 @@ module.exports = {
   MODERN,
   KNOWN,
   DECIMAL,
+  since,
   versionOf,
 }

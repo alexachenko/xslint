@@ -1,24 +1,18 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-pack: unknown-version-in-stylesheet
+pack: malformed-version-in-stylesheet
 found:
-  amount: 5
-  positions: [ [ 2, 74 ], [ 4, 35 ], [ 7, 21 ], [ 10, 35 ], [ 14, 61 ] ]
+  amount: 3
+  positions: [ [ 2, 74 ], [ 4, 21 ], [ 7, 35 ] ]
 input: |-
   <?xml version="1.0"?>
   <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2,0" id="style1">
     <xsl:output encoding="UTF-8" method="xml"/>
-    <xsl:template match="a" version="4.0">
-      <xsl:copy-of select="."/>
-    </xsl:template>
     <html xsl:version="">
       <xsl:copy-of select="."/>
     </html>
     <xsl:template match="b" version="2e0">
       <xsl:copy-of select="."/>
-    </xsl:template>
-    <xsl:template match="c">
-      <xsl:result-document href="o.xml" method="html" version="4.0"/>
     </xsl:template>
   </xsl:stylesheet>
