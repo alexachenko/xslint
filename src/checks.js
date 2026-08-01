@@ -4,6 +4,7 @@
  */
 
 const {yaml} = require('./helpers')
+const {offsetAt, placeAt, skip} = require('./source')
 const path = require('path')
 
 /**
@@ -37,36 +38,45 @@ const LEAD = {2: 1, 4: '<![CDATA['.length}
 
 /**
  * A defect at an offset inside an attribute, text, or CDATA node. Its line and
- * column are the node's own, advanced by the newlines the offset spans
- * and, on the first line, past the markup the value opens with. The fix, when
- * given as `{value, replacement, suggestion?}`, is anchored there and carries
- * the decoded `offset`, so the fixer can decode-walk from the node's raw start
- * to the match even past an entity that shifts it. Omit `fix` for report-only.
+ * column are where it truly stands in the source, which is not something the
+ * parsed value can answer on its own: an attribute value arrives with its line
+ * breaks normalised to spaces and its entities decoded, so the offset is walked
+ * against the raw text from where the node opens. The fix, when given as
+ * `{value, replacement, suggestion?}`, is anchored at that same place, which is
+ * all the fixer needs to find it. It also carries `from`, the line the value
+ * opens on, because a value that wraps can be silenced only from above the
+ * element — no comment fits inside a start tag. Omit `fix` for report-only.
  * @param {string} check - Check name
  * @param {{severity: string, message: string}} meta - The check metadata
- * @param {string} file - File the node sits in
+ * @param {{file: string, content: string}} source - The file the node sits
+ *  in, with its raw text, which is the only place the line breaks a parser
+ *  normalised away are still visible
  * @param {Node} node - The attribute, text, or CDATA node
  * @param {number} offset - Offset of the defect within the node value
  * @param {?{value: string, replacement: string, suggestion?: boolean}} [fix] -
  *  The fix, or undefined for a report-only defect
  * @return {object} - Defect
  */
-const defect = function(check, meta, file, node, offset, fix = undefined) {
-  const before = node.nodeValue.slice(0, offset)
-  const newline = before.lastIndexOf('\n')
-  const line = node.lineNumber + before.split('\n').length - 1
-  const pos = newline < 0 ?
-    node.columnNumber + (LEAD[node.nodeType] || 0) + offset :
-    offset - newline
+const defect = function(check, meta, source, node, offset, fix = undefined) {
+  const {line, pos} = placeAt(
+    source.content,
+    skip(
+      source.content,
+      offsetAt(source.content, node.lineNumber, node.columnNumber) +
+        (LEAD[node.nodeType] || 0),
+      offset,
+    ),
+  )
   const anchored = fix === undefined ?
     undefined :
-    {line: line, col: pos, offset: offset, ...fix}
+    {line: line, col: pos, ...fix}
   return {
     name: check,
     severity: meta.severity,
     message: meta.message,
-    file: file,
+    file: source.file,
     line: line,
+    from: node.lineNumber,
     pos: pos,
     ...(anchored === undefined ? {} : {fix: anchored}),
   }

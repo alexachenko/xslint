@@ -132,15 +132,14 @@ const lintByName = function(corpus, suppressions = []) {
   logger.debug(`Name-comparison linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const {node, start, expression} of expressionsOf(xsl)) {
+    for (const source of corpus) {
+      for (const {node, start, expression} of expressionsOf(source.xsl)) {
         const modern = since(versionOf(node), MODERN)
         for (const {offset, value, replacement} of comparisons(
           expression, modern,
         )) {
           defects.push(
-            defect(
-              CHECK, META, file, node, start + offset,
+            defect(CHECK, META, source, node, start + offset,
               replacement === null ?
                 undefined : {value, replacement, suggestion: true},
             ),

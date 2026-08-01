@@ -314,7 +314,9 @@ the harness asserts too.
   directory and runs [xcop](https://github.com/yegor256/xcop) over it; the CI
   `xcop` job runs it too. The `redundant-namespace-declarations` pack is listed in
   `UNFORMATTED` because its fixture must carry the unused namespace the check
-  flags, which xcop would canonicalize away.
+  flags, which xcop would canonicalize away. The repo-wide sweep in the workflow
+  excludes `test/resources/directives/wrapped.xsl` for the same reason: it must
+  keep the wrapped attribute value #611 is about, which xcop joins onto one line.
 - **Table-driven.** Where several `it` blocks differ only in data, express them as
   a data array plus one generator, not repeated blocks. When adding a test, add a
   row to the matching table (`test/fixer.test.js`, the pack harnesses,
@@ -358,7 +360,8 @@ the harness asserts too.
 | `src/xpath-linter.js` | Loads `checks/xpath/*.yaml`; attaches any `src/fixers.js` fix |
 | `src/corpus-linter.js` | Loads `checks/corpus/*.yaml`; cross-file rules |
 | `src/*-linter.js` | Code-based `checks/format/*.yaml`, one construct each (axis, namespace, count, name, ...); see the flow diagram |
-| `src/checks.js` | Shared for code-based linters: `metaOf`, `suppressed`, `defect(check, meta, file, node, offset, fix)` |
+| `src/checks.js` | Shared for code-based linters: `metaOf`, `suppressed`, `defect(check, meta, source, node, offset, fix)` — walks the raw text so a wrapped or entity-shifted value reports where it truly stands (#611) |
+| `src/source.js` | Raw-text walking shared by `checks` and `fixer`: `offsetAt`, `placeAt`, `character`, `skip` |
 | `src/attributes.js` | `expressionsOf(xsl)` — every expression a stylesheet carries: a bare/AVT attribute, a 3.0 text value template, or a shadow attribute; `selectorOf(name)` for a linter that narrows |
 | `src/xsl-version.js` | `versionOf(node)` — the version in force at a node, from the nearest ancestor's `@version` (XSLT element) or `@xsl:version` (literal result element), canonicalised as a decimal; `since(version, floor)` for a lower-bound gate; shared `MODERN`/`KNOWN`/`DECIMAL` |
 | `src/comparisons.js` | `comparedToZero` — shared scan for a call compared with `0`/`1` (count, string-length) |

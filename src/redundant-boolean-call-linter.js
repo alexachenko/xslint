@@ -76,12 +76,12 @@ const lintByBooleanCall = function(corpus, suppressions = []) {
   logger.debug(`Boolean-call linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const attribute of nodes(xsl, selectorOf('test'))) {
+    for (const source of corpus) {
+      for (const attribute of nodes(source.xsl, selectorOf('test'))) {
         const strip = stripped(attribute.nodeValue)
         if (strip) {
           defects.push(
-            defect(CHECK, META, file, attribute, strip.offset, {
+            defect(CHECK, META, source, attribute, strip.offset, {
               value: strip.value,
               replacement: strip.replacement,
             }),

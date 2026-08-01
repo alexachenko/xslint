@@ -105,14 +105,14 @@ const lintByCount = function(corpus, suppressions = []) {
   logger.debug(`Count-comparison linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const {node, start, expression} of expressionsOf(xsl)) {
+    for (const source of corpus) {
+      for (const {node, start, expression} of expressionsOf(source.xsl)) {
         const modern = since(versionOf(node), MODERN)
         for (const {offset, value, test, argument} of comparisons(expression)) {
           const whole = node.nodeName === 'test' &&
             node.nodeValue.trim() === value
           defects.push(
-            defect(CHECK, META, file, node, start + offset, {
+            defect(CHECK, META, source, node, start + offset, {
               value: value,
               replacement: rewritten(test, argument, modern, whole),
             }),

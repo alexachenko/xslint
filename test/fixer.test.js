@@ -95,6 +95,12 @@ const APPLIED = [
     after: 'unabbreviated-axis.fixed.xsl',
   },
   {
+    name: 'should abbreviate an axis in a wrapped value with --fix',
+    flag: '--fix',
+    before: 'unabbreviated-axis-in-a-wrapped-value.xsl',
+    after: 'unabbreviated-axis-in-a-wrapped-value.fixed.xsl',
+  },
+  {
     name: 'should delete a redundant namespace declaration with --fix',
     flag: '--fix',
     before: 'redundant-namespace-declarations.xsl',

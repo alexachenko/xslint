@@ -37,7 +37,7 @@ describe('xpath-linter', function() {
           })
       })
       it(`should find ${yml.found.amount} defects by all checks`, function() {
-        const defects = lintByXpath([{file: 'test.xsl', xsl: input}])
+        const defects = lintByXpath([{file: 'test.xsl', content: yml.input, xsl: input}])
         assert.equal(defects.length, yml.found.amount)
         defects.forEach((defect, index) => {
           let severity = lint.severity

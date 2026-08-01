@@ -34,7 +34,8 @@ const names = [CHECK]
  * over the stylesheets that parse.
  * @param {Array.<{file: string, content: string}>} sources - Raw stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
- * @return {{corpus: Array.<{file: string, xsl: Document}>, defects:
+ * @return {{corpus: Array.<{file: string, content: string, xsl: Document}>,
+ *  defects:
  *  Array.<object>}} - Parsed corpus and defects for the unparsable sources
  */
 const validate = function(sources, suppressions = []) {
@@ -44,7 +45,9 @@ const validate = function(sources, suppressions = []) {
   const suppressed = suppressions.some((sup) => CHECK.includes(sup))
   for (const {file, content} of sources) {
     try {
-      corpus.push({file: file, xsl: xml.parsedFromString(content)})
+      corpus.push({
+        file: file, content: content, xsl: xml.parsedFromString(content),
+      })
     } catch {
       if (!suppressed) {
         defects.push({

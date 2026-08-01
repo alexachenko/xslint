@@ -70,12 +70,12 @@ const lintByFormat = function(expressions, suppressions = []) {
   logger.debug(`Format linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, expression} of expressions) {
+    for (const {source, expression} of expressions) {
       for (const {offset, value, replacement} of redundancies(
         expression.nodeValue,
       )) {
         defects.push(
-          defect(CHECK, META, file, expression, offset, {value, replacement}),
+          defect(CHECK, META, source, expression, offset, {value, replacement}),
         )
       }
     }
