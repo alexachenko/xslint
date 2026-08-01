@@ -106,3 +106,33 @@
   input: |-
     <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="4.0"/>
   version: "4.0"
+- name: passes over the output method version of an xsl:output
+  at: //xsl:output/@method
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+      <xsl:output method="html" version="4.0"/>
+    </xsl:stylesheet>
+  version: "3.0"
+- name: passes over the output version governing an xsl:result-document subtree
+  at: //xsl:copy-of/@select
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+      <xsl:template match="/">
+        <xsl:result-document href="o.xml" version="1.0">
+          <xsl:copy-of select="a"/>
+        </xsl:result-document>
+      </xsl:template>
+    </xsl:stylesheet>
+  version: "3.0"
+- name: reads a version signed the way its type allows
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="+2.0"/>
+  version: "2.0"
+- name: leaves a version spelled in a notation its type does not have
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2e0"/>
+  version: "2e0"
+- name: leaves a version spelled as hexadecimal
+  input: |-
+    <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="0x2"/>
+  version: "0x2"
