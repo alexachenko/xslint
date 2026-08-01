@@ -8,6 +8,9 @@
     <xsl:value-of select="title"/>
     <xsl:value-of select="@name"/>
     <xsl:apply-templates select=".."/>
+    <xsl:value-of select="."/>
+    <xsl:value-of select=".."/>
     <xsl:value-of select="parent::n"/>
+    <xsl:value-of select="self::text()"/>
   </xsl:template>
 </xsl:stylesheet>

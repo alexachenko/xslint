@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: unabbreviated-axis
+found:
+  amount: 3
+  positions: [ [ 4, 36 ], [ 5, 29 ], [ 6, 38 ] ]
+  fixes: [ "", "", "" ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+    <xsl:template match="/">
+      <xsl:value-of select="count(a)-child::b"/>
+      <xsl:value-of select="1-child::b"/>
+      <xsl:value-of select="count(a) - child::b"/>
+    </xsl:template>
+  </xsl:stylesheet>

@@ -76,12 +76,25 @@ const SCANS = [
     ],
   },
   {
+    name: 'finds an axis that opens a step after an operator',
+    count: 1,
+    pairs: [
+      ['count(a)-child::b', TOKENS.CHILD],
+      ['1-child::b', TOKENS.CHILD],
+      ['count(a) - child::b', TOKENS.CHILD],
+      ['a|self::b', TOKENS.SELF],
+    ],
+  },
+  {
     name: 'finds no axes',
     count: 0,
     pairs: [
       ['child:abc', TOKENS.CHILD],
       ['descendant-or-self', TOKENS.DESCENDANT_OR_SELF],
       ['child : :abc', TOKENS.CHILD],
+      ['ns:child::abc', TOKENS.CHILD],
+      ['myself::abc', TOKENS.SELF],
+      ['stepparent::abc', TOKENS.PARENT],
     ],
   },
 ]

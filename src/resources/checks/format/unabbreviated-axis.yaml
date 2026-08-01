@@ -2,4 +2,4 @@
 # SPDX-License-Identifier: MIT
 ---
 severity: warning
-message: Verbose axis specifiers child::, attribute::, or parent::node() are used. Replace them with the node name alone, @, or .. respectively.
+message: Verbose axis specifiers child::, attribute::, parent::node(), or self::node() are used. Replace them with the node name alone, @, .., or . respectively.

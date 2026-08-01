@@ -337,6 +337,11 @@ const UNCHANGED = [
     sheet: 'count-in-xslt-1-0.xsl',
   },
   {
+    name: 'cannot abbreviate a predicated step in a 1.0 stylesheet with --fix',
+    flag: '--fix',
+    sheet: 'unabbreviated-axis-in-xslt-1.xsl',
+  },
+  {
     name: 'cannot rewrite an entity-encoded comparison with --fix-dry-run',
     flag: '--fix-dry-run',
     sheet: 'count-entity-comparison.xsl',
