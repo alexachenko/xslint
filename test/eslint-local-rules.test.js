@@ -104,3 +104,48 @@ tester.run(
     ],
   },
 )
+
+tester.run(
+  'no-multiple-returns',
+  local.rules['no-multiple-returns'],
+  {
+    valid: [
+      'function once() { return make() }',
+      'function never() { make() }',
+      'const brief = (one, two) => one + two',
+      'function branched() { let pick; if (one()) { pick = 1 } else { pick = 2 } return pick }',
+      'function nested() { const inner = function() { return 1 }; return inner }',
+      'function callback() { return list.map(function(item) { return item }) }',
+      'function arrows() { return list.map((item) => { return item }) }',
+      'const shorthand = {method() { return 1 }, other() { return 2 }}',
+      'class Holder { one() { return 1 } two() { return 2 } }',
+      'return 1',
+    ],
+    invalid: [
+      {
+        code: 'function twice() { if (one()) { return 1 } return 2 }',
+        errors: [{messageId: 'multiple'}],
+      },
+      {
+        code: 'function thrice() { if (one()) { return 1 } if (two()) { return 2 } return 3 }',
+        errors: [{messageId: 'multiple'}, {messageId: 'multiple'}],
+      },
+      {
+        code: 'const picked = (one) => { if (one) { return 1 } return 2 }',
+        errors: [{messageId: 'multiple'}],
+      },
+      {
+        code: 'function bare() { if (one()) { return } return 2 }',
+        errors: [{messageId: 'multiple'}],
+      },
+      {
+        code: 'function outer() { const inner = function() { if (one()) { return 1 } return 2 }; return inner }',
+        errors: [{messageId: 'multiple'}],
+      },
+      {
+        code: 'function guarded() { for (const one of many()) { if (one) { return one } } return null }',
+        errors: [{messageId: 'multiple'}],
+      },
+    ],
+  },
+)

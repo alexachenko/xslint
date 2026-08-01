@@ -23,13 +23,12 @@ const section = function(heading) {
   const start = lines.findIndex(
     (line) => line === `## ${heading}` || line.startsWith(`## ${heading} `),
   )
-  if (start < 0) {
-    return ''
-  }
   const next = lines.findIndex(
     (line, index) => index > start && line.startsWith('## '),
   )
-  return lines.slice(start + 1, next < 0 ? lines.length : next).join('\n').trim()
+  return start < 0 ?
+    '' :
+    lines.slice(start + 1, next < 0 ? lines.length : next).join('\n').trim()
 }
 
 // Prefer this version's section; fall back to Unreleased, then a bare line, so

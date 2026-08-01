@@ -64,11 +64,10 @@ const NAME = /^[A-Za-z_][\w.-]*(:[A-Za-z_][\w.-]*)?$/
  * @return {?string} - The replacement expression, or null
  */
 const test = function(fn, operator, literal, modern) {
-  if (!NAME.test(literal) || (fn === 'local-name' && !modern)) {
-    return null
-  }
   const node = fn === 'name' ? `self::${literal}` : `self::*:${literal}`
-  return operator === '!=' ? `not(${node})` : node
+  return !NAME.test(literal) || (fn === 'local-name' && !modern) ?
+    null :
+    operator === '!=' ? `not(${node})` : node
 }
 
 /**

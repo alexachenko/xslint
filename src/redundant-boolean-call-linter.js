@@ -48,20 +48,16 @@ const WRAPPER = /^\s*boolean\s*\(/
 const stripped = function(test) {
   const blanked = masked(test)
   const wrapper = WRAPPER.exec(blanked)
-  if (!wrapper) {
-    return null
-  }
-  const open = wrapper[0].length - 1
-  const close = closes(blanked, open)
-  if (close < 0 || blanked.slice(close + 1).trim() !== '') {
-    return null
-  }
-  const offset = wrapper[0].indexOf('boolean')
-  return {
-    offset: offset,
-    value: test.slice(offset, close + 1),
-    replacement: test.slice(open + 1, close).trim(),
-  }
+  const open = wrapper ? wrapper[0].length - 1 : -1
+  const close = wrapper ? closes(blanked, open) : -1
+  const offset = wrapper ? wrapper[0].indexOf('boolean') : -1
+  return close < 0 || blanked.slice(close + 1).trim() !== '' ?
+    null :
+    {
+      offset: offset,
+      value: test.slice(offset, close + 1),
+      replacement: test.slice(open + 1, close).trim(),
+    }
 }
 
 /**

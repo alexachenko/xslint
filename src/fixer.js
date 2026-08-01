@@ -39,11 +39,11 @@ const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
  *  and the next raw offset
  */
 const character = function(content, at) {
-  if (content[at] !== '&') {
-    return [content[at], at + 1]
-  }
-  const end = content.indexOf(';', at)
-  return [NAMED[content.slice(at + 1, end)], end + 1]
+  const entity = content[at] === '&'
+  const end = entity ? content.indexOf(';', at) : at
+  return entity ?
+    [NAMED[content.slice(at + 1, end)], end + 1] :
+    [content[at], at + 1]
 }
 
 /**
@@ -75,17 +75,14 @@ const skip = function(content, at, count) {
  */
 const decodes = function(content, from, value) {
   let raw = from
-  for (const char of value) {
-    if (raw >= content.length) {
-      return -1
-    }
-    const [decoded, next] = character(content, raw)
-    if (decoded !== char) {
-      return -1
-    }
+  const matched = [...value].every((char) => {
+    const [decoded, next] = raw < content.length ?
+      character(content, raw) :
+      [null, raw]
     raw = next
-  }
-  return raw
+    return decoded === char
+  })
+  return matched ? raw : -1
 }
 
 /**
