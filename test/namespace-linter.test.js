@@ -22,7 +22,7 @@ describe('namespace-linter', function() {
     const input = xml.parsedFromString(yml.input)
     describe(`testing ${path.basename(pack)} pack`, function() {
       it(`should find ${yml.found.amount} redundant declarations`, function() {
-        const defects = lintByNamespace([{file: 'test.xsl', xsl: input}])
+        const defects = lintByNamespace([{file: 'test.xsl', content: yml.input, xsl: input}])
         assert.equal(defects.length, yml.found.amount)
         yml.found.positions.forEach((pos, index) => {
           assert.equal(defects[index].line, pos[0])

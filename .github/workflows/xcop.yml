@@ -28,3 +28,4 @@ jobs:
           --include '**/*.xsl' --include '**/*.xml'
           --exclude 'test/resources/malformed/**'
           --exclude 'test/resources/fix/**'
+          --exclude 'test/resources/directives/wrapped*.xsl'

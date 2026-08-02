@@ -49,10 +49,14 @@ const directivesFrom = function(content) {
 
 /**
  * Whether a single directive covers given defect. A directive with no names
- * covers every rule; otherwise only the ones it names.
+ * covers every rule; otherwise only the ones it names. A defect standing in an
+ * value that wraps is reported on the line it truly occupies, which no comment
+ * can sit above — a start tag admits none, and the tag itself may wrap before
+ * the value does — so the directive reaches anywhere from the line the holding
+ * element opens on, `from`, down to the defect itself.
  * @param {{type: string, line: number, names: Array.<string>}} directive -
  *  Directive to test
- * @param {{name: string, line: number}} defect - Defect to test
+ * @param {{name: string, line: number, from: number}} defect - Defect to test
  * @return {boolean} - True when the directive covers the defect
  */
 const covers = function(directive, defect) {
@@ -61,8 +65,8 @@ const covers = function(directive, defect) {
   const covered = directive.type === TYPES.NEXT_LINE ?
     directive.line + 1 :
     directive.line
-  return named &&
-    (directive.type === TYPES.FILE || defect.line === covered)
+  return named && (directive.type === TYPES.FILE ||
+    (covered >= (defect.from || defect.line) && covered <= defect.line))
 }
 
 /**

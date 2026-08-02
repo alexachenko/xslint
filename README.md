@@ -193,6 +193,12 @@ suppressed.
 A directive that suppresses nothing is reported as unused, so stale ones can be
 found and removed.
 
+An expression written across several lines is one value, and a directive that
+reaches any line of it silences every defect in it. Nothing inside a start tag
+can carry a comment of its own, so a directive above the element is the only
+way to reach a wrapped `@test` or `@select` at all — the cost is that it cannot
+pick out one defect in such a value and leave its neighbours reported.
+
 ## Output
 
 Defects are written to stdout; progress and diagnostic logs go to stderr, so

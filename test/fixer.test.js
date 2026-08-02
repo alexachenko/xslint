@@ -95,6 +95,12 @@ const APPLIED = [
     after: 'unabbreviated-axis.fixed.xsl',
   },
   {
+    name: 'should abbreviate an axis in a wrapped value with --fix',
+    flag: '--fix',
+    before: 'unabbreviated-axis-in-a-wrapped-value.xsl',
+    after: 'unabbreviated-axis-in-a-wrapped-value.fixed.xsl',
+  },
+  {
     name: 'should delete a redundant namespace declaration with --fix',
     flag: '--fix',
     before: 'redundant-namespace-declarations.xsl',
@@ -559,6 +565,18 @@ describe('fixer', function() {
     const file = scratch(fixture('unabbreviated-axis.xsl'))
     runXslint(['--fix', file])
     assert.ok(fs.readFileSync(file, 'utf-8').includes('parent::n'))
+  })
+  it('should abbreviate an axis in a wrapped value of a CRLF file', function() {
+    const file = scratch(
+      fixture('unabbreviated-axis-in-a-wrapped-value.xsl')
+        .replace(/\n/g, '\r\n'),
+    )
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('unabbreviated-axis-in-a-wrapped-value.fixed.xsl')
+        .replace(/\n/g, '\r\n'),
+    )
   })
   it('should announce how many defects --fix would fix', function() {
     const file = scratch(fixture('redundant-whitespace.xsl'))

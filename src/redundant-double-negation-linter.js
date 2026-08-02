@@ -91,13 +91,13 @@ const lintByDoubleNegation = function(corpus, suppressions = []) {
   logger.debug(`Double-negation linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const {node, start, expression} of expressionsOf(xsl)) {
+    for (const source of corpus) {
+      for (const {node, start, expression} of expressionsOf(source.xsl)) {
         for (const {offset, value, argument} of negations(expression)) {
           const bare = node.nodeName === 'test' &&
             node.nodeValue.trim() === value
           defects.push(
-            defect(CHECK, META, file, node, start + offset, {
+            defect(CHECK, META, source, node, start + offset, {
               value: value,
               replacement: bare ? argument : `boolean(${argument})`,
             }),

@@ -54,11 +54,11 @@ const lintByNamespaceAxis = function(corpus, suppressions = []) {
   logger.debug(`Namespace axis linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const {node, start, expression} of expressionsOf(xsl)) {
+    for (const source of corpus) {
+      for (const {node, start, expression} of expressionsOf(source.xsl)) {
         if (since(versionOf(node), MODERN)) {
           for (const offset of axes(expression)) {
-            defects.push(defect(CHECK, META, file, node, start + offset))
+            defects.push(defect(CHECK, META, source, node, start + offset))
           }
         }
       }

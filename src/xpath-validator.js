@@ -55,9 +55,10 @@ const UNRESOLVED = /&[A-Za-z_][\w.-]*;/
  * for the linters to consume from the malformed ones, which become defects.
  * An expression that cannot be parsed by the engine that would run it is
  * reported and dropped, so no linter ever reasons over broken input.
- * @param {Array.<{file: string, xsl: Document}>} corpus - Parsed stylesheets
+ * @param {Array.<{file: string, content: string, xsl: Document}>} corpus -
+ *  Parsed stylesheets
  * @param {Array.<string>} suppressions - Array of suppressed checks
- * @return {{expressions: Array.<{file: string, expression: Node}>, defects:
+ * @return {{expressions: Array.<{source: object, expression: Node}>, defects:
  *  {name: string, severity: string, message: string, file: string,
  *  line: number, pos: number}[]}} - Valid expressions and defects found
  */
@@ -66,10 +67,10 @@ const validate = function(corpus, suppressions = []) {
   const expressions = []
   const defects = []
   const suppressed = suppressions.some((sup) => CHECK.includes(sup))
-  for (const {file, xsl} of corpus) {
-    for (const expression of nodes(xsl, EXPRESSIONS)) {
+  for (const source of corpus) {
+    for (const expression of nodes(source.xsl, EXPRESSIONS)) {
       if (isValid(expression.nodeValue)) {
-        expressions.push({file: file, expression: expression})
+        expressions.push({source: source, expression: expression})
       } else if (UNRESOLVED.test(expression.nodeValue)) {
         logger.debug(`Skipping expression with an unresolved entity`)
       } else if (!suppressed) {
@@ -77,7 +78,7 @@ const validate = function(corpus, suppressions = []) {
           name: CHECK,
           severity: META.severity,
           message: META.message,
-          file: file,
+          file: source.file,
           line: expression.lineNumber,
           pos: expression.columnNumber,
         })

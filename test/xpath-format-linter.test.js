@@ -24,7 +24,7 @@ describe('xpath-format-linter', function() {
     describe(`testing ${path.basename(pack)} pack`, function() {
       it(`should find ${yml.found.amount} redundant whitespace runs`,
         function() {
-          const {expressions} = validate([{file: 'test.xsl', xsl: input}])
+          const {expressions} = validate([{file: 'test.xsl', content: yml.input, xsl: input}])
           const defects = lintByFormat(expressions)
           assert.equal(defects.length, yml.found.amount)
           yml.found.positions.forEach((pos, index) => {

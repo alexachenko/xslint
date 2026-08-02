@@ -75,15 +75,15 @@ const lintByNodeSet = function(corpus, suppressions = []) {
   logger.debug(`Node-set linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const attribute of nodes(xsl, selectorOf('select'))) {
+    for (const source of corpus) {
+      for (const attribute of nodes(source.xsl, selectorOf('select'))) {
         if (since(versionOf(attribute), MODERN)) {
           for (const {offset, value, replacement} of wrappers(
             attribute.nodeValue,
           )) {
             defects.push(
               defect(
-                CHECK, META, file, attribute, offset, {value, replacement},
+                CHECK, META, source, attribute, offset, {value, replacement},
               ),
             )
           }

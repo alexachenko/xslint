@@ -132,11 +132,11 @@ const lintByAxis = function(corpus, suppressions = []) {
   logger.debug(`Axis linting started`)
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
-    for (const {file, xsl} of corpus) {
-      for (const {node, start, expression} of expressionsOf(xsl)) {
+    for (const source of corpus) {
+      for (const {node, start, expression} of expressionsOf(source.xsl)) {
         const modern = since(versionOf(node), MODERN)
         for (const {offset, fix} of abbreviable(expression, modern)) {
-          defects.push(defect(CHECK, META, file, node, start + offset, fix))
+          defects.push(defect(CHECK, META, source, node, start + offset, fix))
         }
       }
     }
