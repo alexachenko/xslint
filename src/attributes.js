@@ -11,13 +11,16 @@ const {XSLT, since, versionOf} = require('./xsl-version')
  * Attributes that hold an XPath expression or a pattern — every place a
  * construct like an axis, a predicate, or a `count(...)` call can appear.
  * Patterns (`match` and the grouping attributes) are included, so a construct
- * in a template match is caught too, not only in the expression stream.
+ * in a template match is caught too, not only in the expression stream. So are
+ * the two an `xsl:merge-source` holds beside its `select`, which carry an
+ * expression the same way it does (#627).
  * @type {Array.<string>}
  */
 const ATTRIBUTES = [
   'select', 'test', 'use', 'value', 'group-by', 'group-adjacent', 'key',
   'initial-value', 'xpath', 'context-item', 'with-params', 'namespace-context',
   'match', 'count', 'from', 'group-starting-with', 'group-ending-with',
+  'for-each-item', 'for-each-source',
 ]
 
 /**

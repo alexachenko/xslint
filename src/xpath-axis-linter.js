@@ -59,6 +59,24 @@ const STEP = {
 const SPAN = 4
 
 /**
+ * Offset just past the axis at the given token index, counting in any
+ * whitespace behind its colons. XPath allows a gap there, and it belongs to the
+ * axis rather than to the node test, so shortening `attribute::  name` has to
+ * take the gap with it — leaving `@  name` would be a fix that reads worse than
+ * what it replaced.
+ * @param {Array.<{type: string, value: string, start: number}>} tokens - Tokens
+ * @param {number} index - Index of the axis token
+ * @return {number} - Offset just past the axis and the gap behind it
+ */
+const spans = function(tokens, index) {
+  const gap = tokens[index + 1]
+  const axis = tokens[index]
+  return gap !== undefined && gap.type === TOKENS.WHITESPACE ?
+    gap.start + gap.value.length :
+    axis.start + axis.value.length
+}
+
+/**
  * The `node()` test that follows the axis token at the given index, or null
  * when the axis carries another node test. The whitespace XPath allows between
  * the pieces is insignificant, so `node ( )` names the same test as `node()`.
@@ -105,7 +123,10 @@ const abbreviable = function(expression, modern) {
     if (SHORT[token.type]) {
       found.push({
         offset: token.start,
-        fix: {value: token.value, replacement: SHORT[token.type].replacement},
+        fix: {
+          value: expression.slice(token.start, spans(tokens, index)),
+          replacement: SHORT[token.type].replacement,
+        },
       })
     } else if (step !== null) {
       found.push({
