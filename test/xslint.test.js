@@ -342,6 +342,14 @@ describe('xslint', function() {
     const streams = xslintStreams(['test/resources/directives/wrapped.xsl'])
     assert.ok(!streams.stderr.includes('Unused xslint-disable'))
   })
+  it('should suppress a defect in a value whose start tag wraps too', function() {
+    const streams = xslintStreams(['test/resources/directives/wrapped-tag.xsl'])
+    assert.ok(!streams.stdout.includes('using-namespace-axis'))
+  })
+  it('should not call the directive over a wrapped tag unused', function() {
+    const streams = xslintStreams(['test/resources/directives/wrapped-tag.xsl'])
+    assert.ok(!streams.stderr.includes('Unused xslint-disable'))
+  })
   it('should suppress across the file with an inline disable-file', function() {
     const streams = xslintStreams(['test/resources/directives/disable-file.xsl'])
     assert.ok(!streams.stdout.includes('short-names'))

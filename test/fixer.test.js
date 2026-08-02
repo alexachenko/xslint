@@ -566,6 +566,18 @@ describe('fixer', function() {
     runXslint(['--fix', file])
     assert.ok(fs.readFileSync(file, 'utf-8').includes('parent::n'))
   })
+  it('should abbreviate an axis in a wrapped value of a CRLF file', function() {
+    const file = scratch(
+      fixture('unabbreviated-axis-in-a-wrapped-value.xsl')
+        .replace(/\n/g, '\r\n'),
+    )
+    runXslint(['--fix', file])
+    assert.equal(
+      fs.readFileSync(file, 'utf-8'),
+      fixture('unabbreviated-axis-in-a-wrapped-value.fixed.xsl')
+        .replace(/\n/g, '\r\n'),
+    )
+  })
   it('should announce how many defects --fix would fix', function() {
     const file = scratch(fixture('redundant-whitespace.xsl'))
     assert.ok(xslintStreams([file]).stderr.includes('fixable with --fix'))

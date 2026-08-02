@@ -10,6 +10,30 @@
 const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
 
 /**
+ * Where every line of a text begins, by zero-based line index. A source is
+ * walked once per defect and read many times over, so the split is remembered
+ * against the text itself rather than repeated.
+ * @type {WeakMap|Map}
+ */
+const LINES = new Map()
+
+/**
+ * The offset each line of the given text starts at, computed once per text.
+ * @param {string} text - Source text
+ * @return {Array.<number>} - Zero-based offset of every line's first character
+ */
+const starts = function(text) {
+  if (!LINES.has(text)) {
+    const offsets = [0]
+    for (let at = text.indexOf('\n'); at >= 0; at = text.indexOf('\n', at + 1)) {
+      offsets.push(at + 1)
+    }
+    LINES.set(text, offsets)
+  }
+  return LINES.get(text)
+}
+
+/**
  * Absolute offset in a text of a one-based line and column.
  * @param {string} text - Source text
  * @param {number} line - One-based line number
@@ -17,12 +41,7 @@ const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
  * @return {number} - Zero-based offset into the text
  */
 const offsetAt = function(text, line, col) {
-  const lines = text.split('\n')
-  let offset = col - 1
-  for (let ln = 0; ln < line - 1; ln++) {
-    offset += lines[ln].length + 1
-  }
-  return offset
+  return starts(text)[line - 1] + col - 1
 }
 
 /**
@@ -33,31 +52,37 @@ const offsetAt = function(text, line, col) {
  * @return {{line: number, pos: number}} - Where that offset stands
  */
 const placeAt = function(text, at) {
-  const before = text.slice(0, at)
-  const newline = before.lastIndexOf('\n')
-  return {
-    line: before.split('\n').length,
-    pos: at - newline,
+  const lines = starts(text)
+  let line = 0
+  while (line + 1 < lines.length && lines[line + 1] <= at) {
+    line += 1
   }
+  return {line: line + 1, pos: at - lines[line] + 1}
 }
 
 /**
- * The decoded character at a raw offset and the offset just past it, reading a
- * named XML entity (`&lt;`, `&gt;`, `&amp;`, …) as the single character it
- * stands for. Anything else an `&` opens (a numeric or unknown entity) yields
- * `undefined`, so a match over it fails and the caller can back off rather than
- * decode it wrongly.
+ * The decoded character at a raw offset and the offset just past it. A named
+ * XML entity (`&lt;`, `&gt;`, `&amp;`, …) reads as the single character it
+ * stands for, and a line ending reads as the `\n` a parser turns it into before
+ * parsing begins — XML 1.0 §2.11 normalises `\r\n` and a lone `\r` alike — so a
+ * CRLF source is one character two offsets wide and a walk over it keeps count.
+ * Anything else an `&` opens, a numeric or unknown entity or one no `;` ever
+ * closes, yields `undefined`, so a match over it fails and the caller backs off
+ * rather than decoding it wrongly.
  * @param {string} content - Raw source text
  * @param {number} at - Zero-based offset to read from
  * @return {[(string|undefined), number]} - The decoded character (or undefined)
  *  and the next raw offset
  */
 const character = function(content, at) {
-  const entity = content[at] === '&'
-  const end = entity ? content.indexOf(';', at) : at
-  return entity ?
-    [NAMED[content.slice(at + 1, end)], end + 1] :
+  const closing = content[at] === '&' ? content.indexOf(';', at) : -1
+  const entity = closing < 0 ?
+    [undefined, at + 1] :
+    [NAMED[content.slice(at + 1, closing)], closing + 1]
+  const ending = content[at] === '\r' ?
+    ['\n', content[at + 1] === '\n' ? at + 2 : at + 1] :
     [content[at], at + 1]
+  return content[at] === '&' ? entity : ending
 }
 
 /**

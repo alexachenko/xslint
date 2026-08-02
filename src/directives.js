@@ -50,9 +50,10 @@ const directivesFrom = function(content) {
 /**
  * Whether a single directive covers given defect. A directive with no names
  * covers every rule; otherwise only the ones it names. A defect standing in an
- * attribute value that wraps is reported on the line it truly occupies, which
- * no comment can sit above — a start tag admits none — so the directive reaches
- * anywhere from the line the value opens on, `from`, down to the defect itself.
+ * value that wraps is reported on the line it truly occupies, which no comment
+ * can sit above — a start tag admits none, and the tag itself may wrap before
+ * the value does — so the directive reaches anywhere from the line the holding
+ * element opens on, `from`, down to the defect itself.
  * @param {{type: string, line: number, names: Array.<string>}} directive -
  *  Directive to test
  * @param {{name: string, line: number, from: number}} defect - Defect to test

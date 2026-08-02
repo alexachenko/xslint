@@ -43,9 +43,10 @@ const LEAD = {2: 1, 4: '<![CDATA['.length}
  * breaks normalised to spaces and its entities decoded, so the offset is walked
  * against the raw text from where the node opens. The fix, when given as
  * `{value, replacement, suggestion?}`, is anchored at that same place, which is
- * all the fixer needs to find it. It also carries `from`, the line the value
- * opens on, because a value that wraps can be silenced only from above the
- * element — no comment fits inside a start tag. Omit `fix` for report-only.
+ * all the fixer needs to find it. It also carries `from`, the line the element
+ * holding the value opens on, because nothing inside a start tag can be
+ * silenced from within it — no comment fits there — so a directive has to reach
+ * the whole way down from above the element. Omit `fix` for report-only.
  * @param {string} check - Check name
  * @param {{severity: string, message: string}} meta - The check metadata
  * @param {{file: string, content: string}} source - The file the node sits
@@ -76,7 +77,7 @@ const defect = function(check, meta, source, node, offset, fix = undefined) {
     message: meta.message,
     file: source.file,
     line: line,
-    from: node.lineNumber,
+    from: (node.ownerElement || node.parentNode).lineNumber,
     pos: pos,
     ...(anchored === undefined ? {} : {fix: anchored}),
   }

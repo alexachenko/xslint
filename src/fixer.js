@@ -64,10 +64,10 @@ const disjoint = function(edits) {
 /**
  * Apply the fixes carried by defects to their sources, returning the rewritten
  * content of each changed file and the defects whose fix was applied. Each fix
- * names a source position, a decoded `value`, and its replacement. The fixer
- * decode-walks the raw source from the node's raw start (`col - offset`) by the
- * fix's decoded `offset`, so it lands on the match even when an entity ahead of
- * it shifts the column, then matches `value` decoding as it goes — a `>`
+ * names a source position, a decoded `value`, and its replacement. The position
+ * is already the true one, worked out against the raw text by `src/checks.js`,
+ * so the fixer goes straight there and matches `value` decoding as it goes —
+ * a `>`
  * written `&gt;` matches alike. A fix whose source no longer decodes to `value`
  * (an already-edited file) is skipped rather than corrupting, and so is one
  * overlapping a fix already accepted in the same run — the spans are proved
@@ -75,8 +75,8 @@ const disjoint = function(edits) {
  * since moved. Fixes for one file are applied from the end backwards so earlier
  * offsets stay valid.
  * @param {Array.<{file: string, content: string}>} sources - Original sources
- * @param {Array.<{file: string, fix: {line: number, col: number, offset:
- *  number, value: string, replacement: string, suggestion: boolean}}>}
+ * @param {Array.<{file: string, fix: {line: number, col: number,
+ *  value: string, replacement: string, suggestion: boolean}}>}
  *  defects - Defects; only those carrying a `fix` are fixed (`offset`
  *  defaults to 0)
  * @param {boolean} suggestions - Whether to also apply the fixes marked as

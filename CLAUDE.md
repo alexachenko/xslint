@@ -315,7 +315,7 @@ the harness asserts too.
   `xcop` job runs it too. The `redundant-namespace-declarations` pack is listed in
   `UNFORMATTED` because its fixture must carry the unused namespace the check
   flags, which xcop would canonicalize away. The repo-wide sweep in the workflow
-  excludes `test/resources/directives/wrapped.xsl` for the same reason: it must
+  excludes `test/resources/directives/wrapped*.xsl` for the same reason: they must
   keep the wrapped attribute value #611 is about, which xcop joins onto one line.
 - **Table-driven.** Where several `it` blocks differ only in data, express them as
   a data array plus one generator, not repeated blocks. When adding a test, add a
