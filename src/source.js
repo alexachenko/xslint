@@ -18,12 +18,15 @@ const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
 const ENDINGS = /\r\n|\r|\n/g
 
 /**
- * Where every line of a text begins, by zero-based line index. A source is
- * walked once per defect and read many times over, so the split is remembered
- * against the text itself rather than repeated.
- * @type {Map}
+ * The text indexed most recently and where its lines begin. Positions are asked
+ * for one source at a time — every defect in a file, then every fix in it — so
+ * remembering the last one spares the rescan without keeping any earlier source
+ * alive. A table of every text ever seen would do that, and `lint` is exported
+ * for an embedder to call on a buffer per keystroke (#336), where each version
+ * of each open file would then be held for the life of the process.
+ * @type {{text: ?string, offsets: Array.<number>}}
  */
-const LINES = new Map()
+const LAST = {text: null, offsets: []}
 
 /**
  * The offset each line of the given text starts at, computed once per text.
@@ -31,12 +34,13 @@ const LINES = new Map()
  * @return {Array.<number>} - Zero-based offset of every line's first character
  */
 const starts = function(text) {
-  if (!LINES.has(text)) {
-    LINES.set(text, [0].concat(
+  if (LAST.text !== text) {
+    LAST.text = text
+    LAST.offsets = [0].concat(
       [...text.matchAll(ENDINGS)].map((end) => end.index + end[0].length),
-    ))
+    )
   }
-  return LINES.get(text)
+  return LAST.offsets
 }
 
 /**
