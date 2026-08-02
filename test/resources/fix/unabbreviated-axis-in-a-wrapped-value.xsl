@@ -8,5 +8,7 @@
     <xsl:value-of select="@a
                           or child::deep"/>
     <xsl:value-of select="@b &gt; 1 and child::later"/>
+    <xsl:value-of select="child::
+                          alpha"/>
   </xsl:template>
 </xsl:stylesheet>

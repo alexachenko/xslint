@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-pack: invalid-extra-attributes
+pack: invalid-xpath-expression
 found:
   amount: 7
   positions: [ [ 3, 43 ], [ 5, 23 ], [ 7, 26 ], [ 9, 44 ], [ 9, 86 ], [ 9, 62 ], [ 9, 25 ] ]

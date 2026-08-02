@@ -20,7 +20,19 @@ const ATTRIBUTES = [
   'select', 'test', 'use', 'value', 'group-by', 'group-adjacent', 'key',
   'initial-value', 'xpath', 'context-item', 'with-params', 'namespace-context',
   'match', 'count', 'from', 'group-starting-with', 'group-ending-with',
-  'for-each-item', 'for-each-source',
+  'for-each-item', 'for-each-source', 'use-when',
+]
+
+/**
+ * The attributes among those that hold a *pattern* rather than an expression.
+ * The two are not one language: a pattern has its own grammar, narrower where
+ * an expression is free — `.` may stand alone there but not inside a union or
+ * a parenthesis — and it decides which template wins rather than what a step
+ * selects. A linter rewriting one has to know which of the two it is holding.
+ * @type {Array.<string>}
+ */
+const PATTERNS = [
+  'match', 'count', 'from', 'group-starting-with', 'group-ending-with',
 ]
 
 /**
@@ -103,9 +115,12 @@ const carried = function(node, bare, three) {
     (bare.has(node) || (three && shadow(node)))
   const braced = node.nodeType === 2 || (three && expands(node))
   return whole ?
-    [{node: node, start: 0, expression: node.nodeValue}] :
+    [{
+      node: node, start: 0, expression: node.nodeValue,
+      pattern: PATTERNS.includes(node.nodeName.replace(/^_/, '')),
+    }] :
     braced ? enclosed(node.nodeValue).map((found) => ({
-      node: node, start: found.offset, expression: found.value,
+      node: node, start: found.offset, expression: found.value, pattern: false,
     })) : []
 }
 
@@ -118,7 +133,7 @@ const carried = function(node, bare, three) {
  * reported — and fixed — where it truly stands.
  * @param {Document} xsl - XSL document parsed as {@link Document}
  * @return {Array.<{node: Node, start: number, expression: string}>} - The
- *  expressions found
+ *  expressions found, each saying whether it is a pattern
  */
 const expressionsOf = function(xsl) {
   const bare = new Set(nodes(xsl, SELECTOR))

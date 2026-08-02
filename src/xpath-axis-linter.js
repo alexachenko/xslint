@@ -29,8 +29,10 @@ const names = [CHECK]
 
 /**
  * The abbreviation each axis specifier collapses to on its own, whatever node
- * test follows it. The verbatim text comes from the token, so a spaced
- * `child ::` is stripped in full rather than leaving its whitespace behind.
+ * test follows it. What gets replaced is measured by `spans`, not taken from
+ * the token: the token carries the gap in front of the colons and `spans`
+ * reaches the one behind them, so a spaced `child ::  a` is stripped in full
+ * from either side.
  * @type {{[type: string]: {replacement: string}}}
  */
 const SHORT = {
@@ -63,7 +65,10 @@ const SPAN = 4
  * whitespace behind its colons. XPath allows a gap there, and it belongs to the
  * axis rather than to the node test, so shortening `attribute::  name` has to
  * take the gap with it — leaving `@  name` would be a fix that reads worse than
- * what it replaced.
+ * what it replaced. A gap the source wrote as a line break cannot be told apart
+ * here — the parser turned it into a space before the lexer saw it — so such a
+ * fix reaches the source as a run of spaces, fails to match, and is declined
+ * rather than misapplied. That is #629's to settle, not this function's.
  * @param {Array.<{type: string, value: string, start: number}>} tokens - Tokens
  * @param {number} index - Index of the axis token
  * @return {number} - Offset just past the axis and the gap behind it
@@ -113,9 +118,11 @@ const afterNode = function(tokens, index) {
  * comments are never seen because the lexer keeps those whole.
  * @param {string} expression - Xpath expression or pattern
  * @param {boolean} modern - Whether the stylesheet declares XSLT 2.0 or later
+ * @param {boolean} pattern - Whether the expression is a pattern, where the
+ *  step abbreviations are not the synonyms they are in an expression
  * @return {Array.<{offset: number, fix: ?object}>} - Axes and their fixes
  */
-const abbreviable = function(expression, modern) {
+const abbreviable = function(expression, modern, pattern) {
   const tokens = tokenized(expression)
   const found = []
   tokens.forEach((token, index) => {
@@ -131,7 +138,7 @@ const abbreviable = function(expression, modern) {
     } else if (step !== null) {
       found.push({
         offset: token.start,
-        fix: step.predicated && !modern ? undefined : {
+        fix: pattern || (step.predicated && !modern) ? undefined : {
           value: expression.slice(token.start, step.end),
           replacement: STEP[token.type].replacement,
         },
@@ -154,9 +161,11 @@ const lintByAxis = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const source of corpus) {
-      for (const {node, start, expression} of expressionsOf(source.xsl)) {
-        const modern = since(versionOf(node), MODERN)
-        for (const {offset, fix} of abbreviable(expression, modern)) {
+      for (const held of expressionsOf(source.xsl)) {
+        const {node, start, expression} = held
+        for (const {offset, fix} of abbreviable(
+          expression, since(versionOf(node), MODERN), held.pattern,
+        )) {
           defects.push(defect(CHECK, META, source, node, start + offset, fix))
         }
       }
