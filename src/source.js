@@ -10,10 +10,18 @@
 const NAMED = {lt: '<', gt: '>', amp: '&', quot: '"', apos: '\''}
 
 /**
+ * The three spellings of a line ending XML 1.0 §2.11 recognises, which a parser
+ * counts alike when it numbers lines — so a walk that honours only `\n` would
+ * disagree with the line a node reports itself on.
+ * @type {RegExp}
+ */
+const ENDINGS = /\r\n|\r|\n/g
+
+/**
  * Where every line of a text begins, by zero-based line index. A source is
  * walked once per defect and read many times over, so the split is remembered
  * against the text itself rather than repeated.
- * @type {WeakMap|Map}
+ * @type {Map}
  */
 const LINES = new Map()
 
@@ -24,11 +32,9 @@ const LINES = new Map()
  */
 const starts = function(text) {
   if (!LINES.has(text)) {
-    const offsets = [0]
-    for (let at = text.indexOf('\n'); at >= 0; at = text.indexOf('\n', at + 1)) {
-      offsets.push(at + 1)
-    }
-    LINES.set(text, offsets)
+    LINES.set(text, [0].concat(
+      [...text.matchAll(ENDINGS)].map((end) => end.index + end[0].length),
+    ))
   }
   return LINES.get(text)
 }

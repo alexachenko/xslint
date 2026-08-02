@@ -67,6 +67,18 @@ const WALKS = [
   },
 ]
 
+/**
+ * The same three lines written with each line ending XML recognises, paired
+ * with the offset of the third character of the second line. A parser numbers
+ * lines the same way whichever is used, so a walk has to as well.
+ * @type {Array.<{name: string, content: string, offset: number}>}
+ */
+const ENDINGS = [
+  {name: 'a newline', content: 'ab\ncde\nf', offset: 5},
+  {name: 'a carriage return', content: 'ab\rcde\rf', offset: 5},
+  {name: 'a CRLF pair', content: 'ab\r\ncde\r\nf', offset: 6},
+]
+
 describe('source', function() {
   CHARACTERS.forEach((one) => {
     it(one.name, function() {
@@ -81,10 +93,15 @@ describe('source', function() {
       assert.equal(skip(one.content, 0, one.count), one.raw)
     })
   })
-  it('turns a line and column into an offset', function() {
-    assert.equal(offsetAt('ab\ncde\nf', 2, 3), 5)
-  })
-  it('turns an offset back into a line and column', function() {
-    assert.deepStrictEqual(placeAt('ab\ncde\nf', 5), {line: 2, pos: 3})
+  ENDINGS.forEach((one) => {
+    it(`turns a line and column into an offset across ${one.name}`, function() {
+      assert.equal(offsetAt(one.content, 2, 3), one.offset)
+    })
+    it(`turns that offset back into a line and column across ${one.name}`,
+      function() {
+        assert.deepStrictEqual(
+          placeAt(one.content, one.offset), {line: 2, pos: 3},
+        )
+      })
   })
 })
