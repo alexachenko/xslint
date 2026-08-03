@@ -114,10 +114,12 @@ const afterNode = function(tokens, index) {
  * aside, whose `//` trades a named step for a whole-tree walk. Before XPath 2.0
  * gave the context item a predicate list, `.` and `..` were an AbbreviatedStep,
  * which takes no predicate, so `self::node()[1]` is only reported on a 1.0
- * sheet: `.[1]` is a syntax error there. A pattern has no abbreviated step to
- * offer at all — `.` is a pattern in its own right rather than a step inside
- * one — so a longhand step there goes unreported, the way `parent::n` does:
- * both are steps with nothing shorter to become. Axes inside string literals or
+ * sheet: `.[1]` is a syntax error there. A longhand step in a pattern goes
+ * unreported for two reasons that meet: before 3.0 a pattern has no `.` step to
+ * offer, so there is nothing shorter to name, and from 3.0 `match="."` does
+ * compile but is not a synonym — a pattern in its own right rather than a step
+ * inside one, illegal in a union and outranking the longhand where it stands
+ * alone. Either way the check has no shorter form to recommend. Axes inside string literals or
  * comments are never seen because the lexer keeps those whole.
  * @param {string} expression - Xpath expression or pattern
  * @param {boolean} modern - Whether the stylesheet declares XSLT 2.0 or later

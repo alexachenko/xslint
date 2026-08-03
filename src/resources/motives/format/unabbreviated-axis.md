@@ -57,15 +57,23 @@ Where a predicate follows the step in a 1.0 stylesheet, either leave it spelled
 out or parenthesise the abbreviation, since `(.)[1]` is a filter expression and
 is legal in every version.
 
-In a pattern only the first two rows hold. A pattern is free with axes —
-`match="self::r"` and `match="descendant::c"` are both legal — and the child and
-attribute axes are among them, so `match="child::chapter"` is `match="chapter"`
-and nothing changes. The abbreviated steps are another matter: `.` is a pattern in its own
-right rather than a step inside one, so it cannot stand in a union or behind a
-parenthesis — `match="y|self::node()"` is legal and `match="y|."` will not
-compile — and where it does parse it is weighed differently against a competing
-template. Leave a longhand step alone in a `match`, a `count`, a `from`, or an
-`xsl:for-each-group` boundary.
+In a pattern only the first two rows hold, and not by coincidence. Before 3.0 a
+pattern step admits the child and attribute axes and nothing else — `match="c"`,
+`match="child::c"` and `match="@a"` are the whole of it, and a 1.0 processor
+rejects `match="self::r"` outright — which is exactly the pair whose
+abbreviations are safe there. XSLT 3.0 widened the step to `descendant`, `self`
+and the rest, so `match="self::r"` compiles on a 3.0 processor; the pair is
+still the pair, because those two drop a step without touching how the rule is
+weighed.
+
+The abbreviated steps never survive the trip. Before 3.0 there is nothing to
+shorten to: a pattern has no `.` step, so `match="self::node()"` does not
+compile at all. From 3.0 `match="."` does compile, and is not a synonym — it is
+a pattern in its own right rather than a step inside one, so it cannot stand in
+a union or behind a parenthesis, `match="y|self::node()"` being legal where
+`match="y|."` is not; and standing alone it outranks the longhand it replaced,
+quietly handing the node to a template that used to lose. Leave a longhand step
+as it is in a `match`, a `count`, a `from`, or an `xsl:for-each-group` boundary.
 
 `descendant-or-self::node()` is the exception that is not worth taking. Its
 short form is `//`, but the two are easy to confuse in use: a `//` that opens a
