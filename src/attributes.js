@@ -48,10 +48,25 @@ const selectorOf = function(name) {
 }
 
 /**
- * XPath selecting every attribute that holds a bare XPath, across the document.
- * @type {string}
+ * The names that hold a bare XPath, for testing one attribute at a time. Asking
+ * XPath for all of them at once — a union of nineteen descendant scans, one per
+ * name — costs more than a single scan of every XSLT attribute filtered by name
+ * here, and costs it quadratically: 4.4 s against 0.3 s on a 2000-line
+ * stylesheet (#633).
+ * @type {Set.<string>}
  */
-const SELECTOR = ATTRIBUTES.map(selectorOf).join(' | ')
+const NAMED = new Set(ATTRIBUTES)
+
+/**
+ * The expression list already derived for a document. Eight code-based linters
+ * ask for the same one in a single run, and deriving it walks every attribute
+ * and text node of the stylesheet, so it is derived once and remembered against
+ * the document itself — which a `WeakMap` releases when the corpus does, rather
+ * than holding every stylesheet ever linted (#633). The list is frozen, since
+ * eight callers now share one array.
+ * @type {WeakMap}
+ */
+const DERIVED = new WeakMap()
 
 /**
  * The spellings that switch an XSLT boolean attribute on, whitespace trimmed —
@@ -136,10 +151,15 @@ const carried = function(node, bare, three) {
  *  expressions found, each saying whether it is a pattern
  */
 const expressionsOf = function(xsl) {
-  const bare = new Set(nodes(xsl, SELECTOR))
-  return nodes(xsl, '//*/@* | //text()').flatMap(
-    (node) => carried(node, bare, since(versionOf(node), '3.0')),
-  )
+  if (!DERIVED.has(xsl)) {
+    const bare = new Set(
+      nodes(xsl, '//xsl:*/@*').filter((one) => NAMED.has(one.nodeName)),
+    )
+    DERIVED.set(xsl, Object.freeze(nodes(xsl, '//*/@* | //text()').flatMap(
+      (node) => carried(node, bare, since(versionOf(node), '3.0')),
+    )))
+  }
+  return DERIVED.get(xsl)
 }
 
 module.exports = {
