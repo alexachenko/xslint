@@ -58,22 +58,24 @@ out or parenthesise the abbreviation, since `(.)[1]` is a filter expression and
 is legal in every version.
 
 In a pattern only the first two rows hold, and not by coincidence. Before 3.0 a
-pattern step admits the child and attribute axes and nothing else — `match="c"`,
-`match="child::c"` and `match="@a"` are the whole of it, and a 1.0 processor
+pattern step admits the child and attribute axes and no others — a 1.0 processor
 rejects `match="self::r"` outright — which is exactly the pair whose
 abbreviations are safe there. XSLT 3.0 widened the step to `descendant`, `self`
 and the rest, so `match="self::r"` compiles on a 3.0 processor; the pair is
 still the pair, because those two drop a step without touching how the rule is
 weighed.
 
-The abbreviated steps never survive the trip. Before 3.0 there is nothing to
-shorten to: a pattern has no `.` step, so `match="self::node()"` does not
-compile at all. From 3.0 `match="."` does compile, and is not a synonym — it is
-a pattern in its own right rather than a step inside one, so it cannot stand in
-a union or behind a parenthesis, `match="y|self::node()"` being legal where
-`match="y|."` is not; and standing alone it outranks the longhand it replaced,
-quietly handing the node to a template that used to lose. Leave a longhand step
-as it is in a `match`, a `count`, a `from`, or an `xsl:for-each-group` boundary.
+The abbreviated steps never survive the trip, for a different reason in each
+era. Before 3.0 the longhand is not a legal pattern to begin with — the self
+axis is not among the two — so the question of shortening it never arises. From
+3.0 it is legal, and then the short form is not a synonym: `.` is a pattern in
+its own right rather than a step inside one, so it cannot stand in a union or
+behind a parenthesis, `match="y|self::node()"` being legal where `match="y|."`
+is not; and standing alone it is outranked by the longhand it replaced, `.`
+carrying a default priority of -1 where `self::node()` carries -0.5, so the
+rewrite quietly hands the node to a template that used to lose. Leave a longhand
+step as it is in a `match`, a `count`, a `from`, or an `xsl:for-each-group`
+boundary.
 
 `descendant-or-self::node()` is the exception that is not worth taking. Its
 short form is `//`, but the two are easy to confuse in use: a `//` that opens a
