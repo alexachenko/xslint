@@ -115,14 +115,14 @@ const afterNode = function(tokens, index) {
  * gave the context item a predicate list, `.` and `..` were an AbbreviatedStep,
  * which takes no predicate, so `self::node()[1]` is only reported on a 1.0
  * sheet: `.[1]` is a syntax error there. A longhand step in a pattern goes
- * unreported for a different reason in each era: before 3.0 the longhand is not
- * a legal pattern at all, the self axis not being one a pattern step admits,
- * and from 3.0 it is legal but `match="."` is no synonym — a pattern in its
- * own right rather than a step inside one, illegal in a union, and outranked by
- * the longhand where it stands alone. Either way there is no shorter form to
- * recommend. Axes inside
- * string literals or comments are never seen because the lexer keeps those
- * whole.
+ * unreported because no pattern offers a shorter one. `parent::node()` is not a
+ * legal pattern in any version, the parent axis being reverse where a pattern
+ * step takes forward axes only, so `..` never enters the question. The self
+ * axis is illegal before 3.0 for the same kind of reason and legal after it,
+ * where `match="."` is still no synonym — a pattern in its own right, not a
+ * step inside one, illegal in a union, and outranked by the longhand where it
+ * stands alone. Axes inside string literals or comments are never seen because
+ * the lexer keeps those whole.
  * @param {string} expression - Xpath expression or pattern
  * @param {boolean} modern - Whether the stylesheet declares XSLT 2.0 or later
  * @param {boolean} pattern - Whether the expression is a pattern, which has no

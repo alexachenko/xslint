@@ -60,22 +60,25 @@ is legal in every version.
 In a pattern only the first two rows hold, and not by coincidence. Before 3.0 a
 pattern step admits the child and attribute axes and no others — a 1.0 processor
 rejects `match="self::r"` outright — which is exactly the pair whose
-abbreviations are safe there. XSLT 3.0 widened the step to `descendant`, `self`
-and the rest, so `match="self::r"` compiles on a 3.0 processor; the pair is
-still the pair, because those two drop a step without touching how the rule is
-weighed.
+abbreviations are safe there. XSLT 3.0 widened the step to the forward axes —
+`descendant`, `self`, `descendant-or-self`, `namespace` — so `match="self::r"`
+compiles on a 3.0 processor; the pair is still the pair, because those two drop
+a step without touching how the rule is weighed. The reverse axes stayed out,
+which is why `parent::` never became a pattern step in any version.
 
-The abbreviated steps never survive the trip, for a different reason in each
-era. Before 3.0 the longhand is not a legal pattern to begin with — the self
-axis is not among the two — so the question of shortening it never arises. From
-3.0 it is legal, and then the short form is not a synonym: `.` is a pattern in
-its own right rather than a step inside one, so it cannot stand in a union or
-behind a parenthesis, `match="y|self::node()"` being legal where `match="y|."`
-is not; and standing alone it is outranked by the longhand it replaced, `.`
-carrying a default priority of -1 where `self::node()` carries -0.5, so the
-rewrite quietly hands the node to a template that used to lose. Leave a longhand
-step as it is in a `match`, a `count`, a `from`, or an `xsl:for-each-group`
-boundary.
+Neither abbreviated step survives the trip. For `..` there is nothing to weigh:
+`match="parent::node()"` is not a legal pattern in any version, so neither is
+`match=".."`, and the question of shortening one into the other never arises.
+
+`.` is the one with two eras. Before 3.0 the longhand is not a legal pattern
+either, the self axis not being among the two. From 3.0 it is, and then the
+short form is no synonym for it: `.` is a pattern in its own right, not a step
+inside one, so it cannot stand in a union or behind a parenthesis,
+`match="y|self::node()"` being legal where `match="y|."` is not; and standing
+alone it is outranked by the longhand it replaced, `.` carrying a default
+priority of -1 where `self::node()` carries -0.5, so the rewrite quietly hands
+the node to a template that used to lose. Leave a longhand step as it is in a
+`match`, a `count`, a `from`, or an `xsl:for-each-group` boundary.
 
 `descendant-or-self::node()` is the exception that is not worth taking. Its
 short form is `//`, but the two are easy to confuse in use: a `//` that opens a
