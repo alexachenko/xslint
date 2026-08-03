@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>invalid-xpath-expression</title>
+  <title>empty-choose</title>
   <style>
   * { box-sizing: border-box; }
   body {
@@ -72,36 +72,32 @@
   <a class="back" href="../index.html">← all checks</a>
   <div class="meta">
     <span class="severity-error">error</span>
-    <code class="xpath">verified by the parser, not an XPath rule</code>
+    <code class="xpath">//xsl:choose[not(xsl:when)]</code>
   </div>
   <div class="check-content">
-<h1>Invalid XPath expression</h1>
-<p>An attribute carrying a bare XPath expression — <code>select</code>, <code>test</code>, <code>use</code>,
-<code>value</code>, <code>group-by</code>, <code>group-adjacent</code>, or the XSLT 3.0 <code>key</code>, <code>initial-value</code>,
-<code>xpath</code>, <code>context-item</code>, <code>with-params</code>, <code>namespace-context</code> — must hold an
-expression the processor can parse. A malformed expression breaks the
-transformation at runtime, so the sooner it surfaces the better. Only the
-expression syntax is checked, not its formatting; pattern attributes such as
-<code>match</code> and attribute value templates are left to other checks.</p>
-<p>The expression is parsed by the same engine that evaluates the rules, so it is
-valid here exactly when the processor can parse it. Every prefix resolves
-while parsing, so an unknown prefix or a custom function is never mistaken for
-a syntax error. Neither is a static-type mismatch: the engine is XPath 3.1, so
-it rejects the implicit string-to-number coercion an XPath 1.0 stylesheet leans
-on — <code>substring-before($spans, &#39;:&#39;) - 1</code> reads a numeric prefix in 1.0 — but
-that is a dialect difference, not a broken expression, so it is not reported.
-The <code>namespace::</code> axis is another such difference — XPath 3.0 dropped it, but
-1.0 and 2.0 define it, so <code>namespace::*</code> is left alone. Only genuine syntax
-mistakes are reported.</p>
-<p>Incorrect (<code>==</code> is not an XPath operator):</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) == &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
-&lt;/xsl:if&gt;
+<h1>Empty choose</h1>
+<p>An <code>xsl:choose</code> exists to pick among <code>xsl:when</code> branches, so one with no
+<code>xsl:when</code> is degenerate. XSLT requires at least one <code>xsl:when</code>, so a processor
+rejects it; and even read loosely, an <code>xsl:choose</code> holding only an
+<code>xsl:otherwise</code> is a wrapper that always runs its single branch — the
+<code>xsl:choose</code> adds nothing.</p>
+<p>The check is report-only until the full-fidelity parser (#228). Both
+corrections — dropping the <code>xsl:choose</code> and keeping its <code>xsl:otherwise</code>
+content, or adding the missing <code>xsl:when</code> — rewrite element structure, which
+the fixer, editing one attribute or text span at a time, cannot express.</p>
+<p>Incorrect:</p>
+<pre><code class="language-xsl">&lt;xsl:template match=&quot;/objects&quot;&gt;
+  &lt;xsl:choose&gt;
+    &lt;xsl:otherwise&gt;
+      &lt;xsl:text&gt;fallback&lt;/xsl:text&gt;
+    &lt;/xsl:otherwise&gt;
+  &lt;/xsl:choose&gt;
+&lt;/xsl:template&gt;
 </code></pre>
 <p>Correct:</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) = &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
-&lt;/xsl:if&gt;
+<pre><code class="language-xsl">&lt;xsl:template match=&quot;/objects&quot;&gt;
+  &lt;xsl:text&gt;fallback&lt;/xsl:text&gt;
+&lt;/xsl:template&gt;
 </code></pre>
 
   </div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>invalid-xpath-expression</title>
+  <title>text-outside-xsl-text</title>
   <style>
   * { box-sizing: border-box; }
   body {
@@ -71,37 +71,74 @@
 <body>
   <a class="back" href="../index.html">← all checks</a>
   <div class="meta">
-    <span class="severity-error">error</span>
-    <code class="xpath">verified by the parser, not an XPath rule</code>
+    <span class="severity-warning">warning</span>
+    <code class="xpath">//xsl:*[text()[normalize-space()] and not(local-name() = ('text','attribute','comment','processing-instruction','message','variable','param','with-param'))]</code>
   </div>
   <div class="check-content">
-<h1>Invalid XPath expression</h1>
-<p>An attribute carrying a bare XPath expression — <code>select</code>, <code>test</code>, <code>use</code>,
-<code>value</code>, <code>group-by</code>, <code>group-adjacent</code>, or the XSLT 3.0 <code>key</code>, <code>initial-value</code>,
-<code>xpath</code>, <code>context-item</code>, <code>with-params</code>, <code>namespace-context</code> — must hold an
-expression the processor can parse. A malformed expression breaks the
-transformation at runtime, so the sooner it surfaces the better. Only the
-expression syntax is checked, not its formatting; pattern attributes such as
-<code>match</code> and attribute value templates are left to other checks.</p>
-<p>The expression is parsed by the same engine that evaluates the rules, so it is
-valid here exactly when the processor can parse it. Every prefix resolves
-while parsing, so an unknown prefix or a custom function is never mistaken for
-a syntax error. Neither is a static-type mismatch: the engine is XPath 3.1, so
-it rejects the implicit string-to-number coercion an XPath 1.0 stylesheet leans
-on — <code>substring-before($spans, &#39;:&#39;) - 1</code> reads a numeric prefix in 1.0 — but
-that is a dialect difference, not a broken expression, so it is not reported.
-The <code>namespace::</code> axis is another such difference — XPath 3.0 dropped it, but
-1.0 and 2.0 define it, so <code>namespace::*</code> is left alone. Only genuine syntax
-mistakes are reported.</p>
-<p>Incorrect (<code>==</code> is not an XPath operator):</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) == &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
+<h1>Literal text outside <code>xsl:text</code></h1>
+<p>Literal text (other than whitespace) must not sit directly inside an <code>xsl:</code>
+instruction. Wrap it in <code>xsl:text</code>. The text can also be wrapped in
+<code>xsl:variable</code>, <code>xsl:param</code>, <code>xsl:with-param</code>, <code>xsl:attribute</code>,<code>xsl:comment</code>,
+<code>xsl:processing-instruction</code> and <code>xsl:message</code>. You can also use text inside
+html-tags or in other non-XSL elements.</p>
+<p>Incorrect:</p>
+<pre><code class="language-xsl">&lt;xsl:if test=&quot;.!=&#39;&#39;&quot;&gt;
+  Hello!
 &lt;/xsl:if&gt;
 </code></pre>
 <p>Correct:</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) = &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
+<pre><code class="language-xsl">&lt;xsl:if test=&quot;.!=&#39;&#39;&quot;&gt;
+  &lt;xsl:text&gt;Hello!&lt;/xsl:text&gt;
 &lt;/xsl:if&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:variable name=&quot;Lord Byron&quot;&gt;
+  1788-1824
+&lt;/xsl:variable&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:param name=&quot;William Shakespeare&quot;&gt;
+  1564-1616
+&lt;/xsl:param&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:with-param name=&quot;Robert Burns&quot;&gt;
+  1759-1796
+&lt;/xsl:with-param&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:attribute-set name=&quot;font&quot;&gt;
+  &lt;xsl:attribute name=&quot;fname&quot;&gt; 
+    Arial 
+  &lt;/xsl:attribute&gt;
+&lt;/xsl:attribute-set&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:comment&gt;
+  Text of comment.
+&lt;/xsl:comment&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:processing-instruction name=&quot;xml-stylesheet&quot;&gt;
+    href=&quot;style.css&quot; type=&quot;text/css&quot;
+&lt;/xsl:processing-instruction&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:message terminate=&quot;yes&quot;&gt;
+  text of message
+&lt;/xsl:message&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;ul&gt;
+  &lt;li&gt;William Shakespeare&lt;/li&gt;
+  &lt;li&gt;Robert Burns&lt;/li&gt;
+  &lt;li&gt;Lord Byron&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;ex:note xmlns:ex=&quot;https://example.com&quot;&gt;
+  some text
+&lt;/ex:note&gt;
 </code></pre>
 
   </div>

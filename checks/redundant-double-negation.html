@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>invalid-xpath-expression</title>
+  <title>redundant-double-negation</title>
   <style>
   * { box-sizing: border-box; }
   body {
@@ -71,37 +71,28 @@
 <body>
   <a class="back" href="../index.html">← all checks</a>
   <div class="meta">
-    <span class="severity-error">error</span>
-    <code class="xpath">verified by the parser, not an XPath rule</code>
+    <span class="severity-warning">warning</span>
+    <code class="xpath">checked over the tokens, not an XPath rule</code>
   </div>
   <div class="check-content">
-<h1>Invalid XPath expression</h1>
-<p>An attribute carrying a bare XPath expression — <code>select</code>, <code>test</code>, <code>use</code>,
-<code>value</code>, <code>group-by</code>, <code>group-adjacent</code>, or the XSLT 3.0 <code>key</code>, <code>initial-value</code>,
-<code>xpath</code>, <code>context-item</code>, <code>with-params</code>, <code>namespace-context</code> — must hold an
-expression the processor can parse. A malformed expression breaks the
-transformation at runtime, so the sooner it surfaces the better. Only the
-expression syntax is checked, not its formatting; pattern attributes such as
-<code>match</code> and attribute value templates are left to other checks.</p>
-<p>The expression is parsed by the same engine that evaluates the rules, so it is
-valid here exactly when the processor can parse it. Every prefix resolves
-while parsing, so an unknown prefix or a custom function is never mistaken for
-a syntax error. Neither is a static-type mismatch: the engine is XPath 3.1, so
-it rejects the implicit string-to-number coercion an XPath 1.0 stylesheet leans
-on — <code>substring-before($spans, &#39;:&#39;) - 1</code> reads a numeric prefix in 1.0 — but
-that is a dialect difference, not a broken expression, so it is not reported.
-The <code>namespace::</code> axis is another such difference — XPath 3.0 dropped it, but
-1.0 and 2.0 define it, so <code>namespace::*</code> is left alone. Only genuine syntax
-mistakes are reported.</p>
-<p>Incorrect (<code>==</code> is not an XPath operator):</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) == &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
-&lt;/xsl:if&gt;
+<h1>Redundant double negation</h1>
+<p><code>not(not(x))</code> negates <code>x</code> and then negates the result — a round trip that just
+coerces <code>x</code> to a boolean. It is exactly <code>boolean(x)</code>, and in a boolean context
+(an <code>xsl:if</code>/<code>xsl:when</code> <code>@test</code>) it is exactly <code>x</code>. Written as a double
+negation it reads as a puzzle: the reader has to cancel the two <code>not</code>s in their
+head to see what it means.</p>
+<p><code>not(not(x))</code> equals <code>boolean(x)</code> in every context, so <code>--fix</code> rewrites it
+there. In a whole <code>@test</code> the value is already coerced to a boolean, so the fix
+goes one step further to bare <code>x</code> — the same form <code>redundant-boolean-call</code>
+would reduce <code>boolean(x)</code> to — rather than leaving a <code>boolean(x)</code> that check
+would then flag.</p>
+<p>Incorrect:</p>
+<pre><code class="language-xsl">&lt;xsl:if test=&quot;not(not(@enabled))&quot;&gt;
+&lt;xsl:value-of select=&quot;not(not(@enabled))&quot;/&gt;
 </code></pre>
 <p>Correct:</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) = &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
-&lt;/xsl:if&gt;
+<pre><code class="language-xsl">&lt;xsl:if test=&quot;@enabled&quot;&gt;
+&lt;xsl:value-of select=&quot;boolean(@enabled)&quot;/&gt;
 </code></pre>
 
   </div>

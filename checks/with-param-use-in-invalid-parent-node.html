@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>invalid-xpath-expression</title>
+  <title>with-param-use-in-invalid-parent-node</title>
   <style>
   * { box-sizing: border-box; }
   body {
@@ -72,36 +72,43 @@
   <a class="back" href="../index.html">← all checks</a>
   <div class="meta">
     <span class="severity-error">error</span>
-    <code class="xpath">verified by the parser, not an XPath rule</code>
+    <code class="xpath">//xsl:with-param[not(parent::xsl:call-template or parent::xsl:apply-templates or parent::xsl:apply-imports or parent::xsl:next-match or parent::xsl:next-iteration)]</code>
   </div>
   <div class="check-content">
-<h1>Invalid XPath expression</h1>
-<p>An attribute carrying a bare XPath expression — <code>select</code>, <code>test</code>, <code>use</code>,
-<code>value</code>, <code>group-by</code>, <code>group-adjacent</code>, or the XSLT 3.0 <code>key</code>, <code>initial-value</code>,
-<code>xpath</code>, <code>context-item</code>, <code>with-params</code>, <code>namespace-context</code> — must hold an
-expression the processor can parse. A malformed expression breaks the
-transformation at runtime, so the sooner it surfaces the better. Only the
-expression syntax is checked, not its formatting; pattern attributes such as
-<code>match</code> and attribute value templates are left to other checks.</p>
-<p>The expression is parsed by the same engine that evaluates the rules, so it is
-valid here exactly when the processor can parse it. Every prefix resolves
-while parsing, so an unknown prefix or a custom function is never mistaken for
-a syntax error. Neither is a static-type mismatch: the engine is XPath 3.1, so
-it rejects the implicit string-to-number coercion an XPath 1.0 stylesheet leans
-on — <code>substring-before($spans, &#39;:&#39;) - 1</code> reads a numeric prefix in 1.0 — but
-that is a dialect difference, not a broken expression, so it is not reported.
-The <code>namespace::</code> axis is another such difference — XPath 3.0 dropped it, but
-1.0 and 2.0 define it, so <code>namespace::*</code> is left alone. Only genuine syntax
-mistakes are reported.</p>
-<p>Incorrect (<code>==</code> is not an XPath operator):</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) == &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
-&lt;/xsl:if&gt;
+<h1>Using <code>xsl:with-param</code> in invalid parent node</h1>
+<p><code>xsl:with-param</code> is allowed within <code>xsl:call-template</code>, <code>xsl:apply-templates</code>,
+<code>xsl:apply-imports</code>, <code>xsl:next-match</code> and <code>xsl:next-iteration</code>. <code>xsl:with-param</code> is
+needed to pass values to the called template or to the applied templates. Otherwise
+it doesn&#39;t make sense.</p>
+<p>Incorrect:</p>
+<pre><code class="language-xsl">&lt;xsl:stylesheet version=&quot;1.0&quot; xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot;&gt;
+  &lt;xsl:with-param name=&quot;Kipling&quot; select=&quot;1865&quot;/&gt;
+&lt;/xsl:stylesheet&gt;
 </code></pre>
 <p>Correct:</p>
-<pre><code class="language-xsl">&lt;xsl:if test=&quot;foo(a) = &#39;hello&#39;&quot;&gt;
-  &lt;xsl:value-of select=&quot;.&quot;/&gt;
-&lt;/xsl:if&gt;
+<pre><code class="language-xsl">&lt;xsl:call-template name=&quot;myTemplate&quot;&gt;
+  &lt;xsl:with-param name=&quot;Shakespeare&quot; select=&quot;1564&quot;/&gt;
+&lt;/xsl:call-template&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:apply-templates select=&quot;node&quot;&gt;
+  &lt;xsl:with-param name=&quot;Austen&quot; select=&quot;1775&quot;/&gt;
+&lt;/xsl:apply-templates&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:apply-imports&gt;
+  &lt;xsl:with-param name=&quot;Dickens&quot; select=&quot;1812&quot;/&gt;
+&lt;/xsl:apply-imports&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:next-match&gt;
+  &lt;xsl:with-param name=&quot;Carroll&quot; select=&quot;1832&quot;/&gt;
+&lt;/xsl:next-match&gt;
+</code></pre>
+<p>or:</p>
+<pre><code class="language-xsl">&lt;xsl:next-iteration&gt;
+  &lt;xsl:with-param name=&quot;Christie&quot; select=&quot;1890&quot;/&gt;
+&lt;/xsl:next-iteration&gt;
 </code></pre>
 
   </div>
