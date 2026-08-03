@@ -60,11 +60,12 @@ is legal in every version.
 In a pattern only the first two rows hold, and not by coincidence. Before 3.0 a
 pattern step admits the child and attribute axes and no others — a 1.0 processor
 rejects `match="self::r"` outright — which is exactly the pair whose
-abbreviations are safe there. XSLT 3.0 widened the step to the forward axes —
+abbreviations are safe there. XSLT 3.0 widened the step to the downward axes —
 `descendant`, `self`, `descendant-or-self`, `namespace` — so `match="self::r"`
 compiles on a 3.0 processor; the pair is still the pair, because those two drop
-a step without touching how the rule is weighed. The reverse axes stayed out,
-which is why `parent::` never became a pattern step in any version.
+a step without touching how the rule is weighed. Every axis that reaches
+elsewhere stayed out, `following::` as much as `parent::`, which is why
+`parent::` never became a pattern step in any version.
 
 Neither abbreviated step survives the trip. For `..` there is nothing to weigh:
 `match="parent::node()"` is not a legal pattern in any version, so neither is

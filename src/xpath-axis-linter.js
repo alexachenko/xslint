@@ -116,8 +116,8 @@ const afterNode = function(tokens, index) {
  * which takes no predicate, so `self::node()[1]` is only reported on a 1.0
  * sheet: `.[1]` is a syntax error there. A longhand step in a pattern goes
  * unreported because no pattern offers a shorter one. `parent::node()` is not a
- * legal pattern in any version, the parent axis being reverse where a pattern
- * step takes forward axes only, so `..` never enters the question. The self
+ * legal pattern in any version, the parent axis not being among the downward
+ * ones a pattern step takes, so `..` never enters the question. The self
  * axis is illegal before 3.0 for the same kind of reason and legal after it,
  * where `match="."` is still no synonym — a pattern in its own right, not a
  * step inside one, illegal in a union, and outranked by the longhand where it
