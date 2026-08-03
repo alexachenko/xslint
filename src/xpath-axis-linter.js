@@ -29,8 +29,10 @@ const names = [CHECK]
 
 /**
  * The abbreviation each axis specifier collapses to on its own, whatever node
- * test follows it. The verbatim text comes from the token, so a spaced
- * `child ::` is stripped in full rather than leaving its whitespace behind.
+ * test follows it. What gets replaced is measured by `spans`, not taken from
+ * the token: the token carries the gap in front of the colons and `spans`
+ * reaches the one behind them, so a spaced `child ::  a` is stripped in full
+ * from either side.
  * @type {{[type: string]: {replacement: string}}}
  */
 const SHORT = {
@@ -57,6 +59,27 @@ const STEP = {
  * @type {number}
  */
 const SPAN = 4
+
+/**
+ * Offset just past the axis at the given token index, counting in any
+ * whitespace behind its colons. XPath allows a gap there, and it belongs to the
+ * axis rather than to the node test, so shortening `attribute::  name` has to
+ * take the gap with it — leaving `@  name` would be a fix that reads worse than
+ * what it replaced. A gap the source wrote as a line break cannot be told apart
+ * here — the parser turned it into a space before the lexer saw it — so such a
+ * fix reaches the source as a run of spaces, fails to match, and is declined
+ * rather than misapplied. That is #629's to settle, not this function's.
+ * @param {Array.<{type: string, value: string, start: number}>} tokens - Tokens
+ * @param {number} index - Index of the axis token
+ * @return {number} - Offset just past the axis and the gap behind it
+ */
+const spans = function(tokens, index) {
+  const gap = tokens[index + 1]
+  const axis = tokens[index]
+  return gap !== undefined && gap.type === TOKENS.WHITESPACE ?
+    gap.start + gap.value.length :
+    axis.start + axis.value.length
+}
 
 /**
  * The `node()` test that follows the axis token at the given index, or null
@@ -91,13 +114,22 @@ const afterNode = function(tokens, index) {
  * aside, whose `//` trades a named step for a whole-tree walk. Before XPath 2.0
  * gave the context item a predicate list, `.` and `..` were an AbbreviatedStep,
  * which takes no predicate, so `self::node()[1]` is only reported on a 1.0
- * sheet: `.[1]` is a syntax error there. Axes inside string literals or
- * comments are never seen because the lexer keeps those whole.
+ * sheet: `.[1]` is a syntax error there. A longhand step in a pattern goes
+ * unreported because no pattern offers a shorter one. `parent::node()` is not a
+ * legal pattern in any version, the parent axis not being among the downward
+ * ones a pattern step takes, so `..` never enters the question. The self
+ * axis is illegal before 3.0 for the same kind of reason and legal after it,
+ * where `match="."` is still no synonym — a pattern in its own right, not a
+ * step inside one, illegal in a union, and outranked by the longhand where it
+ * stands alone. Axes inside string literals or comments are never seen because
+ * the lexer keeps those whole.
  * @param {string} expression - Xpath expression or pattern
  * @param {boolean} modern - Whether the stylesheet declares XSLT 2.0 or later
+ * @param {boolean} pattern - Whether the expression is a pattern, which has no
+ *  abbreviated step to offer, so a longhand one there is not a defect at all
  * @return {Array.<{offset: number, fix: ?object}>} - Axes and their fixes
  */
-const abbreviable = function(expression, modern) {
+const abbreviable = function(expression, modern, pattern) {
   const tokens = tokenized(expression)
   const found = []
   tokens.forEach((token, index) => {
@@ -105,9 +137,12 @@ const abbreviable = function(expression, modern) {
     if (SHORT[token.type]) {
       found.push({
         offset: token.start,
-        fix: {value: token.value, replacement: SHORT[token.type].replacement},
+        fix: {
+          value: expression.slice(token.start, spans(tokens, index)),
+          replacement: SHORT[token.type].replacement,
+        },
       })
-    } else if (step !== null) {
+    } else if (step !== null && !pattern) {
       found.push({
         offset: token.start,
         fix: step.predicated && !modern ? undefined : {
@@ -133,9 +168,11 @@ const lintByAxis = function(corpus, suppressions = []) {
   const defects = []
   if (!suppressed(CHECK, suppressions)) {
     for (const source of corpus) {
-      for (const {node, start, expression} of expressionsOf(source.xsl)) {
-        const modern = since(versionOf(node), MODERN)
-        for (const {offset, fix} of abbreviable(expression, modern)) {
+      for (const held of expressionsOf(source.xsl)) {
+        const {node, start, expression} = held
+        for (const {offset, fix} of abbreviable(
+          expression, since(versionOf(node), MODERN), held.pattern,
+        )) {
           defects.push(defect(CHECK, META, source, node, start + offset, fix))
         }
       }

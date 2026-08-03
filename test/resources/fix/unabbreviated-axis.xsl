@@ -12,5 +12,7 @@
     <xsl:value-of select="parent :: node ( )"/>
     <xsl:value-of select="parent::n"/>
     <xsl:value-of select="self::text()"/>
+    <xsl:value-of select="attribute::  spaced"/>
+    <xsl:value-of select="child::  gapped"/>
   </xsl:template>
 </xsl:stylesheet>

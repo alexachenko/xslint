@@ -35,6 +35,13 @@ describe('xpath-axis-linter', function() {
             expected,
           )
         })
+        const values = yml.found.values || []
+        values.forEach((expected, index) => {
+          assert.equal(
+            defects[index].fix ? defects[index].fix.value : null,
+            expected,
+          )
+        })
       })
     })
   })

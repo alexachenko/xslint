@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
+# SPDX-License-Identifier: MIT
+---
+pack: unabbreviated-axis
+found:
+  amount: 4
+  positions: [ [ 4, 27 ], [ 5, 27 ], [ 6, 27 ], [ 7, 27 ] ]
+  fixes: [ "@", "", "", ".." ]
+  values: [ "attribute::  ", "child::\t", "child ::  ", "parent ::  node ( )" ]
+input: |-
+  <?xml version="1.0"?>
+  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+    <xsl:template match="/">
+      <xsl:value-of select="attribute::  name"/>
+      <xsl:value-of select="child::&#9;title"/>
+      <xsl:value-of select="child ::  buried"/>
+      <xsl:value-of select="parent ::  node ( )"/>
+    </xsl:template>
+  </xsl:stylesheet>

@@ -239,6 +239,17 @@ describe('conformance', function() {
         )
       }
     }
+    const every = new Set(KINDS.flatMap((kind) => names(kind)))
+    for (const dir of fs.readdirSync(RESOURCES)
+      .filter((one) => one.endsWith('-packs'))) {
+      for (const pack of allFilesFrom(path.join(RESOURCES, dir))
+        .filter((file) => file.endsWith('.yaml'))) {
+        assert.ok(
+          every.has(yaml.parsedFromFile(pack).pack),
+          `pack ${dir}/${path.basename(pack)} names no check`,
+        )
+      }
+    }
     for (const [kind, dir] of Object.entries(PACKED)) {
       const checks = new Set(names(kind))
       for (const pack of allFilesFrom(path.join(RESOURCES, dir))

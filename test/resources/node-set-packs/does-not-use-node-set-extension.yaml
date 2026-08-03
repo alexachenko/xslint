@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-pack: does-not-use-node-set-extension
+pack: use-node-set-extension
 found:
   amount: 0
   positions: [ ]

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 Max Trunnikov
 # SPDX-License-Identifier: MIT
 ---
-pack: abbreviated-axis
+pack: unabbreviated-axis
 found:
   amount: 0
   positions: [ ]

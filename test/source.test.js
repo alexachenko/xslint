@@ -65,6 +65,14 @@ const WALKS = [
     name: 'counts a plain run one for one',
     content: 'abcdef', count: 3, raw: 3,
   },
+  {
+    name: 'reaches an entity that sits at the very end of the span',
+    content: 'ab&amp;', count: 3, raw: 7,
+  },
+  {
+    name: 'goes nowhere for a count below zero',
+    content: 'abcdef', count: -2, raw: 0,
+  },
 ]
 
 /**
