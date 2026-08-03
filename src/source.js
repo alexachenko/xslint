@@ -98,16 +98,23 @@ const character = function(content, at) {
 /**
  * The raw offset reached after skipping the given number of decoded characters,
  * so an offset into a parsed value maps back to its true place in the source
- * even when an entity ahead of it spans several source characters.
+ * even when an entity ahead of it spans several source characters. Where the
+ * span holds no `&` and no `\r` nothing can be wider than one character, and
+ * the answer is the count itself — which is the ordinary case, and worth not
+ * walking a character at a time to reach.
  * @param {string} content - Raw source text
  * @param {number} at - Zero-based offset to start from
  * @param {number} count - Number of decoded characters to skip
  * @return {number} - The raw offset after `count` decoded characters
  */
 const skip = function(content, at, count) {
-  let raw = at
-  for (let seen = 0; seen < count; seen++) {
-    raw = character(content, raw)[1]
+  const ahead = content.slice(at, at + count)
+  let raw = at + count
+  if (ahead.includes('&') || ahead.includes('\r')) {
+    raw = at
+    for (let seen = 0; seen < count; seen++) {
+      raw = character(content, raw)[1]
+    }
   }
   return raw
 }

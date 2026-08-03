@@ -119,8 +119,9 @@ const afterNode = function(tokens, index) {
  * offer, so there is nothing shorter to name, and from 3.0 `match="."` does
  * compile but is not a synonym — a pattern in its own right rather than a step
  * inside one, illegal in a union and outranking the longhand where it stands
- * alone. Either way the check has no shorter form to recommend. Axes inside string literals or
- * comments are never seen because the lexer keeps those whole.
+ * alone. Either way the check has no shorter form to recommend. Axes inside
+ * string literals or comments are never seen because the lexer keeps those
+ * whole.
  * @param {string} expression - Xpath expression or pattern
  * @param {boolean} modern - Whether the stylesheet declares XSLT 2.0 or later
  * @param {boolean} pattern - Whether the expression is a pattern, which has no
