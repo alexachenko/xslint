@@ -62,8 +62,10 @@ const NAMED = new Set(ATTRIBUTES)
  * ask for the same one in a single run, and deriving it walks every attribute
  * and text node of the stylesheet, so it is derived once and remembered against
  * the document itself — which a `WeakMap` releases when the corpus does, rather
- * than holding every stylesheet ever linted (#633). The list is frozen, since
- * eight callers now share one array.
+ * than holding every stylesheet ever linted (#633). Eight callers share one
+ * array, so the array is frozen against having its entries swapped and each
+ * entry is frozen where `carried` builds it — freezing the array alone leaves
+ * `held.expression = ...` free to poison the other seven.
  * @type {WeakMap}
  */
 const DERIVED = new WeakMap()
@@ -130,11 +132,11 @@ const carried = function(node, bare, three) {
     (bare.has(node) || (three && shadow(node)))
   const braced = node.nodeType === 2 || (three && expands(node))
   return whole ?
-    [{
+    [Object.freeze({
       node: node, start: 0, expression: node.nodeValue,
       pattern: PATTERNS.includes(node.nodeName.replace(/^_/, '')),
-    }] :
-    braced ? enclosed(node.nodeValue).map((found) => ({
+    })] :
+    braced ? enclosed(node.nodeValue).map((found) => Object.freeze({
       node: node, start: found.offset, expression: found.value, pattern: false,
     })) : []
 }
