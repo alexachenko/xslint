@@ -57,9 +57,10 @@ Where a predicate follows the step in a 1.0 stylesheet, either leave it spelled
 out or parenthesise the abbreviation, since `(.)[1]` is a filter expression and
 is legal in every version.
 
-In a pattern only the first two rows hold. A pattern takes the child and
-attribute axes, so `match="child::chapter"` is `match="chapter"` and nothing
-changes. The abbreviated steps are another matter: `.` is a pattern in its own
+In a pattern only the first two rows hold. A pattern is free with axes —
+`match="self::r"` and `match="descendant::c"` are both legal — and the child and
+attribute axes are among them, so `match="child::chapter"` is `match="chapter"`
+and nothing changes. The abbreviated steps are another matter: `.` is a pattern in its own
 right rather than a step inside one, so it cannot stand in a union or behind a
 parenthesis — `match="y|self::node()"` is legal and `match="y|."` will not
 compile — and where it does parse it is weighed differently against a competing

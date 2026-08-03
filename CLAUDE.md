@@ -113,7 +113,14 @@ a linter and its suppression names cannot drift apart.
 No code-based linter selects attributes by name on its own. `src/attributes.js`
 hands it every expression a stylesheet carries: an XPath or pattern attribute *of
 an XSLT element*, whole, plus each expression an attribute value template encloses
-in braces, offset by where it starts inside the value (#579). In an XSLT 3.0
+in braces, offset by where it starts inside the value (#579). Each one says
+whether it is a `pattern`, because the two are different languages and a rewrite
+legal in one can be a syntax error in the other — `.` stands alone in an
+expression but is a whole pattern rather than a step inside one, so `y|.` does
+not parse and a bare `match="."` outranks the `self::node()` it replaced. A
+fixer touching a step withholds inside a pattern; where the shorter form does
+not exist there at all, the check does not report it either, the way it stays
+quiet on a `parent::n` (#583). In an XSLT 3.0
 stylesheet it also reads a **text value template** — the braces of a text node
 whose nearest `expand-text`/`xsl:expand-text` is on — and a **shadow attribute**
 (`_select` for `select`), the same expressions the modern idiom hides outside an
@@ -177,7 +184,8 @@ motive, or ships untested fails the build.
   (`metaOf`, `suppressed`, `defect`) and reads its expressions from
   `src/attributes.js`'s `expressionsOf` (every XPath/pattern attribute of an XSLT
   element, plus every expression an attribute value template, a 3.0 text value
-  template, or a shadow attribute carries) unless it has a documented reason to
+  template, or a shadow attribute carries, each flagged `pattern` or not) unless
+  it has a documented reason to
   narrow — then it narrows through `selectorOf`, never a hand-written `//@name`,
   which an ESLint `no-restricted-syntax` selector bans.
 
@@ -362,7 +370,7 @@ the harness asserts too.
 | `src/*-linter.js` | Code-based `checks/format/*.yaml`, one construct each (axis, namespace, count, name, ...); see the flow diagram |
 | `src/checks.js` | Shared for code-based linters: `metaOf`, `suppressed`, `defect(check, meta, source, node, offset, fix)` — walks the raw text so a wrapped or entity-shifted value reports where it truly stands (#611) |
 | `src/source.js` | Raw-text walking shared by `checks` and `fixer`: `offsetAt`, `placeAt`, `character`, `skip` |
-| `src/attributes.js` | `expressionsOf(xsl)` — every expression a stylesheet carries: a bare/AVT attribute, a 3.0 text value template, or a shadow attribute; `selectorOf(name)` for a linter that narrows |
+| `src/attributes.js` | `expressionsOf(xsl)` — every expression a stylesheet carries: a bare/AVT attribute, a 3.0 text value template, or a shadow attribute, each saying whether it is a `pattern`; `PATTERNS` names the five attributes that hold one; `selectorOf(name)` for a linter that narrows |
 | `src/xsl-version.js` | `versionOf(node)` — the version in force at a node, from the nearest ancestor's `@version` (XSLT element) or `@xsl:version` (literal result element), canonicalised as a decimal; `since(version, floor)` for a lower-bound gate; shared `MODERN`/`KNOWN`/`DECIMAL` |
 | `src/comparisons.js` | `comparedToZero` — shared scan for a call compared with `0`/`1` (count, string-length) |
 | `src/expressions.js` | `masked`/`closes` lexer helpers (node-set, double-negation, boolean-call); `enclosed` — the expressions an AVT holds in its braces |

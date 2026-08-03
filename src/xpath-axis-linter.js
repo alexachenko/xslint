@@ -114,12 +114,15 @@ const afterNode = function(tokens, index) {
  * aside, whose `//` trades a named step for a whole-tree walk. Before XPath 2.0
  * gave the context item a predicate list, `.` and `..` were an AbbreviatedStep,
  * which takes no predicate, so `self::node()[1]` is only reported on a 1.0
- * sheet: `.[1]` is a syntax error there. Axes inside string literals or
+ * sheet: `.[1]` is a syntax error there. A pattern has no abbreviated step to
+ * offer at all — `.` is a pattern in its own right rather than a step inside
+ * one — so a longhand step there goes unreported, the way `parent::n` does:
+ * both are steps with nothing shorter to become. Axes inside string literals or
  * comments are never seen because the lexer keeps those whole.
  * @param {string} expression - Xpath expression or pattern
  * @param {boolean} modern - Whether the stylesheet declares XSLT 2.0 or later
- * @param {boolean} pattern - Whether the expression is a pattern, where the
- *  step abbreviations are not the synonyms they are in an expression
+ * @param {boolean} pattern - Whether the expression is a pattern, which has no
+ *  abbreviated step to offer, so a longhand one there is not a defect at all
  * @return {Array.<{offset: number, fix: ?object}>} - Axes and their fixes
  */
 const abbreviable = function(expression, modern, pattern) {
@@ -135,10 +138,10 @@ const abbreviable = function(expression, modern, pattern) {
           replacement: SHORT[token.type].replacement,
         },
       })
-    } else if (step !== null) {
+    } else if (step !== null && !pattern) {
       found.push({
         offset: token.start,
-        fix: pattern || (step.predicated && !modern) ? undefined : {
+        fix: step.predicated && !modern ? undefined : {
           value: expression.slice(token.start, step.end),
           replacement: STEP[token.type].replacement,
         },
