@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {nodes} = require('./xpath')
 const {enclosed} = require('./expressions')
 const {XSLT, since, versionOf} = require('./xsl-version')
+const {walked} = require('./tree')
 
 /**
  * Attributes that hold an XPath expression or a pattern — every place a
@@ -48,10 +48,27 @@ const selectorOf = function(name) {
 }
 
 /**
- * XPath selecting every attribute that holds a bare XPath, across the document.
- * @type {string}
+ * The names that hold a bare XPath, for testing one attribute at a time. Asking
+ * XPath for all of them at once — a union of nineteen descendant scans, one per
+ * name — costs more than a single scan of every XSLT attribute filtered by name
+ * here, and costs it quadratically: 4.4 s against 0.3 s on a 2000-line
+ * stylesheet (#633).
+ * @type {Set.<string>}
  */
-const SELECTOR = ATTRIBUTES.map(selectorOf).join(' | ')
+const NAMED = new Set(ATTRIBUTES)
+
+/**
+ * The expression list already derived for a document. Eight code-based linters
+ * ask for the same one in a single run, and deriving it walks every attribute
+ * and text node of the stylesheet, so it is derived once and remembered against
+ * the document itself — which a `WeakMap` releases when the corpus does, rather
+ * than holding every stylesheet ever linted (#633). Eight callers share one
+ * array, so the array is frozen against having its entries swapped and each
+ * entry is frozen where `carried` builds it — freezing the array alone leaves
+ * `held.expression = ...` free to poison the other seven.
+ * @type {WeakMap}
+ */
+const DERIVED = new WeakMap()
 
 /**
  * The spellings that switch an XSLT boolean attribute on, whitespace trimmed —
@@ -115,11 +132,11 @@ const carried = function(node, bare, three) {
     (bare.has(node) || (three && shadow(node)))
   const braced = node.nodeType === 2 || (three && expands(node))
   return whole ?
-    [{
+    [Object.freeze({
       node: node, start: 0, expression: node.nodeValue,
       pattern: PATTERNS.includes(node.nodeName.replace(/^_/, '')),
-    }] :
-    braced ? enclosed(node.nodeValue).map((found) => ({
+    })] :
+    braced ? enclosed(node.nodeValue).map((found) => Object.freeze({
       node: node, start: found.offset, expression: found.value, pattern: false,
     })) : []
 }
@@ -136,10 +153,17 @@ const carried = function(node, bare, three) {
  *  expressions found, each saying whether it is a pattern
  */
 const expressionsOf = function(xsl) {
-  const bare = new Set(nodes(xsl, SELECTOR))
-  return nodes(xsl, '//*/@* | //text()').flatMap(
-    (node) => carried(node, bare, since(versionOf(node), '3.0')),
-  )
+  if (!DERIVED.has(xsl)) {
+    const held = walked(xsl)
+    const bare = new Set(held.filter(
+      (one) => one.nodeType === 2 && NAMED.has(one.nodeName) &&
+        one.ownerElement.namespaceURI === XSLT,
+    ))
+    DERIVED.set(xsl, Object.freeze(held.flatMap(
+      (node) => carried(node, bare, since(versionOf(node), '3.0')),
+    )))
+  }
+  return DERIVED.get(xsl)
 }
 
 module.exports = {

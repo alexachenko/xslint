@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {nodes, isValid} = require('./xpath')
+const {isValid} = require('./xpath')
+const {walked} = require('./tree')
+const {XSLT} = require('./xsl-version')
 const {yaml} = require('./helpers')
 const path = require('path')
 const {logger} = require('./logger')
@@ -35,11 +37,24 @@ const names = [CHECK]
  * and sequence types (as) are not expressions and stay out.
  * @type {string}
  */
-const EXPRESSIONS =
-  '//xsl:*/@*[local-name() = (' +
-  '"select", "test", "use", "value", "group-by", "group-adjacent", ' +
-  '"key", "initial-value", "xpath", "context-item", "with-params", ' +
-  '"namespace-context")]'
+const EXPRESSIONS = [
+  'select', 'test', 'use', 'value', 'group-by', 'group-adjacent',
+  'key', 'initial-value', 'xpath', 'context-item', 'with-params',
+  'namespace-context',
+]
+
+/**
+ * Whether the walked node is one of those attributes on an XSLT element. The
+ * walk answers the same set a descendant scan did and answers it linearly
+ * (#635), so the name test that was a predicate inside the XPath is a filter
+ * here.
+ * @param {Node} node - A node of the walk
+ * @return {boolean} - True when it holds an expression to validate
+ */
+const held = function(node) {
+  return node.nodeType === 2 && EXPRESSIONS.includes(node.localName) &&
+    node.ownerElement.namespaceURI === XSLT
+}
 
 /**
  * A reference to an entity left unresolved in a parsed expression — an entity
@@ -68,7 +83,7 @@ const validate = function(corpus, suppressions = []) {
   const defects = []
   const suppressed = suppressions.some((sup) => CHECK.includes(sup))
   for (const source of corpus) {
-    for (const expression of nodes(source.xsl, EXPRESSIONS)) {
+    for (const expression of walked(source.xsl).filter(held)) {
       if (isValid(expression.nodeValue)) {
         expressions.push({source: source, expression: expression})
       } else if (UNRESOLVED.test(expression.nodeValue)) {
