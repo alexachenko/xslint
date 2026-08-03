@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-const {nodes} = require('./xpath')
 const {enclosed} = require('./expressions')
 const {XSLT, since, versionOf} = require('./xsl-version')
+const {walked} = require('./tree')
 
 /**
  * Attributes that hold an XPath expression or a pattern — every place a
@@ -154,10 +154,12 @@ const carried = function(node, bare, three) {
  */
 const expressionsOf = function(xsl) {
   if (!DERIVED.has(xsl)) {
-    const bare = new Set(
-      nodes(xsl, '//xsl:*/@*').filter((one) => NAMED.has(one.nodeName)),
-    )
-    DERIVED.set(xsl, Object.freeze(nodes(xsl, '//*/@* | //text()').flatMap(
+    const held = walked(xsl)
+    const bare = new Set(held.filter(
+      (one) => one.nodeType === 2 && NAMED.has(one.nodeName) &&
+        one.ownerElement.namespaceURI === XSLT,
+    ))
+    DERIVED.set(xsl, Object.freeze(held.flatMap(
       (node) => carried(node, bare, since(versionOf(node), '3.0')),
     )))
   }
